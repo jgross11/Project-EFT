@@ -18,13 +18,24 @@ namespace Project_EFT.Controllers
             _logger = logger;
         }
 
+        // attempts to locate cshtml file with name Index in Home folder and Shared folder
         public IActionResult Index()
         {
             return View();
         }
 
+        // localhost.../Home/GenericCipher
+        public IActionResult GenericCipher()
+        {
+            ViewData["echo"] = "Hello, World!";
+
+            // attempts to locate cshtml file with name GenericCipher in Home folder and Shared folder
+            return View();
+        }
+
         public IActionResult Privacy()
         {
+            // attempts to locate cshtml file with name Privacy in Home folder and Shared folder
             return View();
         }
 
