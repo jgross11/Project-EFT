@@ -9,33 +9,27 @@ using Project_EFT.Models;
 
 namespace Project_EFT.Controllers
 {
-    public class HomeController : Controller
+    public class GenericCipherController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly ILogger<GenericCipherController> _logger;
 
-        public HomeController(ILogger<HomeController> logger)
+        public GenericCipherController(ILogger<GenericCipherController> logger)
         {
             _logger = logger;
         }
 
-        // attempts to locate cshtml file with name Index in Home folder and Shared folder
-        public IActionResult Index()
+        // localhost.../GenericCipher, see Startup.cs for more info
+        public IActionResult GetPage()
         {
-            return View();
+            return GenericCipher();
         }
 
-        // localhost.../Home/GenericCipher
         public IActionResult GenericCipher()
         {
-            ViewData["echo"] = "Hello, World!";
+            // must set viewdata here, not in initial GetPage
+            ViewData["echo"] = "Hello again, World!";
 
-            // attempts to locate cshtml file with name GenericCipher in Home folder and Shared folder
-            return View();
-        }
-
-        public IActionResult Privacy()
-        {
-            // attempts to locate cshtml file with name Privacy in Home folder and Shared folder
+            // attempts to locate cshtml file with name GenericCipher in GenericCipher folder and Shared folder
             return View();
         }
 
