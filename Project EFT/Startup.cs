@@ -51,6 +51,9 @@ namespace Project_EFT
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
+                endpoints.MapControllerRoute(
+                    name: "cipherRoute",
+                    pattern: "{controller=GenericCipher}/{action=genericCipher}");
             });
         }
     }
