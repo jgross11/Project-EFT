@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Project_EFT.Data_Classes;
 using Project_EFT.Models;
 
 namespace Project_EFT.Controllers
@@ -22,6 +23,31 @@ namespace Project_EFT.Controllers
         public IActionResult GetPage()
         {
             return GenericCipher();
+        }
+
+        // encryption POST
+        [HttpPost]
+        public IActionResult encrypt()
+        {
+            // debug form contents
+            Debug.WriteLine("From request");
+            Debug.WriteLine(Request.Form["alphabet"]);
+            Debug.WriteLine(Request.Form["encryptShiftAmount"]);
+            Debug.WriteLine(Request.Form["plainTextInput"]);
+
+            // create instance of cipher, do encryption
+            string ciphertext = new CaesarCipher(Request.Form["alphabet"], 0, int.Parse(Request.Form["encryptShiftAmount"]), 1).Encrypt(Request.Form["plainTextInput"]);
+            
+            // store ciphertext in view map
+            ViewData["ciphertext"] = ciphertext;
+
+            // store other form contents to populate form 
+            ViewData["alphabet"] = Request.Form["alphabet"];
+            ViewData["encryptShiftAmount"] = Request.Form["encryptShiftAmount"];
+            ViewData["plainTextInput"] = Request.Form["plainTextInput"];
+
+            // refresh page
+            return View("GenericCipher");
         }
 
         public IActionResult GenericCipher()

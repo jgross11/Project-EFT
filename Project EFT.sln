@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30907.101
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Project EFT", "Project EFT\Project EFT.csproj", "{5AE9FEE0-E7AE-49E2-B684-C86D06C675D1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Project EFT", "Project EFT\Project EFT.csproj", "{5AE9FEE0-E7AE-49E2-B684-C86D06C675D1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Project-EFT Tests", "Project-EFT Tests\Project-EFT Tests.csproj", "{1E9E6292-B69F-4D2E-B305-8DE844A941C0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{5AE9FEE0-E7AE-49E2-B684-C86D06C675D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5AE9FEE0-E7AE-49E2-B684-C86D06C675D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5AE9FEE0-E7AE-49E2-B684-C86D06C675D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E9E6292-B69F-4D2E-B305-8DE844A941C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E9E6292-B69F-4D2E-B305-8DE844A941C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E9E6292-B69F-4D2E-B305-8DE844A941C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E9E6292-B69F-4D2E-B305-8DE844A941C0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
