@@ -18,10 +18,10 @@ namespace Project_EFT_Tests
         [Test]
         public void testEncrypt()
         {
-            Assert.True(cs1.encrypt("a") == "a");
-            Assert.True(cs2.encrypt("abc") == "bca");
-            Assert.True(cs2.encrypt("abccba") == "bcaacb");
-            Assert.True(og.encrypt("test") == "whvw");
+            Assert.True(cs1.Encrypt("a") == "a");
+            Assert.True(cs2.Encrypt("abc") == "bca");
+            Assert.True(cs2.Encrypt("abc cba") == "bca acb");
+            Assert.True(og.Encrypt("test...") == "whvw...");
         }
     }
 }
