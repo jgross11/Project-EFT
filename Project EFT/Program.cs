@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Project_EFT.Database;
 
 namespace Project_EFT
 {
@@ -13,6 +14,9 @@ namespace Project_EFT
     {
         public static void Main(string[] args)
         {
+            // connect to database
+            DBConnector.Init();
+
             CreateHostBuilder(args).Build().Run();
         }
 
