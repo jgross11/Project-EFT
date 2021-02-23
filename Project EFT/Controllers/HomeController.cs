@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Project_EFT.Data_Classes;
+using Project_EFT.Database;
 using Project_EFT.Models;
 
 namespace Project_EFT.Controllers
@@ -43,14 +44,8 @@ namespace Project_EFT.Controllers
         public IActionResult GenericList() 
         {
 
-            // create a sample list of problems to display on the webpage
-            Problem[] problems = new Problem[3];
-            problems[0] = new Problem(1, "A Simple Caesar", "Decrypt the following Caesar cipher: wkdw", "that", 100, 85);
-            problems[1] = new Problem(2, "A Less Simple Caesar", "Decrypt the following Caesar cipher: wkdw d", "that a", 50, 27);
-            problems[2] = new Problem(3, "A Much Less Simple Caesar", "Decrypt the following Caesar cipher: wkdw dw", "that at", 10, 2);
-
-            // store problem array in view data
-            ViewData["problems"] = problems;
+            // fetch problems from DB and render in view
+            ViewData["problems"] = DBConnector.GetProblemsList();
             return View();
         }
 

@@ -48,7 +48,20 @@ namespace Project_EFT.Data_Classes
 
         public override string[] Decrypt(string ciphertext)
         {
-            return null;
+            string[] plaintexts = new string[numSolutionsToReturn];
+            foreach (char c in ciphertext) 
+            {
+                int index = alphabet.IndexOf(c);
+                if (index == -1) 
+                {
+                    plaintexts[0] += c;
+                }
+                else 
+                {
+                    plaintexts[0] += alphabet[(index - decryptionShiftAmount) % alphabet.Length];
+                }
+            }
+            return plaintexts;
         }
     }
 }
