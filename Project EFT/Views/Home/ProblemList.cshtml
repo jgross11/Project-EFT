@@ -1,0 +1,27 @@
+﻿@using Project_EFT.Data_Classes;
+@{
+    // fetch problem array from view data
+    Problem[] problems = (Problem[]) ViewData["problems"];
+}
+
+<h1> Problems </h1>
+<table>
+    <tr>
+        <th>Number</th>
+        <th>Title</th>
+        <th>Attempts</th>
+        <th>Completions</th>
+    </tr>
+    @{ 
+        // generate row for each problem in problems array
+        foreach (Problem problem in problems) 
+        { 
+        <tr>
+            <th>@problem.problemNumber</th>
+            <th><a href="/problem?ID=@problem.problemNumber">@problem.title</a></th>
+            <th>@problem.attempts</th>
+            <th>@problem.completions</th>
+        </tr>
+        }
+    }
+</table>
