@@ -67,5 +67,35 @@ namespace Project_EFT.Database
             return problems.ToArray();
         }
 
+        public static Problem GetProblemByID(int ID)
+        {
+
+
+            MySqlCommand command = MakeCommand("SELECT * FROM Problems WHERE Problem_Number = @id");
+            command.Parameters.AddWithValue("@id", ID);
+            MySqlDataReader reader = command.ExecuteReader();
+            
+            //if a problem was returned, read it and create a new problem to return
+            if (reader.Read())
+            {
+                Problem problem = new Problem(
+                        reader.GetInt32(0),
+                        reader.GetString(1),
+                        reader.GetString(2),
+                        reader.GetString(3),
+                        reader.GetInt32(4),
+                        reader.GetInt32(5)
+                    );
+
+                connection.Close();
+                return problem;
+            }
+
+            //return an empty problem if a problem was not returned from the DB
+            return new Problem();
+
+            
+        }
+
     }
 }
