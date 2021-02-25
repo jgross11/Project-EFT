@@ -56,7 +56,7 @@ namespace Project_EFT
                     pattern: "{controller=GenericCipher}/{action=genericCipher}");
                 endpoints.MapControllerRoute(
                     name: "problemRoute",
-                    pattern: "{controller=GenericProblem}/{action=genericProblem}");
+                    pattern: "{controller=Problem}/{action=Problem}/");
             });
         }
     }
