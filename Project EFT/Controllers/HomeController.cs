@@ -41,7 +41,7 @@ namespace Project_EFT.Controllers
             return View();
         }
 
-        public IActionResult GenericList() 
+        public IActionResult ProblemList() 
         {
 
             // fetch problems from DB and render in view
