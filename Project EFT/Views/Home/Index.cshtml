@@ -1,17 +1,48 @@
-﻿@{
+﻿@using Microsoft.AspNetCore.Http;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@using Project_EFT.Data_Classes;
+@{ISession session = HttpContextAccessor.HttpContext.Session; }
+
+@{
     ViewData["Title"] = "Home Page";
+    if (session.ContainsKey("userInfo"))
+    {
+        StandardUser user = session.GetComplexObject<StandardUser>("userInfo");
+        <h2>Logged in as standard user: </h2>
+        <br>
+        <h3>@user.Email</h3>
+        <br>
+        <h3>@user.Username</h3>
+    }
+    else if (session.ContainsKey("adminInfo"))
+    {
+        Admin admin = session.GetComplexObject<Admin>("adminInfo");
+        <h2>Logged in as admin: </h2>
+        <br>
+        <h3>@admin.Email</h3>
+        <br>
+        <h3>@admin.Username</h3><br>
+
+        <form action="/Home/DeleteUserAccount" method="post">
+            Enter username of account to delete:<br>
+            <input type="text" id="username" name="username" /><br>
+            <input type="submit" value="Delete Account">
+        </form>
+    }
+    else
+    {
+        <div>
+            <form action="~/Home/login" method="post">
+                <label>Username:</label>
+                <input type="text" id="username" name="username" /><br />
+                <label>Password:</label>
+                <input type="password" id="password" name="password" /><br />
+                <input type="submit" value="Login!" />
+            </form>
+        </div>
+        <br />
+        <div>
+            <a href="/signup">Not already a user?  Click here to make an account!</a>
+        </div>
+    }
 }
-
-<div>
-    <label>Username:</label>
-    <input type="text" id="username" name="username" /><br />
-    <label>Password:</label>
-    <input type="text" id="password" name="password" /><br />
-
-    <input type="submit" value="Login!" />
-</div>
-<br />
-<div>
-    <input type="submit" value="Not already a user?  Click here to make an account!" />
-
-</div>
