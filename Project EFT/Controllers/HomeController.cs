@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Project_EFT.Data_Classes;
 using Project_EFT.Database;
@@ -23,22 +24,48 @@ namespace Project_EFT.Controllers
         // attempts to locate cshtml file with name Index in Home folder and Shared folder
         public IActionResult Index()
         {
+            // TODO conditional formatting for logged in users
             return View();
         }
 
-        // localhost.../Home/GenericCipher
-        public IActionResult GenericCipher()
+        [HttpPost]
+        public IActionResult login()
         {
-            ViewData["echo"] = "Hello, World!";
+            string username = Request.Form["username"];
+            string password = Request.Form["password"];
 
-            // attempts to locate cshtml file with name GenericCipher in Home folder and Shared folder
-            return View();
+            StandardUser user = DBConnector.StandardUserLogin(username, password);
+            if (user.Id != 0)
+            {
+                // user props
+                ViewData["UserStatus"] = "Standard User";
+                HttpContext.Session.SetComplexObject("userInfo", user);
+                return RedirectToAction("Index");
+            }
+
+            Admin admin = DBConnector.AdminLogin(username, password);
+            if (admin.Id != 0)
+            {
+                // admin props
+                ViewData["UserStatus"] = "Admin";
+                HttpContext.Session.SetComplexObject("adminInfo", admin);
+
+                // redirect to /, not /Home/login, needs session
+                return RedirectToAction("Index");
+            }
+            else 
+            {
+                // no user found
+                return RedirectToAction("Index");
+            }
         }
 
-        public IActionResult Privacy()
+        [HttpPost]
+        public IActionResult DeleteUserAccount() 
         {
-            // attempts to locate cshtml file with name Privacy in Home folder and Shared folder
-            return View();
+            string username = Request.Form["username"];
+            DBConnector.DeleteUser(username);
+            return RedirectToAction("Index");
         }
 
         public IActionResult ProblemList() 
