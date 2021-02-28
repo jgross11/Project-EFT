@@ -33,13 +33,13 @@ namespace Project_EFT.Controllers
             Problem problem = DBConnector.GetProblemByID(ID);
 
             //checks to see if the problem returned from the DB is an actual problem or not
-            if (problem.problemNumber != 0)
+            if (problem.ProblemNumber != 0)
             {
                 //Set the problem information to be passed to the front end
                 ViewData["ShowPage"] = true;
-                ViewData["Title"] = problem.title;
-                ViewData["problemNumber"] = "This is problem number " + problem.problemNumber + ".";
-                ViewData["problem"] = problem.question;
+                ViewData["Title"] = problem.Title;
+                ViewData["problemNumber"] = "This is problem number " + problem.ProblemNumber + ".";
+                ViewData["problem"] = problem.Question;
             }
             else
             {
