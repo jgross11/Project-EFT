@@ -1,0 +1,26 @@
+﻿@{
+
+    string username = "";
+    string email = "";
+
+    // if a form on this page was submitted
+    // will only happen when error in form data occurs
+    if (Context.Request.Method == "POST")
+    {
+        // repopulate form data
+        username = ViewData["username"].ToString();
+        email = ViewData["email"].ToString();
+    }
+}
+
+<form action="~/Signup/SubmitSignup" method="post">
+    Enter Username:<br>
+    <input type="text" name="username" value="@username" /><br>
+    Enter Email:<br>
+    <input type="text" name="email" value="@email" /><br>
+    Enter Password:<br>
+    <input type="password" name="password" /><br>
+    Confirm Password:<br>
+    <input type="password" name="confirmPassword" /><br>
+    <input type="submit" value="Sign up!">
+</form>

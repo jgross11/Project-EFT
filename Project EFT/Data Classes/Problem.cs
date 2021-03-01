@@ -8,12 +8,12 @@ namespace Project_EFT.Data_Classes
     // data class representing a Project Euler-type Problem
     public class Problem
     {
-        public int problemNumber { get; set; }
-        public string title { get; set; }
-        public string question { get; set; }
-        public string answer { get; set; }
-        public int attempts { get; set; }
-        public int completions { get; set; }
+        public int ProblemNumber { get; set; }
+        public string Title { get; set; }
+        public string Question { get; set; }
+        public string Answer { get; set; }
+        public int Attempts { get; set; }
+        public int Completions { get; set; }
 
         // null constructor for convenience / piecewise field setting
         public Problem() 
@@ -23,12 +23,12 @@ namespace Project_EFT.Data_Classes
 
         public Problem(int number, string title, string question, string answer, int attempts, int completions) 
         {
-            this.problemNumber = number;
-            this.title = title;
-            this.question = question;
-            this.answer = answer;
-            this.attempts = attempts;
-            this.completions = completions;
+            ProblemNumber = number;
+            Title = title;
+            Question = question;
+            Answer = answer;
+            Attempts = attempts;
+            Completions = completions;
         }
     }
 }
