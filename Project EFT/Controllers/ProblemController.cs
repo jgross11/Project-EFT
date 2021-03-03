@@ -38,8 +38,9 @@ namespace Project_EFT.Controllers
                 //Set the problem information to be passed to the front end
                 ViewData["ShowPage"] = true;
                 ViewData["Title"] = problem.Title;
-                ViewData["problemNumber"] = "This is problem number " + problem.ProblemNumber + ".";
+                ViewData["problemNumber"] = problem.ProblemNumber;
                 ViewData["problem"] = problem.Question;
+
             }
             else
             {
@@ -47,6 +48,39 @@ namespace Project_EFT.Controllers
             }
             // attempts to locate cshtml file with name GenericProblem in GenericProblem folder and Shared folder
             return View();
+        }
+
+        //check Answer method POST
+        [HttpPost]
+        public IActionResult CheckAnswer()
+        {
+            Problem problem = DBConnector.GetProblemByID(int.Parse(Request.Form["problemNumber"]));
+           
+            //TODO this needs a connection to the user that is signed in
+            //as well as some form of "submission" to the database, in order
+            // to mark off the user as having completed a problem, this also
+            //will keep a user from resubmitting a problem after marking it correct
+            if (Request.Form["answer"].Equals(problem.Answer))
+            {
+                //Set the problem information to be passed to the front end
+                ViewData["ShowPage"] = true;
+                ViewData["Title"] = problem.Title;
+                ViewData["problemNumber"] = problem.ProblemNumber;
+                ViewData["problem"] = problem.Question;
+                ViewData["isCorrect"] = true;
+            }
+            else
+            {
+                //Set the problem information to be passed to the front end
+                ViewData["ShowPage"] = true;
+                ViewData["Title"] = problem.Title;
+                ViewData["problemNumber"] = problem.ProblemNumber;
+                ViewData["problem"] = problem.Question;
+                ViewData["isCorrect"] = false;
+            }
+
+
+            return View("Problem");
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
