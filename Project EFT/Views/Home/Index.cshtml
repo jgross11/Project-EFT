@@ -47,6 +47,27 @@
             <div class="error">@errorMessage</div>
             <div class="success">@successMessage</div>
         </form>
+        <br><br>
+        if (admin.Submissions.Count > 0) { 
+            <h3>Previous admin actions</h3>
+            <table>
+                <tr>
+                    <th>Action</th>
+                    <th>Date</th>
+                </tr>
+                @{
+                    // generate row for each problem in problems array
+                    foreach (Submission sub in admin.Submissions) 
+                    { 
+                    <tr>
+                        <th>@sub.Content</th>
+                        <th>@sub.SubmissionDate</th>
+                    </tr>
+                    }
+                }
+            </table>
+        }
+
         <script>
             function verifyDeleteAccount() {
                 let usernameElement = document.getElementById("username");
