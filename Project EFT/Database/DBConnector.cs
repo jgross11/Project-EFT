@@ -48,6 +48,26 @@ namespace Project_EFT.Database
             return numRowsAffected == 1;
         }
 
+        public static List<Submission> GetAdminSubmissionsByID(int id)
+        {
+            List<Submission> subs = new List<Submission>();
+            MySqlCommand command = MakeCommand("SELECT * FROM AdminSubmissions WHERE Admin_ID = @id");
+            command.Parameters.AddWithValue("@id", id);
+            command.Prepare();
+            MySqlDataReader reader = command.ExecuteReader();
+            // need row count
+            while (reader.Read())
+            {
+                subs.Add(new Submission(
+                    reader.GetString(2),
+                    reader.GetDateTime(3),
+                    reader.GetInt32(1)
+                ));
+            }
+            connection.Close();
+            return subs;
+        }
+
         public static Problem[] GetProblemsList()
         {
             MySqlCommand command = MakeCommand("SELECT * FROM Problems");
@@ -67,6 +87,20 @@ namespace Project_EFT.Database
             }
             connection.Close();
             return problems.ToArray();
+        }
+
+        public static bool InsertNewAdminSubmission(Submission submission)
+        {
+            MySqlCommand command = MakeCommand("INSERT INTO AdminSubmissions(Admin_ID, AdminSubmissions_Content, AdminSubmissions_SubmissionDate) VALUES(@id, @content, @date)");
+            command.Parameters.AddWithValue("@id", submission.UserID);
+            command.Parameters.AddWithValue("@content", submission.Content);
+            command.Parameters.AddWithValue("@date", submission.SubmissionDate);
+            command.Prepare();
+            int result = command.ExecuteNonQuery();
+            connection.Close();
+
+            // submission added --> one row was affected (the added one)
+            return result == 1;
         }
 
         public static Problem GetProblemByID(int ID)
