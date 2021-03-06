@@ -114,7 +114,7 @@ namespace Project_EFT.Database
             return result == 1;
         }
 
-        public static bool DoesUserExist(string email)
+        public static bool DoesEmailExist(string email)
         {
             MySqlCommand command = MakeCommand("SELECT User_ID FROM Users WHERE User_Email = @email");
             command.Parameters.AddWithValue("@email", email);
@@ -127,12 +127,35 @@ namespace Project_EFT.Database
                 connection.Close();
                 return true;
             }
-            command = MakeCommand("SELECT Admin_ID FROM Admins WHERE Admins_Email = @email");
+            command = MakeCommand("SELECT Admin_ID FROM Admins WHERE Admin_Email = @email");
             command.Parameters.AddWithValue("@email", email);
             command.Prepare();
             reader = command.ExecuteReader();
+            bool result = reader.Read();
             connection.Close();
-            return reader.Read();
+            return result;
+        }
+
+        public static bool DoesUsernameExist(string username)
+        {
+            MySqlCommand command = MakeCommand("SELECT User_ID FROM Users WHERE User_Username = @username");
+            command.Parameters.AddWithValue("@username", username);
+            command.Prepare();
+            MySqlDataReader reader = command.ExecuteReader();
+
+            // user exists in standard users table
+            if (reader.Read())
+            {
+                connection.Close();
+                return true;
+            }
+            command = MakeCommand("SELECT Admin_ID FROM Admins WHERE Admin_Username = @username");
+            command.Parameters.AddWithValue("@username", username);
+            command.Prepare();
+            reader = command.ExecuteReader();
+            bool result = reader.Read();
+            connection.Close();
+            return result;
         }
 
         public static StandardUser StandardUserLogin(string username, string password)
