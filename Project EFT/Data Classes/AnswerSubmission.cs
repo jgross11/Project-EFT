@@ -9,7 +9,7 @@ namespace Project_EFT.Data_Classes
     {
         public bool IsCorrect { get; set; }
 
-        public AnswerSubmission(string content, DateTime submissionDate, bool isCorrect) : base(content, submissionDate)
+        public AnswerSubmission(string content, DateTime submissionDate, int id, bool isCorrect) : base(content, submissionDate, id)
         {
             IsCorrect = isCorrect;
         }
