@@ -16,33 +16,91 @@
     }
     else if (session.ContainsKey("adminInfo"))
     {
+        string errorMessage = "";
+        string successMessage = "";
+        string username = "";
+        if (session.ContainsKey("username"))
+        {
+            username = session.GetString("username");
+            session.Remove("username");
+            errorMessage = session.GetString("errorMessage");
+            session.Remove("errorMessage");
+        } else if (session.ContainsKey("successMessage"))
+        {
+            successMessage = session.GetString("successMessage");
+            session.Remove("successMessage");
+        }
+
         Admin admin = session.GetComplexObject<Admin>("adminInfo");
         <h2>Logged in as admin: </h2>
         <br>
         <h3>@admin.Email</h3>
         <br>
-        <h3>@admin.Username</h3><br>
+        <h3>@admin.Username</h3>
+        <br>
 
-        <form action="/Home/DeleteUserAccount" method="post">
+        <form id="delete-account" action="/Home/DeleteUserAccount" method="post">
             Enter username of account to delete:<br>
-            <input type="text" id="username" name="username" /><br>
-            <input type="submit" value="Delete Account">
+            <input type="text" id="username" name="username" value="@username"/><br>
+            <div class="error" id="username-error"></div>
+            <input type="button" value="Delete Account" onclick="verifyDeleteAccount()">
+            <div class="error">@errorMessage</div>
+            <div class="success">@successMessage</div>
         </form>
+        <script>
+            function verifyDeleteAccount() {
+                let usernameElement = document.getElementById("username");
+                let username = usernameElement.value.trim();
+                if (username.length > 0) {
+                    document.getElementById("username-error").innerHTML = "";
+                    usernameElement.value = username;
+                    document.getElementById("delete-account").submit();
+                } else {
+                    document.getElementById("username-error").innerHTML = "Please enter a valid username.";
+                }
+            }
+        </script>
     }
     else
     {
+        string loginErrorMessage = "";
+        if (session.ContainsKey("errorMessage")) {
+            loginErrorMessage = session.GetString("errorMessage");
+            session.Remove("errorMessage");
+        }
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.12.0/js/md5.min.js"></script>
         <div>
-            <form action="~/Home/login" method="post">
+            <form id="login" action="~/Home/login" method="post">
                 <label>Username:</label>
                 <input type="text" id="username" name="username" /><br />
-                <label>Password:</label>
-                <input type="password" id="password" name="password" /><br />
-                <input type="submit" value="Login!" />
+                <div class="error" id="username-error"></div>
+                <input type="hidden" id="password" name="password" />
             </form>
+            <label>Password:</label>
+            <input type="password" id="frontPassword" name="frontPassword" /><br />
+            <div class="error" id="password-error"></div>
+            <input type="button" value="Login!" onclick="verifyLogin()" /><br />
+            <div class="error" id="login-error"> @loginErrorMessage</div>
         </div>
-        <br />
         <div>
             <a href="/signup">Not already a user?  Click here to make an account!</a>
         </div>
     }
+    <script>
+        function verifyLogin() {
+            let usernameElement = document.getElementById("username");
+            let passwordEntryElement = document.getElementById("frontPassword");
+            let passwordSubmissionElement = document.getElementById("password");
+            let username = usernameElement.value.trim();
+            let password = passwordEntryElement.value.trim();
+            if (username.length > 0 && password.length > 7) {
+                usernameElement.value = username;
+                passwordSubmissionElement.value = md5(password);
+                document.getElementById("login").submit();
+            } else {
+                document.getElementById("username-error").innerHTML = username.length > 0 ? "" : "Please enter a valid username.";
+                document.getElementById("password-error").innerHTML = password.length > 7 ? "" : "Please enter a valid password.";
+            }
+        }
+    </script>
 }
