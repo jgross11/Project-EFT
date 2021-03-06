@@ -1,4 +1,8 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Http;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@using Project_EFT.Data_Classes;
+@{ISession session = HttpContextAccessor.HttpContext.Session; }
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -8,6 +12,7 @@
     <link rel="stylesheet" href="~/css/site.css" />
 </head>
 <body>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container">
@@ -24,6 +29,14 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="ProblemList">Problems</a>
                         </li>
+                        @{
+                            if (session.ContainsKey("userInfo") || session.ContainsKey("adminInfo"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="logout">Log Out</a>
+                                </li>
+                            }
+                        }
                     </ul>
                 </div>
             </div>
@@ -42,7 +55,6 @@
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>
