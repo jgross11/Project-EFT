@@ -70,6 +70,9 @@ namespace Project_EFT
                     name: "signup",
                     pattern: "{controller=Signup}/{action=Signup}");
                 endpoints.MapControllerRoute(
+                    name: "editInfo",
+                    pattern: "{controller=EditInfo}/{action=EditInfo}");
+                endpoints.MapControllerRoute(
                     name: "cipherRoute",
                     pattern: "{controller=GenericCipher}/{action=genericCipher}");
                 endpoints.MapControllerRoute(
