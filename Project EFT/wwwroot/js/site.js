@@ -6,6 +6,7 @@
 const TYPE_NAME = 0;
 const TYPE_EMAIL = 1;
 const TYPE_PASSWORD = 2;
+const TYPE_USERNAME = 3;
 
 /*
 Checks if the given information is valid
@@ -73,6 +74,9 @@ function verifyInformation(info, type) {
                 }
             }
             return false;
+            break;
+        case TYPE_USERNAME:
+            return info.length > 0 && info.length < 46;
             break;
     }
 }

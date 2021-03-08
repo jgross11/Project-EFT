@@ -58,7 +58,7 @@
         let password = passwordEntryElement.value.trim();
         let confirmPassword = confirmPasswordElement.value.trim();
 
-        let usernameGood = username.length > 0;
+        let usernameGood = verifyInformation(username, TYPE_USERNAME);
         let emailGood = verifyInformation(email, TYPE_EMAIL);
         let passwordComplex = verifyInformation(password, TYPE_PASSWORD);
         let passwordsMatch = password == confirmPassword;

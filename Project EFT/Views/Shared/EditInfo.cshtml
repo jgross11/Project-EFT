@@ -63,7 +63,7 @@
     function verifyUsername() {
         let usernameElement = document.getElementById("username");
         let username = usernameElement.value.trim();
-        let usernameGood = username.length > 0;
+        let usernameGood = verifyInformation(username, TYPE_USERNAME);
         if (usernameGood) {
             usernameElement.value = username;
             document.getElementById("username-error").innerHTML = "";

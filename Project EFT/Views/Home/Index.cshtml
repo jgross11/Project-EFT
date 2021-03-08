@@ -72,7 +72,7 @@
             function verifyDeleteAccount() {
                 let usernameElement = document.getElementById("username");
                 let username = usernameElement.value.trim();
-                if (username.length > 0) {
+                if (verifyInformation(username, TYPE_USERNAME)) {
                     document.getElementById("username-error").innerHTML = "";
                     usernameElement.value = username;
                     document.getElementById("delete-account").submit();
