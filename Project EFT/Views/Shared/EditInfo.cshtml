@@ -1,0 +1,108 @@
+﻿@using Microsoft.AspNetCore.Http;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@using Project_EFT.Data_Classes;
+@{ISession session = HttpContextAccessor.HttpContext.Session; }
+@{
+    string username = "";
+    string email = "";
+    string usernameSuccess = session.TryGetAndRemoveKey<string>("usernameSuccess");
+    string emailSuccess = session.TryGetAndRemoveKey<string>("emailSuccess");
+    string passwordSuccess = session.TryGetAndRemoveKey<string>("passwordSuccess");
+    string usernameError = session.TryGetAndRemoveKey<string>("usernameError");
+    string emailError = session.TryGetAndRemoveKey<string>("emailError");
+    string passwordError = session.TryGetAndRemoveKey<string>("passwordError");
+
+    if (session.ContainsKey("userInfo")) {
+        StandardUser user = session.GetComplexObject<StandardUser>("userInfo");
+        username = user.Username;
+        email = user.Email;
+    }
+    else if (session.ContainsKey("adminInfo"))
+    {
+        Admin admin = session.GetComplexObject<Admin>("adminInfo");
+        username = admin.Username;
+        email = admin.Email;
+    }
+}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.12.0/js/md5.min.js"></script>
+<form id="usernameForm" action="~/EditInfo/editUsername" method="post">
+    Enter New Username:<br>
+    <input type="text" id="username" name="username" value="@username" /><br>
+    <div class="error" id="username-error"></div>
+    <input type="button" value="Update username" onclick="verifyUsername()">
+    <div class="error">@usernameError</div>
+    <div class="success">@usernameSuccess</div>
+</form>
+<form id="emailForm" action="~/EditInfo/editEmail" method="post">
+    Enter New Email:<br>
+    <input type="text" id="email" name="email" value="@email" /><br>
+    <div class="error" id="email-error"></div>
+    <input type="button" value="Update email" onclick="verifyEmail()">
+    <div class="error">@emailError</div>
+    <div class="success">@emailSuccess</div>
+</form>
+<form id="passwordForm" action="~/EditInfo/editPassword" method="post">
+    <input type="hidden" id="password" name="password" />
+</form>
+    Enter New Password:
+<br>
+<input type="password" id="passwordEntry" name="passwordEntry" />
+<br>
+<div class="error" id="password-error"></div>
+    Confirm New Password:
+<br>
+<input type="password" id="confirmPassword" name="confirmPassword" />
+<br>
+<div class="error" id="confirm-password-error"></div>
+<input type="button" value="Update Password" onclick="verifyPassword()">
+<div class="error">@passwordError</div>
+<div class="success">@passwordSuccess</div>
+
+<script>
+
+    function verifyUsername() {
+        let usernameElement = document.getElementById("username");
+        let username = usernameElement.value.trim();
+        let usernameGood = verifyInformation(username, TYPE_USERNAME);
+        if (usernameGood) {
+            usernameElement.value = username;
+            document.getElementById("username-error").innerHTML = "";
+            document.getElementById("usernameForm").submit();
+        } else {
+            document.getElementById("username-error").innerHTML = "Please enter a valid username.";
+        }
+    }
+
+    function verifyEmail() {
+        let emailElement = document.getElementById("email");
+        let email = emailElement.value.trim();
+        let emailGood = verifyInformation(email, TYPE_EMAIL);
+        if (emailGood) {
+            emailElement.value = email;
+            document.getElementById("email-error").innerHTML = "";
+            document.getElementById("emailForm").submit();
+        } else {
+            document.getElementById("email-error").innerHTML = "Please enter a valid email.";
+        }
+    }
+
+    function verifyPassword() {
+        let passwordEntryElement = document.getElementById("passwordEntry");
+        let confirmPasswordElement = document.getElementById("confirmPassword");
+        let passwordSubmissionElement = document.getElementById("password");
+        let password = passwordEntryElement.value.trim();
+        let confirmPassword = confirmPasswordElement.value.trim();
+        let passwordComplex = verifyInformation(password, TYPE_PASSWORD);
+        let passwordsMatch = password == confirmPassword;
+        if (passwordComplex && passwordsMatch) {
+            passwordSubmissionElement.value = md5(password);
+            document.getElementById("password-error").innerHTML = "";
+            document.getElementById("confirm-password-error").innerHTML = "";
+            document.getElementById("passwordForm").submit();
+        } else {
+            document.getElementById("password-error").innerHTML = passwordComplex ? "" : "Please enter a valid password. <br> A valid password is at least 8 characters, and includes at least one number, uppercase letter, and symbol.";
+            document.getElementById("confirm-password-error").innerHTML = passwordsMatch ? "" : "Passwords must match.";
+        }
+    }
+
+</script>

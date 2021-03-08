@@ -14,6 +14,10 @@ namespace Project_EFT.Database
         public static MySqlConnection connection;
         public static string connectionString;
 
+        public const int DB_FAILURE = -1;
+        public const int CREDENTIAL_CHANGE_SUCCESS = 100;
+        public const int CREDENTIAL_TAKEN = 101;
+
         public static void Init()
         {
             string[] lines = System.IO.File.ReadAllLines("../../info.txt");
@@ -48,6 +52,127 @@ namespace Project_EFT.Database
             return numRowsAffected == 1;
         }
 
+        public static int TryUpdateUsername(User user, string newUsername)
+        {
+            string firstCommand;
+            string secondCommand;
+            if (user.GetType() == typeof(Admin))
+            {
+                firstCommand = "SELECT Admin_ID FROM Admins WHERE Admin_Username = @username";
+                secondCommand = "UPDATE Admins SET Admin_Username = @username WHERE Admin_ID = @id";
+            }
+            else if (user.GetType() == typeof(StandardUser))
+            {
+                firstCommand = "SELECT User_ID FROM Users WHERE User_Username = @username";
+                secondCommand = "UPDATE Users SET User_Username = @username WHERE User_ID = @id";
+            }
+            else return DB_FAILURE;
+
+
+            MySqlCommand command = MakeCommand(firstCommand);
+            command.Parameters.AddWithValue("@username", newUsername);
+            command.Prepare();
+            MySqlDataReader reader = command.ExecuteReader();
+            if (reader.Read())
+            {
+                connection.Close();
+                return CREDENTIAL_TAKEN;
+            }
+            else
+            {
+                connection.Close();
+                command = MakeCommand(secondCommand);
+                command.Parameters.AddWithValue("@id", user.Id);
+                command.Parameters.AddWithValue("@username", newUsername);
+                command.Prepare();
+                int result = command.ExecuteNonQuery();
+                connection.Close();
+                return result == 1 ? CREDENTIAL_CHANGE_SUCCESS : DB_FAILURE;
+            }
+        }
+
+        public static int TryUpdateEmail(User user, string newEmail)
+        {
+            string firstCommand;
+            string secondCommand;
+            if (user.GetType() == typeof(Admin))
+            {
+                firstCommand = "SELECT Admin_ID FROM Admins WHERE Admin_Email = @email";
+                secondCommand = "UPDATE Admins SET Admin_Email = @email WHERE Admin_ID = @id";
+            }
+            else if (user.GetType() == typeof(StandardUser))
+            {
+                firstCommand = "SELECT User_ID FROM Users WHERE User_Email = @email";
+                secondCommand = "UPDATE Users SET User_Email = @email WHERE User_ID = @id";
+            }
+            else return DB_FAILURE;
+
+
+            MySqlCommand command = MakeCommand(firstCommand);
+            command.Parameters.AddWithValue("@email", newEmail);
+            command.Prepare();
+            MySqlDataReader reader = command.ExecuteReader();
+            if (reader.Read())
+            {
+                connection.Close();
+                return CREDENTIAL_TAKEN;
+            }
+            else
+            {
+                connection.Close();
+                command = MakeCommand(secondCommand);
+                command.Parameters.AddWithValue("@id", user.Id);
+                command.Parameters.AddWithValue("@email", newEmail);
+                command.Prepare();
+                int result = command.ExecuteNonQuery();
+                connection.Close();
+                return result == 1 ? CREDENTIAL_CHANGE_SUCCESS : DB_FAILURE;
+            }
+        }
+
+        public static int UpdatePassword(User user, string newPassword)
+        {
+            string commandString;
+            if (user.GetType() == typeof(Admin))
+            {
+                commandString = "UPDATE Admins SET Admin_Password = @password WHERE Admin_ID = @id";
+            }
+            else if (user.GetType() == typeof(StandardUser))
+            {
+                commandString = "UPDATE Users SET User_Password = @password WHERE User_ID = @id";
+            }
+            else return DB_FAILURE;
+
+
+            MySqlCommand command = MakeCommand(commandString);
+            command.Parameters.AddWithValue("@password", newPassword);
+            command.Parameters.AddWithValue("@id", user.Id);
+            command.Prepare();
+            int result = command.ExecuteNonQuery();
+            connection.Close();
+            return result == 1 ? CREDENTIAL_CHANGE_SUCCESS : DB_FAILURE;
+        }
+
+        public static List<Submission> GetAdminSubmissionsByID(int id)
+        {
+            List<Submission> subs = new List<Submission>();
+            MySqlCommand command = MakeCommand("SELECT * FROM AdminSubmissions WHERE Admin_ID = @id");
+            command.Parameters.AddWithValue("@id", id);
+            command.Prepare();
+            MySqlDataReader reader = command.ExecuteReader();
+            // need row count
+            while (reader.Read())
+            {
+                subs.Add(new Submission(
+                    reader.GetString(2),
+                    reader.GetDateTime(3),
+                    reader.GetInt32(1)
+                ));
+            }
+            connection.Close();
+            return subs;
+        }
+
         public static Problem[] GetProblemsList()
         {
             MySqlCommand command = MakeCommand("SELECT * FROM Problems");
@@ -67,6 +192,20 @@ namespace Project_EFT.Database
             }
             connection.Close();
             return problems.ToArray();
+        }
+
+        public static bool InsertNewAdminSubmission(Submission submission)
+        {
+            MySqlCommand command = MakeCommand("INSERT INTO AdminSubmissions(Admin_ID, AdminSubmissions_Content, AdminSubmissions_SubmissionDate) VALUES(@id, @content, @date)");
+            command.Parameters.AddWithValue("@id", submission.UserID);
+            command.Parameters.AddWithValue("@content", submission.Content);
+            command.Parameters.AddWithValue("@date", submission.SubmissionDate);
+            command.Prepare();
+            int result = command.ExecuteNonQuery();
+            connection.Close();
+
+            // submission added --> one row was affected (the added one)
+            return result == 1;
         }
 
         public static Problem GetProblemByID(int ID)
@@ -114,7 +253,7 @@ namespace Project_EFT.Database
             return result == 1;
         }
 
-        public static bool DoesUserExist(string email)
+        public static bool DoesEmailExist(string email)
         {
             MySqlCommand command = MakeCommand("SELECT User_ID FROM Users WHERE User_Email = @email");
             command.Parameters.AddWithValue("@email", email);
@@ -127,12 +266,35 @@ namespace Project_EFT.Database
                 connection.Close();
                 return true;
             }
-            command = MakeCommand("SELECT Admin_ID FROM Admins WHERE Admins_Email = @email");
+            command = MakeCommand("SELECT Admin_ID FROM Admins WHERE Admin_Email = @email");
             command.Parameters.AddWithValue("@email", email);
             command.Prepare();
             reader = command.ExecuteReader();
+            bool result = reader.Read();
             connection.Close();
-            return reader.Read();
+            return result;
+        }
+
+        public static bool DoesUsernameExist(string username)
+        {
+            MySqlCommand command = MakeCommand("SELECT User_ID FROM Users WHERE User_Username = @username");
+            command.Parameters.AddWithValue("@username", username);
+            command.Prepare();
+            MySqlDataReader reader = command.ExecuteReader();
+
+            // user exists in standard users table
+            if (reader.Read())
+            {
+                connection.Close();
+                return true;
+            }
+            command = MakeCommand("SELECT Admin_ID FROM Admins WHERE Admin_Username = @username");
+            command.Parameters.AddWithValue("@username", username);
+            command.Prepare();
+            reader = command.ExecuteReader();
+            bool result = reader.Read();
+            connection.Close();
+            return result;
         }
 
         public static StandardUser StandardUserLogin(string username, string password)

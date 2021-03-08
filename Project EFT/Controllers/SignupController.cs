@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Project_EFT.Data_Classes;
 using Project_EFT.Database;
 
@@ -25,13 +26,26 @@ namespace Project_EFT.Controllers
             Debug.WriteLine(username);
             Debug.WriteLine(email);
             Debug.WriteLine(password);
-            StandardUser newUser = new StandardUser(username, password, email);
-            // TODO conditionals
-            DBConnector.InsertNewUser(newUser);
+            if (DBConnector.DoesEmailExist(email))
+                HttpContext.Session.SetString("errorMessage", "The submitted email is already associated with an account.");
+            else if (DBConnector.DoesUsernameExist(username))
+                HttpContext.Session.SetString("errorMessage", "The submitted username is already associated with an account.");
+            else
+            {
+                StandardUser newUser = new StandardUser(username, password, email);
+                if (DBConnector.InsertNewUser(newUser))
+                {
+                    HttpContext.Session.SetComplexObject("userInfo", newUser);
+                    return RedirectToAction("Index", "Home");
+                }
+                else
+                    HttpContext.Session.SetString("errorMessage", "Error creating account. Please try again.");
+            }
+            HttpContext.Session.SetString("username", username);
+            HttpContext.Session.SetString("email", email);
 
-            HttpContext.Session.SetComplexObject("userInfo", newUser);
-
-            return RedirectToAction("Index");
+            // TODO fix weird routing (/Signup/signup instead of just /Signup)
+            return RedirectToAction("signup", "Signup");
         }
     }
 }

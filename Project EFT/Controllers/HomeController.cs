@@ -28,6 +28,13 @@ namespace Project_EFT.Controllers
             return View();
         }
 
+        [HttpGet]
+        public IActionResult logout() 
+        {
+            HttpContext.Session.Clear();
+            return RedirectToAction("Index");
+        }
+
         [HttpPost]
         public IActionResult login()
         {
@@ -37,8 +44,6 @@ namespace Project_EFT.Controllers
             StandardUser user = DBConnector.StandardUserLogin(username, password);
             if (user.Id != 0)
             {
-                // user props
-                ViewData["UserStatus"] = "Standard User";
                 HttpContext.Session.SetComplexObject("userInfo", user);
                 return RedirectToAction("Index");
             }
@@ -46,25 +51,39 @@ namespace Project_EFT.Controllers
             Admin admin = DBConnector.AdminLogin(username, password);
             if (admin.Id != 0)
             {
-                // admin props
-                ViewData["UserStatus"] = "Admin";
+                admin.Submissions = DBConnector.GetAdminSubmissionsByID(admin.Id);
                 HttpContext.Session.SetComplexObject("adminInfo", admin);
-
-                // redirect to /, not /Home/login, needs session
                 return RedirectToAction("Index");
             }
-            else 
-            {
-                // no user found
-                return RedirectToAction("Index");
-            }
+            HttpContext.Session.SetString("errorMessage", "No user exists with those credentials.");
+            return RedirectToAction("Index");
         }
 
         [HttpPost]
         public IActionResult DeleteUserAccount() 
         {
             string username = Request.Form["username"];
-            DBConnector.DeleteUser(username);
+            if (DBConnector.DoesUsernameExist(username))
+            {
+                if (DBConnector.DeleteUser(username)) {
+                    Admin admin = HttpContext.Session.GetComplexObject<Admin>("adminInfo");
+                    Submission deleteUserSubmission = new Submission("Deleted account with username: " + username, DateTime.Now, admin.Id);
+                    admin.Submissions.Add(deleteUserSubmission);
+                    DBConnector.InsertNewAdminSubmission(deleteUserSubmission);
+                    HttpContext.Session.SetComplexObject<Admin>("adminInfo", admin);
+                    HttpContext.Session.SetString("successMessage", "The account was successfully deleted.");
+                }
+            else
+            {
+                HttpContext.Session.SetString("errorMessage", "An account was found, but was not deleted. Please try again.");
+                HttpContext.Session.SetString("username", username);
+            }
+            }
+            else {
+                HttpContext.Session.SetString("errorMessage", "No account with that username exists.");
+                HttpContext.Session.SetString("username", username);
+            }
+
             return RedirectToAction("Index");
         }
 
