@@ -37,6 +37,9 @@ function verifyInformation(info, type) {
 
         // email check
         case TYPE_EMAIL:
+            if (info.length > 45) {
+                return false;
+            }
             var foundAt = false;
             for (i = 1; i < info.length; i++) {
                 char = info.charAt(i);
