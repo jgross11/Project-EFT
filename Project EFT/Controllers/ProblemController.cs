@@ -74,6 +74,33 @@ namespace Project_EFT.Controllers
             return View("Problem");
         }
 
+        public IActionResult AddProblemPage()
+        {
+            
+            return View();
+        }
+
+
+        [HttpPost]
+        public IActionResult AddProblem()
+        {
+            Problem problem = new Problem(0, Request.Form["Title"], Request.Form["question"], Request.Form["answer"], 0, 0);
+
+            if(problem.Title.Equals("") || problem.Question.Equals("") || problem.Answer.Equals(""))
+            {
+                ViewData["message"] = "One of the entries was left blank, please try again.";
+            }
+            else
+            {
+                DBConnector.InsertNewProblem(problem);
+                ViewData["message"] = "Your new problem has been added to the list of problems!";
+            }
+
+
+
+            return View("AddProblemPage");
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
