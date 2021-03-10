@@ -30,6 +30,13 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="ProblemList">Problems</a>
                         </li>
                         @{
+                            if (session.ContainsKey("adminInfo"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Problem" asp-action="AddProblemPage">Add New Problems</a>
+                                </li>
+                            }
+
                             if (session.ContainsKey("userInfo") || session.ContainsKey("adminInfo"))
                             {
                                 <li class="nav-item">
