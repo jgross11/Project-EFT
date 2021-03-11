@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Project_EFT.Models;
 using Project_EFT.Database;
@@ -40,6 +41,16 @@ namespace Project_EFT.Controllers
                 ViewData["Title"] = problem.Title;
                 ViewData["problemNumber"] = problem.ProblemNumber;
                 ViewData["problem"] = problem.Question;
+                if (HttpContext.Session.ContainsKey("userInfo"))
+                {
+                    StandardUser user = HttpContext.Session.GetComplexObject<StandardUser>("userInfo");
+                    ViewData["showProblem"] = !(DBConnector.GetProblemCorrectValueByUserAndProblemID(user.Id, problem.ProblemNumber));
+                   
+                }
+                else
+                {
+                    ViewData["showProblem"] = false;
+                }
 
             }
             else
@@ -54,22 +65,23 @@ namespace Project_EFT.Controllers
         [HttpPost]
         public IActionResult CheckAnswer()
         {
+
+            //retrieves the user from the session
+            StandardUser user = HttpContext.Session.GetComplexObject<StandardUser>("userInfo");
+
             Problem problem = DBConnector.GetProblemByID(int.Parse(Request.Form["problemNumber"]));
            
-            //TODO this needs a connection to the user that is signed in
-            //as well as some form of "submission" to the database, in order
-            // to mark off the user as having completed a problem, this also
-            //will keep a user from resubmitting a problem after marking it correct
-           
+            //TODO Add this to session?
             //Set the problem information to be passed to the front end
             ViewData["ShowPage"] = true;
             ViewData["Title"] = problem.Title;
             ViewData["problemNumber"] = problem.ProblemNumber;
             ViewData["problem"] = problem.Question;
             ViewData["isCorrect"] = Request.Form["answer"].Equals(problem.Answer);
-           
-              
-
+            ViewData["showProblem"] = !((bool)ViewData["isCorrect"]);
+            //creates a new submission and sends it to the DB
+            AnswerSubmission answer = new AnswerSubmission(Request.Form["answer"], DateTime.Now, user.Id, (bool)ViewData["isCorrect"], problem.ProblemNumber);
+            DBConnector.InsertNewAnswerSubmission(answer);
 
             return View("Problem");
         }
