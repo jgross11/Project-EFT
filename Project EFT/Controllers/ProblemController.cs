@@ -103,8 +103,14 @@ namespace Project_EFT.Controllers
             }
             else
             {
-                DBConnector.InsertNewProblem(problem);
-                ViewData["message"] = "Your new problem has been added to the list of problems!";
+                if (DBConnector.InsertNewProblem(problem))
+                {
+                    ViewData["message"] = "Your new problem has been added to the list of problems!";
+                }
+                else
+                {
+                    ViewData["message"] = "Something went wrong and your problem wasn't added, please try again.";
+                }
             }
 
 
