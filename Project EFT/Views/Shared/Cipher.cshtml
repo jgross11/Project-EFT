@@ -19,12 +19,11 @@
     }
 }
 
-@if (ViewData["name"] != null)
-{
+
     <h1>@ViewData["name"] Cipher</h1>
 
     <!-- encryption form-->
-    <form action="~/GenericCipher/encrypt" method="post">
+    <form action="~/Cipher/encrypt" method="post">
         <h6>Encrypt Cipher</h6>
         <textarea name="plainTextInput" cols="50" rows="4" placeholder="Enter plaintext here...">@plainTextInput</textarea>
         <br>
@@ -36,7 +35,7 @@
     </form>
 
     <!-- decryption form-->
-    <form action="~/GenericCipher/decrypt" method="post">
+    <form action="~/Cipher/decrypt" method="post">
         <h6>Decrypt Cipher</h6>
         <textarea name="cipherTextInput" cols="50" rows="4" placeholder="Enter ciphertext here...">@cipherTextInput</textarea>
         <br>
@@ -46,8 +45,4 @@
         <input type="number" name="decryptShiftAmount" value="@decryptShiftAmount" /><br />
         <input type="submit" value="Decrypt">
     </form>
-}
-else
-{
-    <h1>This cipher page has not yet been created!</h1>
 }
