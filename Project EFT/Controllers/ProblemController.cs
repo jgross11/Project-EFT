@@ -30,7 +30,6 @@ namespace Project_EFT.Controllers
         public IActionResult Problem(int ID)
         {
             //requests a specific problem from the DB, by its ID
-            //TODO have the ID be generic based on the number passed by the URL
             Problem problem = DBConnector.GetProblemByID(ID);
 
             //checks to see if the problem returned from the DB is an actual problem or not
