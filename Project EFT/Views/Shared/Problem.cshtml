@@ -9,7 +9,7 @@
     <h1>@ViewData["Title"]</h1>
     <h2>This is problem number @ViewData["problemNumber"].</h2>
     <div>@ViewData["problem"]</div>
-    @if (session.ContainsKey("userInfo"))
+    @if (session.ContainsKey("userInfo") && (bool)ViewData["showProblem"])
     {
         <!-- submission form-->
         <form action="~/Problem/CheckAnswer" method="post">
@@ -18,6 +18,10 @@
             <input type="hidden" id="problemNumber" name="problemNumber" value="@ViewData["problemNumber"]" />
             <div></div>
         </form>
+    }
+    else if (session.ContainsKey("userInfo") && !((bool)ViewData["showProblem"]))
+    {
+        <br /><br /><div>Congratulations, this problem has been completed!</div>
     }
     else
     {
