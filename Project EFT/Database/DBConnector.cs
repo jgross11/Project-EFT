@@ -253,13 +253,10 @@ namespace Project_EFT.Database
             //updates the correct field in the problem based on attempts vs. completions
             if (submission.IsCorrect)
             {
-                problem.Attempts++;
                 problem.Completions++;
             }
-            else
-            {
-                problem.Attempts++;
-            }
+            problem.Attempts++;
+            
 
             //updates the problem in the DB
             UpdateProblem(problem);
