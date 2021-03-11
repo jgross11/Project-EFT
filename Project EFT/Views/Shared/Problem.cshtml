@@ -27,16 +27,11 @@
     {
         <br /><br /><div>In order to submit a solution you must sign in to a User account.</div>
     }
-    @if (ViewData["isCorrect"] == null)
-    {
-
-
-    }
-    else if ((bool)ViewData["isCorrect"])
+    @if ((ViewData["isCorrect"] != null && (bool)ViewData["isCorrect"]))
     {
         <div style="color:green">Correct!</div>
     }
-    else if (!(bool)ViewData["isCorrect"])
+    else if ((ViewData["isCorrect"] != null && !(bool)ViewData["isCorrect"]))
     {
         <div style="color:crimson">Incorrect, please try again!</div>
     }
