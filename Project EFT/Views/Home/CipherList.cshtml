@@ -1,0 +1,21 @@
+﻿@using Project_EFT.Data_Classes;
+@{
+    // fetch problem array from view data
+    String[] cipher = (String[])ViewData["ciphers"];
+}
+
+<h1> Ciphers </h1>
+<table>
+    <tr>
+        <th>Title</th>
+    </tr>
+    @{
+        // generate row for each cipher in cipher array
+        foreach (String cipherName in cipher)
+        {
+            <tr>
+                <th><a href="/cipher?name=@cipherName">@cipherName</a></th>
+            </tr>
+        }
+    }
+</table>

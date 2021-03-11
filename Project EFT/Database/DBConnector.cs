@@ -209,6 +209,20 @@ namespace Project_EFT.Database
             return problems.ToArray();
         }
 
+        public static String[] GetCipherNameList()
+        {
+            MySqlCommand command = MakeCommand("SELECT * FROM Ciphers");
+            MySqlDataReader reader = command.ExecuteReader();
+            List<String> ciphers = new List<String>();
+            // need row count
+            while (reader.Read())
+            {
+                ciphers.Add(reader.GetString(1));
+            }
+            connection.Close();
+            return ciphers.ToArray();
+        }
+
         public static bool InsertNewAdminSubmission(Submission submission)
         {
             MySqlCommand command = MakeCommand("INSERT INTO AdminSubmissions(Admin_ID, AdminSubmissions_Content, AdminSubmissions_SubmissionDate) VALUES(@id, @content, @date)");
@@ -286,7 +300,6 @@ namespace Project_EFT.Database
             
         }
 
-        //this would be much better if the AnswerSubmission had a ProblemID in it as well...should be editted later
         public static bool GetProblemCorrectValueByUserAndProblemID(int userID, int problemID)
         {
             MySqlCommand command = MakeCommand("SELECT AnswerSubmissions_IsCorrect FROM AnswerSubmissions WHERE User_ID = @user_id AND AnswerSubmissions_ProblemID = @problem_id AND AnswerSubmissions_IsCorrect = @correct");

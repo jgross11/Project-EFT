@@ -95,6 +95,14 @@ namespace Project_EFT.Controllers
             return View();
         }
 
+        public IActionResult CipherList()
+        {
+
+            // fetch problems from DB and render in view
+            ViewData["ciphers"] = DBConnector.GetCipherNameList();
+            return View();
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
