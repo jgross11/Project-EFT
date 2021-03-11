@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -58,7 +59,7 @@ namespace Project_EFT.Data_Classes
                 }
                 else 
                 {
-                    plaintexts[0] += alphabet[(index - decryptionShiftAmount) % alphabet.Length];
+                    plaintexts[0] += alphabet[(index - decryptionShiftAmount + alphabet.Length) % alphabet.Length];
                 }
             }
             return plaintexts;
