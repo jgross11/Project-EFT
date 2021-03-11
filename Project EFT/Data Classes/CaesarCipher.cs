@@ -40,8 +40,8 @@ namespace Project_EFT.Data_Classes
                 // otherwise, do shift
                 else
                 {
-                    // TODO this doesn't work for negative shift values
-                    ciphertext += alphabet[(index + encryptionShiftAmount) % alphabet.Length];
+                    int newPosition = (((index + encryptionShiftAmount) % alphabet.Length) + alphabet.Length) % alphabet.Length;
+                    ciphertext += alphabet[newPosition];
                 }
             }
             return ciphertext;
@@ -59,7 +59,8 @@ namespace Project_EFT.Data_Classes
                 }
                 else 
                 {
-                    plaintexts[0] += alphabet[(index - decryptionShiftAmount + alphabet.Length) % alphabet.Length];
+                    int newPosition = (((index - decryptionShiftAmount) % alphabet.Length) + alphabet.Length) % alphabet.Length;
+                    plaintexts[0] += alphabet[newPosition];
                 }
             }
             return plaintexts;
