@@ -9,24 +9,29 @@
     <h1>@ViewData["Title"]</h1>
     <h2>This is problem number @ViewData["problemNumber"].</h2>
     <div>@ViewData["problem"]</div>
-    @if (session.ContainsKey("userInfo") && (bool)ViewData["showProblem"])
+    @if (session.ContainsKey("userInfo"))
     {
-        <!-- submission form-->
-        <form action="~/Problem/CheckAnswer" method="post">
-            <input type="text" id="answer" name="answer" /><br />
-            <input type="submit" value="Submit your answer!" />
-            <input type="hidden" id="problemNumber" name="problemNumber" value="@ViewData["problemNumber"]" />
-            <div></div>
-        </form>
-    }
-    else if (session.ContainsKey("userInfo") && !((bool)ViewData["showProblem"]))
-    {
-        <br /><br /><div>Congratulations, this problem has been completed!</div>
+
+        if ((bool)ViewData["showProblem"])
+        {
+            <!-- submission form-->
+            <form action="~/Problem/CheckAnswer" method="post">
+                <input type="text" id="answer" name="answer" /><br />
+                <input type="submit" value="Submit your answer!" />
+                <input type="hidden" id="problemNumber" name="problemNumber" value="@ViewData["problemNumber"]" />
+                <div></div>
+            </form>
+        }
+        else
+        {
+            <br /><br /><div>Congratulations, this problem has been completed!</div>
+        }
     }
     else
     {
         <br /><br /><div>In order to submit a solution you must sign in to a User account.</div>
     }
+
     @if ((ViewData["isCorrect"] != null && (bool)ViewData["isCorrect"]))
     {
         <div style="color:green">Correct!</div>
