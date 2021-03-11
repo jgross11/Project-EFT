@@ -22,9 +22,9 @@ namespace Project_EFT.Controllers
         }
 
         // localhost.../GenericProblem, see Startup.cs for more info
-        public IActionResult GetPage()
+        public IActionResult GetPage(int ID)
         {
-            return Problem();
+            return Problem(ID);
         }
 
         public IActionResult Problem(int ID)
