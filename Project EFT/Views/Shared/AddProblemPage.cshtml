@@ -1,0 +1,30 @@
+﻿@using Microsoft.AspNetCore.Http;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@using Project_EFT.Data_Classes;
+@{ISession session = HttpContextAccessor.HttpContext.Session; }
+
+@if (session.ContainsKey("adminInfo"))
+{
+    <h1>You can create a new problem here!</h1>
+    <!-- submission form-->
+    <form action="~/Problem/AddProblem" method="post">
+        Enter Problem Title: <br />
+        <input type="text" id="title" name="title" /><br />
+        Enter Problem Question: <br />
+        <textarea name="question" id="question" cols="50" rows="4"> </textarea> <br />
+        Enter Problem Answer: <br />
+        <textarea name="answer" id="answer" cols="50" rows="4"> </textarea> <br />
+        <input type="submit" value="Submit your new problem!" />
+        <div></div>
+    </form>
+
+    @if (ViewData["message"] != null)
+    {
+        <div>@ViewData["message"]</div>
+    }
+    
+}
+else
+{
+    <h1>This is a Top Secret Page...How did you even get here?</h1>
+}

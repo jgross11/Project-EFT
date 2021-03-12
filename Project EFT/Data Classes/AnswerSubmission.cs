@@ -9,9 +9,12 @@ namespace Project_EFT.Data_Classes
     {
         public bool IsCorrect { get; set; }
 
-        public AnswerSubmission(string content, DateTime submissionDate, int id, bool isCorrect) : base(content, submissionDate, id)
+        public int ProblemId { get; set; }
+
+        public AnswerSubmission(string content, DateTime submissionDate, int id, bool isCorrect, int problemID) : base(content, submissionDate, id)
         {
             IsCorrect = isCorrect;
+            ProblemId = problemID;
         }
     }
 }

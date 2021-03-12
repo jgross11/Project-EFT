@@ -1,4 +1,7 @@
-﻿
+﻿@using Microsoft.AspNetCore.Http;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@using Project_EFT.Data_Classes;
+@{ISession session = HttpContextAccessor.HttpContext.Session; }
 
 
 @if ((bool)ViewData["ShowPage"])
@@ -6,25 +9,34 @@
     <h1>@ViewData["Title"]</h1>
     <h2>This is problem number @ViewData["problemNumber"].</h2>
     <div>@ViewData["problem"]</div>
-
-    <!-- submission form-->
-    <form action="~/Problem/CheckAnswer" method="post">
-        <input type="text" id="answer" name="answer" /><br />
-        <input type="submit" value="Submit your answer!" />
-        <input type="hidden" id="problemNumber" name="problemNumber" value="@ViewData["problemNumber"]" />
-        <div></div>
-    </form>
-
-    @if (ViewData["isCorrect"] == null)
+    @if (session.ContainsKey("userInfo"))
     {
 
-
+        if ((bool)ViewData["showProblem"])
+        {
+            <!-- submission form-->
+            <form action="~/Problem/CheckAnswer" method="post">
+                <input type="text" id="answer" name="answer" /><br />
+                <input type="submit" value="Submit your answer!" />
+                <input type="hidden" id="problemNumber" name="problemNumber" value="@ViewData["problemNumber"]" />
+                <div></div>
+            </form>
+        }
+        else
+        {
+            <br /><br /><div>Congratulations, this problem has been completed!</div>
+        }
     }
-    else if ((bool)ViewData["isCorrect"])
+    else
+    {
+        <br /><br /><div>In order to submit a solution you must sign in to a User account.</div>
+    }
+
+    @if ((ViewData["isCorrect"] != null && (bool)ViewData["isCorrect"]))
     {
         <div style="color:green">Correct!</div>
     }
-    else if (!(bool)ViewData["isCorrect"])
+    else if ((ViewData["isCorrect"] != null && !(bool)ViewData["isCorrect"]))
     {
         <div style="color:crimson">Incorrect, please try again!</div>
     }

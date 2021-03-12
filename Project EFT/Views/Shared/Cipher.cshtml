@@ -1,0 +1,48 @@
+@{
+
+    // default form values
+    string cipherTextInput = "";
+    string plainTextInput = "";
+    string alphabet = "abcdefghijklmnopqrstuvwxyz";
+    int encryptShiftAmount = 3;
+    int decryptShiftAmount = 3;
+
+    // if a form on this page was submitted
+    if (Context.Request.Method == "POST")
+    {
+        // populate with form / calculated data
+        cipherTextInput = ViewData["cipherTextInput"].ToString();
+        plainTextInput = ViewData["plainTextInput"].ToString();
+        alphabet = ViewData["alphabet"].ToString();
+        int.TryParse(ViewData["encryptShiftAmount"].ToString(), out encryptShiftAmount);
+        int.TryParse(ViewData["decryptShiftAmount"].ToString(), out decryptShiftAmount);
+    }
+}
+
+
+    <h1>@ViewData["name"] Cipher</h1>
+
+    <!-- encryption form-->
+    <form action="~/Cipher/encrypt" method="post">
+        <h6>Encrypt Cipher</h6>
+        <textarea name="plainTextInput" cols="50" rows="4" placeholder="Enter plaintext here...">@plainTextInput</textarea>
+        <br>
+        Enter alphabet:
+        <input type="text" name="alphabet" value="@alphabet" /><br />
+        Enter shift amount:
+        <input type="number" name="encryptShiftAmount" value="@encryptShiftAmount" /><br />
+        <input type="submit" value="Encrypt">
+    </form>
+
+    <!-- decryption form-->
+    <form action="~/Cipher/decrypt" method="post">
+        <h6>Decrypt Cipher</h6>
+        <textarea name="cipherTextInput" cols="50" rows="4" placeholder="Enter ciphertext here...">@cipherTextInput</textarea>
+        <br>
+        Enter alphabet:
+        <input type="text" name="alphabet" value="@alphabet" /><br />
+        Enter shift amount:
+        <input type="number" name="decryptShiftAmount" value="@decryptShiftAmount" /><br />
+        <input type="submit" value="Decrypt">
+    </form>
+

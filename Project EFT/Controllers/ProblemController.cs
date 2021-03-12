@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Project_EFT.Models;
 using Project_EFT.Database;
@@ -21,15 +22,14 @@ namespace Project_EFT.Controllers
         }
 
         // localhost.../GenericProblem, see Startup.cs for more info
-        public IActionResult GetPage()
+        public IActionResult GetPage(int ID)
         {
-            return Problem();
+            return Problem(ID);
         }
 
         public IActionResult Problem(int ID)
         {
             //requests a specific problem from the DB, by its ID
-            //TODO have the ID be generic based on the number passed by the URL
             Problem problem = DBConnector.GetProblemByID(ID);
 
             //checks to see if the problem returned from the DB is an actual problem or not
@@ -40,6 +40,16 @@ namespace Project_EFT.Controllers
                 ViewData["Title"] = problem.Title;
                 ViewData["problemNumber"] = problem.ProblemNumber;
                 ViewData["problem"] = problem.Question;
+                if (HttpContext.Session.ContainsKey("userInfo"))
+                {
+                    StandardUser user = HttpContext.Session.GetComplexObject<StandardUser>("userInfo");
+                    ViewData["showProblem"] = !(DBConnector.GetProblemCorrectValueByUserAndProblemID(user.Id, problem.ProblemNumber));
+                   
+                }
+                else
+                {
+                    ViewData["showProblem"] = false;
+                }
 
             }
             else
@@ -54,24 +64,58 @@ namespace Project_EFT.Controllers
         [HttpPost]
         public IActionResult CheckAnswer()
         {
+
+            //retrieves the user from the session
+            StandardUser user = HttpContext.Session.GetComplexObject<StandardUser>("userInfo");
+
             Problem problem = DBConnector.GetProblemByID(int.Parse(Request.Form["problemNumber"]));
            
-            //TODO this needs a connection to the user that is signed in
-            //as well as some form of "submission" to the database, in order
-            // to mark off the user as having completed a problem, this also
-            //will keep a user from resubmitting a problem after marking it correct
-           
+            //TODO Add this to session?
             //Set the problem information to be passed to the front end
             ViewData["ShowPage"] = true;
             ViewData["Title"] = problem.Title;
             ViewData["problemNumber"] = problem.ProblemNumber;
             ViewData["problem"] = problem.Question;
             ViewData["isCorrect"] = Request.Form["answer"].Equals(problem.Answer);
-           
-              
-
+            ViewData["showProblem"] = !((bool)ViewData["isCorrect"]);
+            //creates a new submission and sends it to the DB
+            AnswerSubmission answer = new AnswerSubmission(Request.Form["answer"], DateTime.Now, user.Id, (bool)ViewData["isCorrect"], problem.ProblemNumber);
+            DBConnector.InsertNewAnswerSubmission(answer);
 
             return View("Problem");
+        }
+
+        public IActionResult AddProblemPage()
+        {
+            
+            return View();
+        }
+
+
+        [HttpPost]
+        public IActionResult AddProblem()
+        {
+            Problem problem = new Problem(0, Request.Form["Title"], Request.Form["question"], Request.Form["answer"], 0, 0);
+
+            if(problem.Title.Equals("") || problem.Question.Equals("") || problem.Answer.Equals(""))
+            {
+                ViewData["message"] = "One of the entries was left blank, please try again.";
+            }
+            else
+            {
+                if (DBConnector.InsertNewProblem(problem))
+                {
+                    ViewData["message"] = "Your new problem has been added to the list of problems!";
+                }
+                else
+                {
+                    ViewData["message"] = "Something went wrong and your problem wasn't added, please try again.";
+                }
+            }
+
+
+
+            return View("AddProblemPage");
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

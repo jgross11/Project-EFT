@@ -10,19 +10,19 @@ using Project_EFT.Models;
 
 namespace Project_EFT.Controllers
 {
-    public class GenericCipherController : Controller
+    public class CipherController : Controller
     {
-        private readonly ILogger<GenericCipherController> _logger;
+        private readonly ILogger<CipherController> _logger;
 
-        public GenericCipherController(ILogger<GenericCipherController> logger)
+        public CipherController(ILogger<CipherController> logger)
         {
             _logger = logger;
         }
 
-        // localhost.../GenericCipher, see Startup.cs for more info
-        public IActionResult GetPage()
+        // localhost.../Cipher?name=(name), see Startup.cs for more info
+        public IActionResult GetPage(String name)
         {
-            return GenericCipher();
+            return Cipher(name);
         }
 
         // encryption POST
@@ -48,7 +48,7 @@ namespace Project_EFT.Controllers
             ViewData["plainTextInput"] = Request.Form["plainTextInput"];
 
             // refresh page
-            return View("GenericCipher");
+            return View("Cipher");
         }
 
         [HttpPost]
@@ -73,15 +73,17 @@ namespace Project_EFT.Controllers
             ViewData["decryptShiftAmount"] = Request.Form["decryptShiftAmount"];
             ViewData["cipherTextInput"] = Request.Form["cipherTextInput"];
 
-            return View("GenericCipher");
+            return View("Cipher");
         }
 
-        public IActionResult GenericCipher()
+        //TODO: Have this change more than just the Title of the page, currently regardless of name, you are sent to 
+        //the caesar cipher page...
+        public IActionResult Cipher(string name)
         {
             // must set viewdata here, not in initial GetPage
-            ViewData["echo"] = "Hello again, World!";
+            ViewData["name"] = name;
 
-            // attempts to locate cshtml file with name GenericCipher in GenericCipher folder and Shared folder
+            // attempts to locate cshtml file with name Cipher in Cipher folder and Shared folder
             return View();
         }
 

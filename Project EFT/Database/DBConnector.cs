@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 using Project_EFT.Data_Classes;
+using System.Diagnostics;
 
 namespace Project_EFT.Database
 {
@@ -153,6 +154,20 @@ namespace Project_EFT.Database
             return result == 1 ? CREDENTIAL_CHANGE_SUCCESS : DB_FAILURE;
         }
 
+        public static int UpdateProblem(Problem problem)
+        {
+            MySqlCommand command = MakeCommand("UPDATE Problems SET Problem_Title = @title, Problem_Answer = @answer, Problem_Attempts = @attempts, Problem_Completions = @completions WHERE Problem_Number = @id");
+            command.Parameters.AddWithValue("@title", problem.Title);
+            command.Parameters.AddWithValue("@answer", problem.Answer);
+            command.Parameters.AddWithValue("@attempts", problem.Attempts);
+            command.Parameters.AddWithValue("@completions", problem.Completions);
+            command.Parameters.AddWithValue("@id", problem.ProblemNumber);
+            command.Prepare();
+            int result = command.ExecuteNonQuery();
+
+            return result;
+        }
+
         public static List<Submission> GetAdminSubmissionsByID(int id)
         {
             List<Submission> subs = new List<Submission>();
@@ -194,6 +209,20 @@ namespace Project_EFT.Database
             return problems.ToArray();
         }
 
+        public static String[] GetCipherNameList()
+        {
+            MySqlCommand command = MakeCommand("SELECT * FROM Ciphers");
+            MySqlDataReader reader = command.ExecuteReader();
+            List<String> ciphers = new List<String>();
+            // need row count
+            while (reader.Read())
+            {
+                ciphers.Add(reader.GetString(1));
+            }
+            connection.Close();
+            return ciphers.ToArray();
+        }
+
         public static bool InsertNewAdminSubmission(Submission submission)
         {
             MySqlCommand command = MakeCommand("INSERT INTO AdminSubmissions(Admin_ID, AdminSubmissions_Content, AdminSubmissions_SubmissionDate) VALUES(@id, @content, @date)");
@@ -202,6 +231,35 @@ namespace Project_EFT.Database
             command.Parameters.AddWithValue("@date", submission.SubmissionDate);
             command.Prepare();
             int result = command.ExecuteNonQuery();
+            connection.Close();
+
+            // submission added --> one row was affected (the added one)
+            return result == 1;
+        }
+
+        public static bool InsertNewAnswerSubmission(AnswerSubmission submission)
+        {
+            MySqlCommand command = MakeCommand("INSERT INTO AnswerSubmissions(User_ID, AnswerSubmissions_Answer, AnswerSubmissions_SubmissionDate, AnswerSubmissions_IsCorrect, AnswerSubmissions_ProblemID) VALUES(@user_id, @content, @date, @correct, @problem_id)");
+            command.Parameters.AddWithValue("@user_id", submission.UserID);
+            command.Parameters.AddWithValue("@content", submission.Content);
+            command.Parameters.AddWithValue("@date", submission.SubmissionDate);
+            command.Parameters.AddWithValue("@correct", submission.IsCorrect);
+            command.Parameters.AddWithValue("@problem_id", submission.ProblemId);
+            command.Prepare();
+            int result = command.ExecuteNonQuery();
+
+            Problem problem = GetProblemByID(submission.ProblemId);
+
+            //updates the correct field in the problem based on attempts vs. completions
+            if (submission.IsCorrect)
+            {
+                problem.Completions++;
+            }
+            problem.Attempts++;
+            
+
+            //updates the problem in the DB
+            UpdateProblem(problem);
             connection.Close();
 
             // submission added --> one row was affected (the added one)
@@ -237,6 +295,20 @@ namespace Project_EFT.Database
             return new Problem();
 
             
+        }
+
+        public static bool GetProblemCorrectValueByUserAndProblemID(int userID, int problemID)
+        {
+            MySqlCommand command = MakeCommand("SELECT AnswerSubmissions_IsCorrect FROM AnswerSubmissions WHERE User_ID = @user_id AND AnswerSubmissions_ProblemID = @problem_id AND AnswerSubmissions_IsCorrect = TRUE");
+            command.Parameters.AddWithValue("@user_id", userID);
+            command.Parameters.AddWithValue("@problem_id", problemID);
+            command.Prepare();
+            MySqlDataReader reader = command.ExecuteReader();
+            bool result = reader.Read();
+            
+            connection.Close();
+            
+            return result;
         }
 
         public static bool InsertNewUser(StandardUser user)
