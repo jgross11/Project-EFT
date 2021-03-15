@@ -14,6 +14,7 @@ namespace Project_EFT.Database
     {
         public static MySqlConnection connection;
         public static string connectionString;
+        public static List<Problem> problems;
 
         public const int DB_FAILURE = -1;
         public const int CREDENTIAL_CHANGE_SUCCESS = 100;
@@ -23,6 +24,9 @@ namespace Project_EFT.Database
         {
             string[] lines = System.IO.File.ReadAllLines("../../info.txt");
             connectionString = @"server=" + lines[0] + ";userid=" + lines[1] + ";password=" + lines[2] + ";database=" + lines[3];
+            
+            // cache list of all problems currently in db
+            GetProblemsList();
         }
 
         public static bool OpenConnection() 
@@ -48,9 +52,13 @@ namespace Project_EFT.Database
             command.Prepare();
             int numRowsAffected = command.ExecuteNonQuery();
             connection.Close();
-            
-            // problem added --> one row was affected (the added one)
-            return numRowsAffected == 1;
+
+            if (numRowsAffected == 1) {
+                problem.ProblemNumber = (int) command.LastInsertedId;
+                problems.Add(problem);
+                return true;
+            }
+            return false;
         }
 
         public static int TryUpdateUsername(User user, string newUsername)
@@ -165,6 +173,19 @@ namespace Project_EFT.Database
             command.Prepare();
             int result = command.ExecuteNonQuery();
 
+            // update info in cached problem list
+            if (result == 1) 
+            {
+                for (int i =0; i < problems.Count; i++)
+                {
+                    if (problems[i].ProblemNumber == problem.ProblemNumber) 
+                    {
+                        problems[i] = problem;
+                        break;
+                    }
+                }
+            }
+
             return result;
         }
 
@@ -190,9 +211,9 @@ namespace Project_EFT.Database
 
         public static Problem[] GetProblemsList()
         {
+            problems = new List<Problem>();
             MySqlCommand command = MakeCommand("SELECT * FROM Problems");
             MySqlDataReader reader = command.ExecuteReader();
-            List<Problem> problems = new List<Problem>();
             // need row count
             while (reader.Read()) 
             {
@@ -305,24 +326,23 @@ namespace Project_EFT.Database
             command.Prepare();
             MySqlDataReader reader = command.ExecuteReader();
             bool result = reader.Read();
-            
             connection.Close();
             
             return result;
         }
 
-        public static bool InsertNewUser(StandardUser user)
+        public static int InsertNewUser(StandardUser user)
         {
             MySqlCommand command = MakeCommand("INSERT INTO Users(User_Username, User_Password, User_Email) VALUES(@username, @password, @email)");
             command.Parameters.AddWithValue("@username", user.Username);
             command.Parameters.AddWithValue("@password", user.Password);
             command.Parameters.AddWithValue("@email", user.Email);
             command.Prepare();
-            int result = command.ExecuteNonQuery();
+            int result = command.ExecuteNonQuery() == 1 ? (int)command.LastInsertedId : -1;
             connection.Close();
 
             // user added --> one row was affected (the added one)
-            return result == 1;
+            return result;
         }
 
         public static bool DoesEmailExist(string email)
@@ -426,14 +446,62 @@ namespace Project_EFT.Database
 
         public static bool DeleteUser(string username)
         {
-            MySqlCommand command = MakeCommand("DELETE FROM Users WHERE User_Username = @username");
+            MySqlCommand command = MakeCommand("SELECT User_ID FROM Users WHERE User_Username = @username");
             command.Parameters.AddWithValue("@username", username);
             command.Prepare();
-            int result = command.ExecuteNonQuery();
-            connection.Close();
+            MySqlDataReader reader = command.ExecuteReader();
+            if (reader.Read())
+            {
+                int userID = reader.GetInt32(0);
+                connection.Close();
 
-            // user deleted --> one row was affected (the deleted one)
-            return result == 1;
+                // why does ado.net not like multiple statements in one command ahh
+
+                // remove user's attempts
+                command = MakeCommand(@"
+                                        UPDATE Problems, AnswerSubmissions SET Problem_Attempts = Problem_Attempts - 1
+                                        WHERE Problem_Number = AnswerSubmissions.AnswerSubmissions_ProblemID AND AnswerSubmissions.User_ID = @id  AND Problem_Attempts > 0
+                                        "
+                                      );
+
+                command.Parameters.AddWithValue("@id", userID);
+                command.Prepare();
+                command.ExecuteNonQuery();
+                command.Parameters.Clear();
+
+                // remove user's completions
+                command.CommandText = @"UPDATE Problems, AnswerSubmissions SET Problem_Completions = Problem_Completions - 1, Problem_Attempts = Problem_Attempts - 1 
+                                        WHERE Problem_Number = AnswerSubmissions.AnswerSubmissions_ProblemID AND AnswerSubmissions.User_ID = @id AND AnswerSubmissions_IsCorrect = TRUE AND Problem_Completions > 0
+                                       ";
+                command.Parameters.AddWithValue("@id", userID);
+                command.Prepare();
+                command.ExecuteNonQuery();
+                command.Parameters.Clear();
+
+                // remove user's submissions
+                command.CommandText = "DELETE FROM AnswerSubmissions WHERE User_ID = @id";
+                command.Parameters.AddWithValue("@id", userID);
+                command.Prepare();
+                command.ExecuteNonQuery();
+                command.Parameters.Clear();
+
+                // remove user
+                command.CommandText = "DELETE FROM Users WHERE User_Username = @username";
+                command.Parameters.AddWithValue("@username", username);
+                command.Prepare();
+                int result = command.ExecuteNonQuery();
+                connection.Close();
+
+                // refresh problems attempt / completion count the bad way because time crunch
+                GetProblemsList();
+
+                // user deleted --> one row was affected (the deleted one)
+                return result == 1;
+            }
+            else 
+            {
+                return false;
+            }
         }
     }
 }

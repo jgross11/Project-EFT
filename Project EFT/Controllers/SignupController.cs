@@ -33,8 +33,10 @@ namespace Project_EFT.Controllers
             else
             {
                 StandardUser newUser = new StandardUser(username, password, email);
-                if (DBConnector.InsertNewUser(newUser))
+                int result = DBConnector.InsertNewUser(newUser);
+                if (result != -1)
                 {
+                    newUser.Id = result;
                     HttpContext.Session.SetComplexObject("userInfo", newUser);
                     return RedirectToAction("Index", "Home");
                 }
