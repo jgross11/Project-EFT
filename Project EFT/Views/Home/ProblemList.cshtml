@@ -1,7 +1,8 @@
 ﻿@using Project_EFT.Data_Classes;
+@using Project_EFT.Database;
 @{
     // fetch problem array from view data
-    Problem[] problems = (Problem[]) ViewData["problems"];
+    Problem[] problems = DBConnector.problems.ToArray();
 }
 
 <h1> Problems </h1>
