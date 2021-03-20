@@ -24,12 +24,12 @@ namespace Project_EFT.Database
         {
             string[] lines = System.IO.File.ReadAllLines("../../info.txt");
             connectionString = @"server=" + lines[0] + ";userid=" + lines[1] + ";password=" + lines[2] + ";database=" + lines[3];
-            
+
             // cache list of all problems currently in db
             GetProblemsList();
         }
 
-        public static bool OpenConnection() 
+        public static bool OpenConnection()
         {
             // dependent on the structure of the file...
             connection = new MySqlConnection(connectionString);
@@ -37,7 +37,7 @@ namespace Project_EFT.Database
             return true;
         }
 
-        public static MySqlCommand MakeCommand(string statement) 
+        public static MySqlCommand MakeCommand(string statement)
         {
             OpenConnection();
             return new MySqlCommand(statement, connection);
@@ -53,8 +53,9 @@ namespace Project_EFT.Database
             int numRowsAffected = command.ExecuteNonQuery();
             connection.Close();
 
-            if (numRowsAffected == 1) {
-                problem.ProblemNumber = (int) command.LastInsertedId;
+            if (numRowsAffected == 1)
+            {
+                problem.ProblemNumber = (int)command.LastInsertedId;
                 problems.Add(problem);
                 return true;
             }
@@ -174,11 +175,11 @@ namespace Project_EFT.Database
             int result = command.ExecuteNonQuery();
 
             // update info in cached problem list
-            if (result == 1) 
+            if (result == 1)
             {
-                for (int i =0; i < problems.Count; i++)
+                for (int i = 0; i < problems.Count; i++)
                 {
-                    if (problems[i].ProblemNumber == problem.ProblemNumber) 
+                    if (problems[i].ProblemNumber == problem.ProblemNumber)
                     {
                         problems[i] = problem;
                         break;
@@ -187,6 +188,29 @@ namespace Project_EFT.Database
             }
 
             return result;
+        }
+
+        public static List<AnswerSubmission> GetAnswerSubmissionsByID(int id) 
+        {
+            List<AnswerSubmission> subs = new List<AnswerSubmission>();
+            MySqlCommand command = MakeCommand("SELECT * FROM AnswerSubmissions WHERE User_ID = @id");
+            command.Parameters.AddWithValue("@id", id);
+            command.Prepare();
+            MySqlDataReader reader = command.ExecuteReader();
+            // need row count
+            while (reader.Read())
+            {
+                // (string content, DateTime submissionDate, int id, bool isCorrect, int problemID)
+                subs.Add(new AnswerSubmission(
+                    reader.GetString(2),
+                    reader.GetDateTime(3),
+                    reader.GetInt32(1),
+                    reader.GetBoolean(4),
+                    reader.GetInt32(5)
+                ));
+            }
+            connection.Close();
+            return subs;
         }
 
         public static List<Submission> GetAdminSubmissionsByID(int id)
@@ -215,7 +239,7 @@ namespace Project_EFT.Database
             MySqlCommand command = MakeCommand("SELECT * FROM Problems");
             MySqlDataReader reader = command.ExecuteReader();
             // need row count
-            while (reader.Read()) 
+            while (reader.Read())
             {
                 problems.Add(new Problem(
                     reader.GetInt32(0),
@@ -277,7 +301,7 @@ namespace Project_EFT.Database
                 problem.Completions++;
             }
             problem.Attempts++;
-            
+
 
             //updates the problem in the DB
             UpdateProblem(problem);
@@ -295,7 +319,7 @@ namespace Project_EFT.Database
             command.Parameters.AddWithValue("@id", ID);
             command.Prepare();
             MySqlDataReader reader = command.ExecuteReader();
-            
+
             //if a problem was returned, read it and create a new problem to return
             if (reader.Read())
             {
@@ -315,7 +339,7 @@ namespace Project_EFT.Database
             //return an empty problem if a problem was not returned from the DB
             return new Problem();
 
-            
+
         }
 
         public static bool GetProblemCorrectValueByUserAndProblemID(int userID, int problemID)
@@ -327,7 +351,7 @@ namespace Project_EFT.Database
             MySqlDataReader reader = command.ExecuteReader();
             bool result = reader.Read();
             connection.Close();
-            
+
             return result;
         }
 
@@ -409,7 +433,8 @@ namespace Project_EFT.Database
                     usern, passw, email, rank, id
                 );
             }
-            else {
+            else
+            {
                 connection.Close();
                 return new StandardUser();
             }
@@ -454,29 +479,48 @@ namespace Project_EFT.Database
             {
                 int userID = reader.GetInt32(0);
                 connection.Close();
-
-                // why does ado.net not like multiple statements in one command ahh
-
-                // remove user's attempts
-                command = MakeCommand(@"
-                                        UPDATE Problems, AnswerSubmissions SET Problem_Attempts = Problem_Attempts - 1
-                                        WHERE Problem_Number = AnswerSubmissions.AnswerSubmissions_ProblemID AND AnswerSubmissions.User_ID = @id  AND Problem_Attempts > 0
-                                        "
-                                      );
-
+                command = MakeCommand("SELECT * FROM AnswerSubmissions WHERE User_ID = @id");
                 command.Parameters.AddWithValue("@id", userID);
                 command.Prepare();
-                command.ExecuteNonQuery();
+                reader = command.ExecuteReader();
+                Dictionary<int, int[]> submissionInfos = new Dictionary<int, int[]>();
+                while (reader.Read())
+                {
+                    int problemID = reader.GetInt32(5);
+                    bool isCorrect = reader.GetBoolean(4);
+                    if (submissionInfos.ContainsKey(problemID))
+                    {
+                        int[] attemptsAndCompletions = submissionInfos[problemID];
+                        attemptsAndCompletions[0]++;
+                        if (isCorrect)
+                        {
+                            attemptsAndCompletions[1]++;
+                        }
+                        submissionInfos[problemID] = attemptsAndCompletions;
+                    }
+                    else 
+                    {
+                        int[] newProblem = new int[2];
+                        newProblem[0] = 1;
+                        newProblem[1] = isCorrect ? 1 : 0;
+                        submissionInfos.Add(problemID, newProblem);
+                    }
+                }
                 command.Parameters.Clear();
-
-                // remove user's completions
-                command.CommandText = @"UPDATE Problems, AnswerSubmissions SET Problem_Completions = Problem_Completions - 1, Problem_Attempts = Problem_Attempts - 1 
-                                        WHERE Problem_Number = AnswerSubmissions.AnswerSubmissions_ProblemID AND AnswerSubmissions.User_ID = @id AND AnswerSubmissions_IsCorrect = TRUE AND Problem_Completions > 0
-                                       ";
-                command.Parameters.AddWithValue("@id", userID);
-                command.Prepare();
-                command.ExecuteNonQuery();
-                command.Parameters.Clear();
+                reader.Close();
+                command.CommandText = @"
+                                        UPDATE Problems SET Problem_Attempts = Problem_Attempts - @attempts, Problem_Completions = Problem_Completions - @completions
+                                        WHERE Problem_Number = @pID";
+                foreach (int pID in submissionInfos.Keys)
+                {
+                    int[] aandc = submissionInfos[pID];
+                    command.Parameters.AddWithValue("@attempts", aandc[0]);
+                    command.Parameters.AddWithValue("@completions", aandc[1]);
+                    command.Parameters.AddWithValue("@pID", pID);
+                    command.Prepare();
+                    command.ExecuteNonQuery();
+                    command.Parameters.Clear();
+                }
 
                 // remove user's submissions
                 command.CommandText = "DELETE FROM AnswerSubmissions WHERE User_ID = @id";
@@ -486,8 +530,8 @@ namespace Project_EFT.Database
                 command.Parameters.Clear();
 
                 // remove user
-                command.CommandText = "DELETE FROM Users WHERE User_Username = @username";
-                command.Parameters.AddWithValue("@username", username);
+                command.CommandText = "DELETE FROM Users WHERE User_ID = @id";
+                command.Parameters.AddWithValue("@id", userID);
                 command.Prepare();
                 int result = command.ExecuteNonQuery();
                 connection.Close();
@@ -498,10 +542,60 @@ namespace Project_EFT.Database
                 // user deleted --> one row was affected (the deleted one)
                 return result == 1;
             }
-            else 
+            else
             {
                 return false;
             }
         }
+
+        public static StandardUser GetStandardUserByUsername(string username) 
+        {
+            MySqlCommand command = MakeCommand("SELECT * FROM Users WHERE User_Username = @username");
+            command.Parameters.AddWithValue("@username", username);
+            command.Prepare();
+            MySqlDataReader reader = command.ExecuteReader();
+            if (reader.Read())
+            {
+                string usern = reader.GetString(1);
+                string passw = reader.GetString(2);
+                string email = reader.GetString(3);
+                int rank = reader.GetInt32(4);
+                int id = reader.GetInt32(0);
+                connection.Close();
+                return new StandardUser(
+                    usern, passw, email, rank, id
+                );
+            }
+            else
+            {
+                connection.Close();
+                return new StandardUser();
+            }
+        }
+
+        public static StandardUser GetStandardUserByEmail(string email)
+        {
+            MySqlCommand command = MakeCommand("SELECT * FROM Users WHERE User_Email = @email");
+            command.Parameters.AddWithValue("@email", email);
+            command.Prepare();
+            MySqlDataReader reader = command.ExecuteReader();
+            if (reader.Read())
+            {
+                string usern = reader.GetString(1);
+                string passw = reader.GetString(2);
+                int rank = reader.GetInt32(4);
+                int id = reader.GetInt32(0);
+                connection.Close();
+                return new StandardUser(
+                    usern, passw, email, rank, id
+                );
+            }
+            else
+            {
+                connection.Close();
+                return new StandardUser();
+            }
+        }
+
     }
 }
