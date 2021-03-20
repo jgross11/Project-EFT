@@ -37,6 +37,7 @@ namespace Project_EFT.Controllers
                 if (result != -1)
                 {
                     newUser.Id = result;
+                    Mailer.SendWelcomeEmail(newUser);
                     HttpContext.Session.SetComplexObject("userInfo", newUser);
                     return RedirectToAction("Index", "Home");
                 }
@@ -47,7 +48,7 @@ namespace Project_EFT.Controllers
             HttpContext.Session.SetString("email", email);
 
             // TODO fix weird routing (/Signup/signup instead of just /Signup)
-            return RedirectToAction("signup", "Signup");
+            return RedirectToAction("Signup");
         }
     }
 }
