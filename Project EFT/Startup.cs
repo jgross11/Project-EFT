@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -9,6 +11,7 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using MimeKit;
 
 namespace Project_EFT
 {
@@ -69,6 +72,9 @@ namespace Project_EFT
                 endpoints.MapControllerRoute(
                     name: "signup",
                     pattern: "{controller=Signup}/{action=Signup}");
+                endpoints.MapControllerRoute(
+                    name: "recoverInfo",
+                    pattern: "{controller=Recovery}/{action=RecoverInfo}");
                 endpoints.MapControllerRoute(
                     name: "editInfo",
                     pattern: "{controller=EditInfo}/{action=EditInfo}");
