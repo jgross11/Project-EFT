@@ -8,6 +8,11 @@ const TYPE_EMAIL = 1;
 const TYPE_PASSWORD = 2;
 const TYPE_USERNAME = 3;
 
+const lowers = "qwertyuiopasdfghjklzxcvbnm";
+const uppers = "MNBVCXZQWERTYUIOPHJKLFDSAG";
+const numbers = "0512864973";
+const symbols = ">/?=*@[}^&+.$\|]~-()`#!_%";
+
 /*
 Checks if the given information is valid
 example: if given an email address, it will check if the string contains an @ followed by a . ...
@@ -59,7 +64,7 @@ function verifyInformation(info, type) {
             let containsSymbol = false;
             let containsUppercase = false;
             let containsNumber = false;
-            if (info.length < 8) return false;
+            if (info.length < 8 || info.length > 40) return false;
             for (i = 0; i < info.length; i++) {
                 char = info.charAt(i);
                 if (!containsSymbol && isNaN(char) && char.toLowerCase() == char.toUpperCase()) {
@@ -82,4 +87,45 @@ function verifyInformation(info, type) {
             return info.length > 0 && info.length < 46;
             break;
     }
+}
+
+// generate a password that fits the criteria outlined by verifyInformation.
+function generateTemporaryPassword() {
+    /*
+        let containsSymbol = false;
+        let containsUppercase = false;
+        let containsNumber = false;
+        if (info.length < 8 || info.length > 40) return false;
+     */
+
+    // number of each type of character
+    let numEach = 4;
+
+    // number of categories of characters
+    let numCategoriesRemaining = 4;
+
+    // number of characters remaining for each category
+    let numRemaining = [numEach, numEach, numEach, numEach];
+
+    let result = "";
+
+    // array containing arrays of character types
+    let chars = [lowers, uppers, numbers, symbols];
+
+    for (let i = 0; i < numEach * 4; i++) {
+        let categoryIndex = Math.round(Math.random() * (numCategoriesRemaining - 1));
+        result += chars[categoryIndex].charAt(Math.round(Math.random() * (chars[categoryIndex].length - 1)));
+        numRemaining[categoryIndex]--;
+        if (numRemaining[categoryIndex] == 0) {
+            let temp = numRemaining[numCategoriesRemaining - 1];
+            numRemaining[numCategoriesRemaining - 1] = numRemaining[categoryIndex];
+            numRemaining[categoryIndex] = temp;
+
+            temp = chars[numCategoriesRemaining - 1];
+            chars[numCategoriesRemaining - 1] = categoryIndex;
+            chars[categoryIndex] = temp;
+            numCategoriesRemaining--;
+        }
+    }
+    return result;
 }

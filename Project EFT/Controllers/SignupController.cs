@@ -33,8 +33,11 @@ namespace Project_EFT.Controllers
             else
             {
                 StandardUser newUser = new StandardUser(username, password, email);
-                if (DBConnector.InsertNewUser(newUser))
+                int result = DBConnector.InsertNewUser(newUser);
+                if (result != -1)
                 {
+                    newUser.Id = result;
+                    Mailer.SendWelcomeEmail(newUser);
                     HttpContext.Session.SetComplexObject("userInfo", newUser);
                     return RedirectToAction("Index", "Home");
                 }
@@ -45,7 +48,7 @@ namespace Project_EFT.Controllers
             HttpContext.Session.SetString("email", email);
 
             // TODO fix weird routing (/Signup/signup instead of just /Signup)
-            return RedirectToAction("signup", "Signup");
+            return RedirectToAction("Signup");
         }
     }
 }

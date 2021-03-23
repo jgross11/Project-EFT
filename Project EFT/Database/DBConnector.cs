@@ -14,6 +14,7 @@ namespace Project_EFT.Database
     {
         public static MySqlConnection connection;
         public static string connectionString;
+        public static List<Problem> problems;
 
         public const int DB_FAILURE = -1;
         public const int CREDENTIAL_CHANGE_SUCCESS = 100;
@@ -23,9 +24,12 @@ namespace Project_EFT.Database
         {
             string[] lines = System.IO.File.ReadAllLines("../../info.txt");
             connectionString = @"server=" + lines[0] + ";userid=" + lines[1] + ";password=" + lines[2] + ";database=" + lines[3];
+
+            // cache list of all problems currently in db
+            GetProblemsList();
         }
 
-        public static bool OpenConnection() 
+        public static bool OpenConnection()
         {
             // dependent on the structure of the file...
             connection = new MySqlConnection(connectionString);
@@ -33,7 +37,7 @@ namespace Project_EFT.Database
             return true;
         }
 
-        public static MySqlCommand MakeCommand(string statement) 
+        public static MySqlCommand MakeCommand(string statement)
         {
             OpenConnection();
             return new MySqlCommand(statement, connection);
@@ -48,9 +52,14 @@ namespace Project_EFT.Database
             command.Prepare();
             int numRowsAffected = command.ExecuteNonQuery();
             connection.Close();
-            
-            // problem added --> one row was affected (the added one)
-            return numRowsAffected == 1;
+
+            if (numRowsAffected == 1)
+            {
+                problem.ProblemNumber = (int)command.LastInsertedId;
+                problems.Add(problem);
+                return true;
+            }
+            return false;
         }
 
         public static int TryUpdateUsername(User user, string newUsername)
@@ -165,7 +174,43 @@ namespace Project_EFT.Database
             command.Prepare();
             int result = command.ExecuteNonQuery();
 
+            // update info in cached problem list
+            if (result == 1)
+            {
+                for (int i = 0; i < problems.Count; i++)
+                {
+                    if (problems[i].ProblemNumber == problem.ProblemNumber)
+                    {
+                        problems[i] = problem;
+                        break;
+                    }
+                }
+            }
+
             return result;
+        }
+
+        public static List<AnswerSubmission> GetAnswerSubmissionsByID(int id) 
+        {
+            List<AnswerSubmission> subs = new List<AnswerSubmission>();
+            MySqlCommand command = MakeCommand("SELECT * FROM AnswerSubmissions WHERE User_ID = @id");
+            command.Parameters.AddWithValue("@id", id);
+            command.Prepare();
+            MySqlDataReader reader = command.ExecuteReader();
+            // need row count
+            while (reader.Read())
+            {
+                // (string content, DateTime submissionDate, int id, bool isCorrect, int problemID)
+                subs.Add(new AnswerSubmission(
+                    reader.GetString(2),
+                    reader.GetDateTime(3),
+                    reader.GetInt32(1),
+                    reader.GetBoolean(4),
+                    reader.GetInt32(5)
+                ));
+            }
+            connection.Close();
+            return subs;
         }
 
         public static List<Submission> GetAdminSubmissionsByID(int id)
@@ -190,11 +235,11 @@ namespace Project_EFT.Database
 
         public static Problem[] GetProblemsList()
         {
+            problems = new List<Problem>();
             MySqlCommand command = MakeCommand("SELECT * FROM Problems");
             MySqlDataReader reader = command.ExecuteReader();
-            List<Problem> problems = new List<Problem>();
             // need row count
-            while (reader.Read()) 
+            while (reader.Read())
             {
                 problems.Add(new Problem(
                     reader.GetInt32(0),
@@ -256,7 +301,7 @@ namespace Project_EFT.Database
                 problem.Completions++;
             }
             problem.Attempts++;
-            
+
 
             //updates the problem in the DB
             UpdateProblem(problem);
@@ -274,7 +319,7 @@ namespace Project_EFT.Database
             command.Parameters.AddWithValue("@id", ID);
             command.Prepare();
             MySqlDataReader reader = command.ExecuteReader();
-            
+
             //if a problem was returned, read it and create a new problem to return
             if (reader.Read())
             {
@@ -294,7 +339,7 @@ namespace Project_EFT.Database
             //return an empty problem if a problem was not returned from the DB
             return new Problem();
 
-            
+
         }
 
         public static bool GetProblemCorrectValueByUserAndProblemID(int userID, int problemID)
@@ -305,24 +350,23 @@ namespace Project_EFT.Database
             command.Prepare();
             MySqlDataReader reader = command.ExecuteReader();
             bool result = reader.Read();
-            
             connection.Close();
-            
+
             return result;
         }
 
-        public static bool InsertNewUser(StandardUser user)
+        public static int InsertNewUser(StandardUser user)
         {
             MySqlCommand command = MakeCommand("INSERT INTO Users(User_Username, User_Password, User_Email) VALUES(@username, @password, @email)");
             command.Parameters.AddWithValue("@username", user.Username);
             command.Parameters.AddWithValue("@password", user.Password);
             command.Parameters.AddWithValue("@email", user.Email);
             command.Prepare();
-            int result = command.ExecuteNonQuery();
+            int result = command.ExecuteNonQuery() == 1 ? (int)command.LastInsertedId : -1;
             connection.Close();
 
             // user added --> one row was affected (the added one)
-            return result == 1;
+            return result;
         }
 
         public static bool DoesEmailExist(string email)
@@ -389,7 +433,8 @@ namespace Project_EFT.Database
                     usern, passw, email, rank, id
                 );
             }
-            else {
+            else
+            {
                 connection.Close();
                 return new StandardUser();
             }
@@ -426,14 +471,131 @@ namespace Project_EFT.Database
 
         public static bool DeleteUser(string username)
         {
-            MySqlCommand command = MakeCommand("DELETE FROM Users WHERE User_Username = @username");
+            MySqlCommand command = MakeCommand("SELECT User_ID FROM Users WHERE User_Username = @username");
             command.Parameters.AddWithValue("@username", username);
             command.Prepare();
-            int result = command.ExecuteNonQuery();
-            connection.Close();
+            MySqlDataReader reader = command.ExecuteReader();
+            if (reader.Read())
+            {
+                int userID = reader.GetInt32(0);
+                connection.Close();
+                command = MakeCommand("SELECT * FROM AnswerSubmissions WHERE User_ID = @id");
+                command.Parameters.AddWithValue("@id", userID);
+                command.Prepare();
+                reader = command.ExecuteReader();
+                Dictionary<int, int[]> submissionInfos = new Dictionary<int, int[]>();
+                while (reader.Read())
+                {
+                    int problemID = reader.GetInt32(5);
+                    bool isCorrect = reader.GetBoolean(4);
+                    if (submissionInfos.ContainsKey(problemID))
+                    {
+                        int[] attemptsAndCompletions = submissionInfos[problemID];
+                        attemptsAndCompletions[0]++;
+                        if (isCorrect)
+                        {
+                            attemptsAndCompletions[1]++;
+                        }
+                        submissionInfos[problemID] = attemptsAndCompletions;
+                    }
+                    else 
+                    {
+                        int[] newProblem = new int[2];
+                        newProblem[0] = 1;
+                        newProblem[1] = isCorrect ? 1 : 0;
+                        submissionInfos.Add(problemID, newProblem);
+                    }
+                }
+                command.Parameters.Clear();
+                reader.Close();
+                command.CommandText = @"
+                                        UPDATE Problems SET Problem_Attempts = Problem_Attempts - @attempts, Problem_Completions = Problem_Completions - @completions
+                                        WHERE Problem_Number = @pID";
+                foreach (int pID in submissionInfos.Keys)
+                {
+                    int[] aandc = submissionInfos[pID];
+                    command.Parameters.AddWithValue("@attempts", aandc[0]);
+                    command.Parameters.AddWithValue("@completions", aandc[1]);
+                    command.Parameters.AddWithValue("@pID", pID);
+                    command.Prepare();
+                    command.ExecuteNonQuery();
+                    command.Parameters.Clear();
+                }
 
-            // user deleted --> one row was affected (the deleted one)
-            return result == 1;
+                // remove user's submissions
+                command.CommandText = "DELETE FROM AnswerSubmissions WHERE User_ID = @id";
+                command.Parameters.AddWithValue("@id", userID);
+                command.Prepare();
+                command.ExecuteNonQuery();
+                command.Parameters.Clear();
+
+                // remove user
+                command.CommandText = "DELETE FROM Users WHERE User_ID = @id";
+                command.Parameters.AddWithValue("@id", userID);
+                command.Prepare();
+                int result = command.ExecuteNonQuery();
+                connection.Close();
+
+                // refresh problems attempt / completion count the bad way because time crunch
+                GetProblemsList();
+
+                // user deleted --> one row was affected (the deleted one)
+                return result == 1;
+            }
+            else
+            {
+                return false;
+            }
         }
+
+        public static StandardUser GetStandardUserByUsername(string username) 
+        {
+            MySqlCommand command = MakeCommand("SELECT * FROM Users WHERE User_Username = @username");
+            command.Parameters.AddWithValue("@username", username);
+            command.Prepare();
+            MySqlDataReader reader = command.ExecuteReader();
+            if (reader.Read())
+            {
+                string usern = reader.GetString(1);
+                string passw = reader.GetString(2);
+                string email = reader.GetString(3);
+                int rank = reader.GetInt32(4);
+                int id = reader.GetInt32(0);
+                connection.Close();
+                return new StandardUser(
+                    usern, passw, email, rank, id
+                );
+            }
+            else
+            {
+                connection.Close();
+                return new StandardUser();
+            }
+        }
+
+        public static StandardUser GetStandardUserByEmail(string email)
+        {
+            MySqlCommand command = MakeCommand("SELECT * FROM Users WHERE User_Email = @email");
+            command.Parameters.AddWithValue("@email", email);
+            command.Prepare();
+            MySqlDataReader reader = command.ExecuteReader();
+            if (reader.Read())
+            {
+                string usern = reader.GetString(1);
+                string passw = reader.GetString(2);
+                int rank = reader.GetInt32(4);
+                int id = reader.GetInt32(0);
+                connection.Close();
+                return new StandardUser(
+                    usern, passw, email, rank, id
+                );
+            }
+            else
+            {
+                connection.Close();
+                return new StandardUser();
+            }
+        }
+
     }
 }

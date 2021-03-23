@@ -89,9 +89,6 @@ namespace Project_EFT.Controllers
 
         public IActionResult ProblemList() 
         {
-
-            // fetch problems from DB and render in view
-            ViewData["problems"] = DBConnector.GetProblemsList();
             return View();
         }
 

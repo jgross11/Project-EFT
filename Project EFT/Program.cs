@@ -7,6 +7,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Project_EFT.Database;
+using MailKit.Net.Smtp;
+using MimeKit;
+using System.Diagnostics;
 
 namespace Project_EFT
 {
@@ -16,6 +19,9 @@ namespace Project_EFT
         {
             // connect to database
             DBConnector.Init();
+
+            // connect to mail server
+            Mailer.Init();
 
             CreateHostBuilder(args).Build().Run();
         }
