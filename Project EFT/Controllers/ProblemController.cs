@@ -52,7 +52,7 @@ namespace Project_EFT.Controllers
 
             }
            
-            // attempts to locate cshtml file with name GenericProblem in GenericProblem folder and Shared folder
+            // attempts to locate cshtml file with name Problem in Problem folder and Shared folder
             return View();
         }
 
@@ -64,12 +64,14 @@ namespace Project_EFT.Controllers
             //retrieves the user from the session
             StandardUser user = HttpContext.Session.GetComplexObject<StandardUser>("userInfo");
 
+            //retrieves problem from the session
             Problem problem = HttpContext.Session.GetComplexObject<Problem>("problem");
 
             
-            //Set the problem information to be passed to the front end
+            //Set the correctness information to be passed to the front end
             ViewData["isCorrect"] = Request.Form["answer"].Equals(problem.Answer);
             ViewData["showProblem"] = !((bool)ViewData["isCorrect"]);
+
             //creates a new submission and sends it to the DB
             AnswerSubmission answer = new AnswerSubmission(Request.Form["answer"], DateTime.Now, user.Id, (bool)ViewData["isCorrect"], problem.ProblemNumber);
             DBConnector.InsertNewAnswerSubmission(answer);
