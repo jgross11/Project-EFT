@@ -35,11 +35,10 @@ namespace Project_EFT.Controllers
             //checks to see if the problem returned from the DB is an actual problem or not
             if (problem.ProblemNumber != 0)
             {
-                //Set the problem information to be passed to the front end
-                ViewData["ShowPage"] = true;
-                ViewData["Title"] = problem.Title;
-                ViewData["problemNumber"] = problem.ProblemNumber;
-                ViewData["problem"] = problem.Question;
+
+                //add the problem to the session
+                HttpContext.Session.SetComplexObject("problem", problem);
+                
                 if (HttpContext.Session.ContainsKey("userInfo"))
                 {
                     StandardUser user = HttpContext.Session.GetComplexObject<StandardUser>("userInfo");
@@ -52,10 +51,7 @@ namespace Project_EFT.Controllers
                 }
 
             }
-            else
-            {
-                ViewData["ShowPage"] = false;
-            }
+           
             // attempts to locate cshtml file with name GenericProblem in GenericProblem folder and Shared folder
             return View();
         }
@@ -68,14 +64,10 @@ namespace Project_EFT.Controllers
             //retrieves the user from the session
             StandardUser user = HttpContext.Session.GetComplexObject<StandardUser>("userInfo");
 
-            Problem problem = DBConnector.GetProblemByID(int.Parse(Request.Form["problemNumber"]));
-           
-            //TODO Add this to session?
+            Problem problem = HttpContext.Session.GetComplexObject<Problem>("problem");
+
+            
             //Set the problem information to be passed to the front end
-            ViewData["ShowPage"] = true;
-            ViewData["Title"] = problem.Title;
-            ViewData["problemNumber"] = problem.ProblemNumber;
-            ViewData["problem"] = problem.Question;
             ViewData["isCorrect"] = Request.Form["answer"].Equals(problem.Answer);
             ViewData["showProblem"] = !((bool)ViewData["isCorrect"]);
             //creates a new submission and sends it to the DB

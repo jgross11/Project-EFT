@@ -4,11 +4,16 @@
 @{ISession session = HttpContextAccessor.HttpContext.Session; }
 
 
-@if ((bool)ViewData["ShowPage"])
+
+@if (session.ContainsKey("problem"))
 {
-    <h1>@ViewData["Title"]</h1>
-    <h2>This is problem number @ViewData["problemNumber"].</h2>
-    <div>@ViewData["problem"]</div>
+
+   Problem problem = session.GetComplexObject<Problem>("problem");
+   
+
+<h1>@problem.Title</h1>
+<h2>This is problem number @problem.ProblemNumber.</h2>
+<div>@problem.Question</div>
     @if (session.ContainsKey("userInfo"))
     {
 
@@ -18,18 +23,19 @@
             <form action="~/Problem/CheckAnswer" method="post">
                 <input type="text" id="answer" name="answer" /><br />
                 <input type="submit" value="Submit your answer!" />
-                <input type="hidden" id="problemNumber" name="problemNumber" value="@ViewData["problemNumber"]" />
                 <div></div>
             </form>
         }
         else
         {
-            <br /><br /><div>Congratulations, this problem has been completed!</div>
+            <br />
+            <br /><div>Congratulations, this problem has been completed!</div>
         }
     }
     else
     {
-        <br /><br /><div>In order to submit a solution you must sign in to a User account.</div>
+        <br />
+        <br /><div>In order to submit a solution you must sign in to a User account.</div>
     }
 
     @if ((ViewData["isCorrect"] != null && (bool)ViewData["isCorrect"]))
@@ -43,7 +49,7 @@
 }
 else
 {
-    <h1>This problem has not yet been created!</h1>
+<h1>This problem has not yet been created!</h1>
 }
 
 
