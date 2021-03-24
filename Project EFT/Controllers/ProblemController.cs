@@ -31,7 +31,7 @@ namespace Project_EFT.Controllers
         {
             //requests a specific problem from the DB, by its ID
             Problem problem = DBConnector.GetProblemByID(ID);
-
+            
             //checks to see if the problem returned from the DB is an actual problem or not
             if (problem.ProblemNumber != 0)
             {
@@ -39,17 +39,6 @@ namespace Project_EFT.Controllers
                 //add the problem to the session
                 HttpContext.Session.SetComplexObject("problem", problem);
                 
-                if (HttpContext.Session.ContainsKey("userInfo"))
-                {
-                    StandardUser user = HttpContext.Session.GetComplexObject<StandardUser>("userInfo");
-                    ViewData["showProblem"] = !(DBConnector.GetProblemCorrectValueByUserAndProblemID(user.Id, problem.ProblemNumber));
-                   
-                }
-                else
-                {
-                    ViewData["showProblem"] = false;
-                }
-
             }
            
             // attempts to locate cshtml file with name Problem in Problem folder and Shared folder
@@ -68,13 +57,29 @@ namespace Project_EFT.Controllers
             Problem problem = HttpContext.Session.GetComplexObject<Problem>("problem");
 
             
+            //TODO Find a nice way to get rid of this, I could just be dumb, but I cant find a temporary way to see if a user JUST got it correct, which is what this controls
+            //on the front end, that is, saying Correct/Incorrect
+
             //Set the correctness information to be passed to the front end
             ViewData["isCorrect"] = Request.Form["answer"].Equals(problem.Answer);
-            ViewData["showProblem"] = !((bool)ViewData["isCorrect"]);
+            
 
             //creates a new submission and sends it to the DB
             AnswerSubmission answer = new AnswerSubmission(Request.Form["answer"], DateTime.Now, user.Id, (bool)ViewData["isCorrect"], problem.ProblemNumber);
             DBConnector.InsertNewAnswerSubmission(answer);
+
+            //add submission to the current user in the session's map and reset the user in the session
+            if (user.Submissions.ContainsKey(answer.ProblemId))
+            {
+                user.Submissions[answer.ProblemId].Add(answer);
+            }
+            else
+            {
+                List<AnswerSubmission> newSubList = new List<AnswerSubmission>();
+                newSubList.Add(answer);
+                user.Submissions.Add(answer.ProblemId, newSubList);
+            }
+            HttpContext.Session.SetComplexObject<StandardUser>("userInfo", user);
 
             return View("Problem");
         }
