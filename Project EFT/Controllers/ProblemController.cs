@@ -40,7 +40,7 @@ namespace Project_EFT.Controllers
                 HttpContext.Session.SetComplexObject("problem", problem);
                 
             }
-           
+
             // attempts to locate cshtml file with name Problem in Problem folder and Shared folder
             return View();
         }
@@ -56,10 +56,7 @@ namespace Project_EFT.Controllers
             //retrieves problem from the session
             Problem problem = HttpContext.Session.GetComplexObject<Problem>("problem");
 
-            
-            //TODO Find a nice way to get rid of this, I could just be dumb, but I cant find a temporary way to see if a user JUST got it correct, which is what this controls
-            //on the front end, that is, saying Correct/Incorrect
-
+           
             //Set the correctness information to be passed to the front end
             ViewData["isCorrect"] = Request.Form["answer"].Equals(problem.Answer);
             
