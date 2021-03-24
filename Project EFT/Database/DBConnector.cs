@@ -343,18 +343,6 @@ namespace Project_EFT.Database
 
         }
 
-        public static bool GetProblemCorrectValueByUserAndProblemID(int userID, int problemID)
-        {
-            MySqlCommand command = MakeCommand("SELECT AnswerSubmissions_IsCorrect FROM AnswerSubmissions WHERE User_ID = @user_id AND AnswerSubmissions_ProblemID = @problem_id AND AnswerSubmissions_IsCorrect = TRUE");
-            command.Parameters.AddWithValue("@user_id", userID);
-            command.Parameters.AddWithValue("@problem_id", problemID);
-            command.Prepare();
-            MySqlDataReader reader = command.ExecuteReader();
-            bool result = reader.Read();
-            connection.Close();
-
-            return result;
-        }
 
         public static int InsertNewUser(StandardUser user)
         {
