@@ -1,6 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Http;
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 @using Project_EFT.Data_Classes;
+@using System.Diagnostics;
 @{ISession session = HttpContextAccessor.HttpContext.Session; }
 
 
@@ -8,16 +9,35 @@
 @if (session.ContainsKey("problem"))
 {
 
-   Problem problem = session.GetComplexObject<Problem>("problem");
-   
+    Problem problem = session.GetComplexObject<Problem>("problem");
+
 
     <h1>@problem.Title</h1>
     <h2>This is problem number @problem.ProblemNumber.</h2>
     <div>@problem.Question</div>
     @if (session.ContainsKey("userInfo"))
     {
+        StandardUser user = session.GetComplexObject<StandardUser>("userInfo");
 
-        if ((bool)ViewData["showProblem"])
+        if (user.Submissions.ContainsKey(problem.ProblemNumber))
+        {
+            int numSubs = user.Submissions[problem.ProblemNumber].Count;
+            if (!user.Submissions[problem.ProblemNumber][numSubs - 1].IsCorrect)
+            {
+                <!-- submission form-->
+                <form action="~/Problem/CheckAnswer" method="post">
+                    <input type="text" id="answer" name="answer" /><br />
+                    <input type="submit" value="Submit your answer!" />
+                    <div></div>
+                </form>
+            }
+            else
+            {
+                <br />
+                <br /><div>Congratulations, this problem has been completed!</div>
+            }
+        }
+        else
         {
             <!-- submission form-->
             <form action="~/Problem/CheckAnswer" method="post">
@@ -26,11 +46,6 @@
                 <div></div>
             </form>
         }
-        else
-        {
-            <br />
-            <br /><div>Congratulations, this problem has been completed!</div>
-        }
     }
     else
     {
@@ -38,6 +53,7 @@
         <br /><div>In order to submit a solution you must sign in to a User account.</div>
     }
 
+    //TODO remove this ViewData info
     @if ((ViewData["isCorrect"] != null && (bool)ViewData["isCorrect"]))
     {
         <div style="color:green">Correct!</div>
@@ -49,7 +65,7 @@
 }
 else
 {
-<h1>This problem has not yet been created!</h1>
+    <h1>This problem has not yet been created!</h1>
 }
 
 
