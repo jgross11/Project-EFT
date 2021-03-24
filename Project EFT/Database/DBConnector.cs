@@ -193,7 +193,8 @@ namespace Project_EFT.Database
         public static List<AnswerSubmission> GetAnswerSubmissionsByID(int id) 
         {
             List<AnswerSubmission> subs = new List<AnswerSubmission>();
-            MySqlCommand command = MakeCommand("SELECT * FROM AnswerSubmissions WHERE User_ID = @id");
+            //this query returns all of a users submissions, in ascending order by date
+            MySqlCommand command = MakeCommand("SELECT * FROM AnswerSubmissions WHERE User_ID = @id ORDER BY AnswerSubmissions_SubmissionDate ASC");
             command.Parameters.AddWithValue("@id", id);
             command.Prepare();
             MySqlDataReader reader = command.ExecuteReader();
@@ -342,18 +343,6 @@ namespace Project_EFT.Database
 
         }
 
-        public static bool GetProblemCorrectValueByUserAndProblemID(int userID, int problemID)
-        {
-            MySqlCommand command = MakeCommand("SELECT AnswerSubmissions_IsCorrect FROM AnswerSubmissions WHERE User_ID = @user_id AND AnswerSubmissions_ProblemID = @problem_id AND AnswerSubmissions_IsCorrect = TRUE");
-            command.Parameters.AddWithValue("@user_id", userID);
-            command.Parameters.AddWithValue("@problem_id", problemID);
-            command.Prepare();
-            MySqlDataReader reader = command.ExecuteReader();
-            bool result = reader.Read();
-            connection.Close();
-
-            return result;
-        }
 
         public static int InsertNewUser(StandardUser user)
         {
@@ -422,15 +411,44 @@ namespace Project_EFT.Database
             MySqlDataReader reader = command.ExecuteReader();
             if (reader.Read())
             {
-                // TODO must get submissions for user before returning
                 string usern = reader.GetString(1);
                 string passw = reader.GetString(2);
                 string email = reader.GetString(3);
                 int rank = reader.GetInt32(4);
                 int id = reader.GetInt32(0);
+
+                Dictionary<int, List<AnswerSubmission>> submissionMap = new Dictionary<int, List<AnswerSubmission>>();
+                //this will contain all of the users submissions in ascending order, by date, and then add them to the correct lists based on id
+                List <AnswerSubmission> submissionList = GetAnswerSubmissionsByID(id);
+                if (submissionList != null)
+                {
+                    foreach (AnswerSubmission answer in submissionList)
+                    {
+                        if (submissionMap.ContainsKey(answer.ProblemId))
+                        {
+                            submissionMap[answer.ProblemId].Add(answer);
+                        }
+                        else
+                        {
+                            List<AnswerSubmission> newSubList = new List<AnswerSubmission>();
+                            newSubList.Add(answer);
+                            submissionMap.Add(answer.ProblemId, newSubList);
+                        }
+                    }
+                }
+
+                //to check the values of the new submission map, as of right now it worksTM
+                /*foreach(KeyValuePair<int, List<AnswerSubmission>> k in submissionMap)
+                {
+                    
+                    foreach(AnswerSubmission a in k.Value)
+                    {
+                        Debug.Write(k.Key + " " + a.SubmissionDate + " " + a.Content + "\n");
+                    }
+                }*/
                 connection.Close();
                 return new StandardUser(
-                    usern, passw, email, rank, id
+                    usern, passw, email, rank, id, submissionMap
                 );
             }
             else

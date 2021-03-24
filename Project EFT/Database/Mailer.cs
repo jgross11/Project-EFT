@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using MailKit.Net.Smtp;
@@ -41,6 +42,7 @@ namespace Project_EFT.Database
 
             catch (Exception e) 
             {
+                Debug.Write(e);
                 return false;
             }
         }
@@ -63,6 +65,7 @@ namespace Project_EFT.Database
 
             catch (Exception e)
             {
+                Debug.Write(e);
                 return false;
             }
         }
@@ -85,6 +88,7 @@ namespace Project_EFT.Database
 
             catch (Exception e)
             {
+                Debug.Write(e);
                 return false;
             }
         }

@@ -31,32 +31,17 @@ namespace Project_EFT.Controllers
         {
             //requests a specific problem from the DB, by its ID
             Problem problem = DBConnector.GetProblemByID(ID);
-
+            
             //checks to see if the problem returned from the DB is an actual problem or not
             if (problem.ProblemNumber != 0)
             {
-                //Set the problem information to be passed to the front end
-                ViewData["ShowPage"] = true;
-                ViewData["Title"] = problem.Title;
-                ViewData["problemNumber"] = problem.ProblemNumber;
-                ViewData["problem"] = problem.Question;
-                if (HttpContext.Session.ContainsKey("userInfo"))
-                {
-                    StandardUser user = HttpContext.Session.GetComplexObject<StandardUser>("userInfo");
-                    ViewData["showProblem"] = !(DBConnector.GetProblemCorrectValueByUserAndProblemID(user.Id, problem.ProblemNumber));
-                   
-                }
-                else
-                {
-                    ViewData["showProblem"] = false;
-                }
 
+                //add the problem to the session
+                HttpContext.Session.SetComplexObject("problem", problem);
+                
             }
-            else
-            {
-                ViewData["ShowPage"] = false;
-            }
-            // attempts to locate cshtml file with name GenericProblem in GenericProblem folder and Shared folder
+
+            // attempts to locate cshtml file with name Problem in Problem folder and Shared folder
             return View();
         }
 
@@ -68,19 +53,30 @@ namespace Project_EFT.Controllers
             //retrieves the user from the session
             StandardUser user = HttpContext.Session.GetComplexObject<StandardUser>("userInfo");
 
-            Problem problem = DBConnector.GetProblemByID(int.Parse(Request.Form["problemNumber"]));
+            //retrieves problem from the session
+            Problem problem = HttpContext.Session.GetComplexObject<Problem>("problem");
+
            
-            //TODO Add this to session?
-            //Set the problem information to be passed to the front end
-            ViewData["ShowPage"] = true;
-            ViewData["Title"] = problem.Title;
-            ViewData["problemNumber"] = problem.ProblemNumber;
-            ViewData["problem"] = problem.Question;
+            //Set the correctness information to be passed to the front end
             ViewData["isCorrect"] = Request.Form["answer"].Equals(problem.Answer);
-            ViewData["showProblem"] = !((bool)ViewData["isCorrect"]);
+            
+
             //creates a new submission and sends it to the DB
             AnswerSubmission answer = new AnswerSubmission(Request.Form["answer"], DateTime.Now, user.Id, (bool)ViewData["isCorrect"], problem.ProblemNumber);
             DBConnector.InsertNewAnswerSubmission(answer);
+
+            //add submission to the current user in the session's map and reset the user in the session
+            if (user.Submissions.ContainsKey(answer.ProblemId))
+            {
+                user.Submissions[answer.ProblemId].Add(answer);
+            }
+            else
+            {
+                List<AnswerSubmission> newSubList = new List<AnswerSubmission>();
+                newSubList.Add(answer);
+                user.Submissions.Add(answer.ProblemId, newSubList);
+            }
+            HttpContext.Session.SetComplexObject<StandardUser>("userInfo", user);
 
             return View("Problem");
         }
