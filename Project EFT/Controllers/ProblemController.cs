@@ -101,6 +101,14 @@ namespace Project_EFT.Controllers
             {
                 if (DBConnector.InsertNewProblem(problem))
                 {
+                    Admin admin = HttpContext.Session.GetComplexObject<Admin>("adminInfo");
+                    Problem newProblem = DBConnector.problems[DBConnector.problems.Count - 1];
+                    Submission sub = new Submission("Created problem #" + newProblem.ProblemNumber + ": " + newProblem.Title, DateTime.Now, admin.Id);
+                    if (DBConnector.InsertNewAdminSubmission(sub)) 
+                    {
+                        admin.Submissions.Add(sub);
+                        HttpContext.Session.SetComplexObject<Admin>("adminInfo", admin);
+                    }
                     ViewData["message"] = "Your new problem has been added to the list of problems!";
                 }
                 else
