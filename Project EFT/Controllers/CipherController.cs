@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Project_EFT.Data_Classes;
+using Project_EFT.Ciphers;
 using Project_EFT.Models;
+using Project_EFT.Ciphers.Options;
 
 namespace Project_EFT.Controllers
 {
@@ -19,33 +21,19 @@ namespace Project_EFT.Controllers
             _logger = logger;
         }
 
-        // localhost.../Cipher?name=(name), see Startup.cs for more info
-        public IActionResult GetPage(String name)
-        {
-            return Cipher(name);
-        }
-
         // encryption POST
         [HttpPost]
         public IActionResult encrypt()
         {
-            // debug form contents
-            Debug.WriteLine("From request");
-            Debug.WriteLine(Request.Form["alphabet"]);
-            Debug.WriteLine(Request.Form["encryptShiftAmount"]);
-            Debug.WriteLine(Request.Form["plainTextInput"]);
+            Cipher activeSystem = HttpContext.Session.GetComplexObject<Cipher>("activeSystem");
+            foreach (Option opt in activeSystem.EncryptionFormOptions) 
+            {
+                opt.SetValue(Request.Form[opt.FieldName].ToString());
+            }
 
-            // create instance of cipher, do encryption
-            string ciphertext = new CaesarCipher(Request.Form["alphabet"], 0, int.Parse(Request.Form["encryptShiftAmount"]), 1).Encrypt(Request.Form["plainTextInput"]);
-            
-            // store ciphertext in view map
-            ViewData["cipherTextInput"] = ciphertext;
+            activeSystem.Encrypt();
 
-            // store other form contents to populate form 
-            ViewData["alphabet"] = Request.Form["alphabet"];
-            ViewData["decryptShiftAmount"] = Request.Form["decryptShiftAmount"];
-            ViewData["encryptShiftAmount"] = Request.Form["encryptShiftAmount"];
-            ViewData["plainTextInput"] = Request.Form["plainTextInput"];
+            HttpContext.Session.SetComplexObject<Cipher>("activeSystem", activeSystem);
 
             // refresh page
             return View("Cipher");
@@ -55,33 +43,30 @@ namespace Project_EFT.Controllers
         public IActionResult decrypt() 
         {
 
-            // debug form contents
-            Debug.WriteLine("From request");
-            Debug.WriteLine(Request.Form["alphabet"]);
-            Debug.WriteLine(Request.Form["decryptShiftAmount"]);
-            Debug.WriteLine(Request.Form["cipherTextInput"]);
+            Cipher activeSystem = HttpContext.Session.GetComplexObject<Cipher>("activeSystem");
+            foreach (Option opt in activeSystem.DecryptionFormOptions)
+            {
+                opt.SetValue(Request.Form[opt.FieldName].ToString());
+            }
 
-            // do decryption
-            string plaintext = new CaesarCipher(Request.Form["alphabet"], int.Parse(Request.Form["decryptShiftAmount"]), 0, 1).Decrypt(Request.Form["cipherTextInput"])[0];
+            activeSystem.Decrypt();
 
-            // store plain text in view map
-            ViewData["plainTextInput"] = plaintext;
+            HttpContext.Session.SetComplexObject<Cipher>("activeSystem", activeSystem);
 
-            // store other form contents to populate form 
-            ViewData["alphabet"] = Request.Form["alphabet"];
-            ViewData["encryptShiftAmount"] = Request.Form["encryptShiftAmount"];
-            ViewData["decryptShiftAmount"] = Request.Form["decryptShiftAmount"];
-            ViewData["cipherTextInput"] = Request.Form["cipherTextInput"];
-
+            // refresh page
             return View("Cipher");
         }
 
-        //TODO: Have this change more than just the Title of the page, currently regardless of name, you are sent to 
-        //the caesar cipher page...
-        public IActionResult Cipher(string name)
+        public IActionResult cipher(int id)
         {
-            // must set viewdata here, not in initial GetPage
-            ViewData["name"] = name;
+            if (id > -1 && id < Program.CipherList.Count)
+            {
+                HttpContext.Session.SetComplexObject<Cipher>("activeSystem", (Cipher)Activator.CreateInstance(Program.CipherList[id]));
+            }
+            else 
+            {
+                HttpContext.Session.Remove("activeSystem");
+            }
 
             // attempts to locate cshtml file with name Cipher in Cipher folder and Shared folder
             return View();
