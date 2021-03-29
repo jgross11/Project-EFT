@@ -43,5 +43,10 @@ namespace Project_EFT.Ciphers
             outputs = new string[NumSolutionsToReturn];
         }
 
+        public int Mod(int n, int mod) 
+        {
+            return n > -1 ? n % mod : ((n % mod) + mod) % mod;
+        }
+
     }
 }
