@@ -37,6 +37,7 @@ namespace Project_EFT.Controllers
                 if (result != -1)
                 {
                     newUser.Id = result;
+                    DBConnector.CreateUserSubmissionTable(newUser.Id);
                     Mailer.SendWelcomeEmail(newUser);
                     HttpContext.Session.SetComplexObject("userInfo", newUser);
                     return RedirectToAction("Index", "Home");
