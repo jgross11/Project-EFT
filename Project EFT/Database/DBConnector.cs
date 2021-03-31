@@ -43,43 +43,45 @@ namespace Project_EFT.Database
             return new MySqlCommand(statement, connection);
         }
 
-        //this query is just gross, and I considered deleting it...however, it works(update: I should say "worked", now that the subqueries have been changed, this really should be deleted...)
-        //...and should at least be in here for documentation as to
-        //how I converted the AnswerSubmissions table into UserSubmissions for specific users without deleting their data...this is how
-        /*public static void CreateNewTablesAndPopulateOldData()
+        
+        public static bool CheckIfUserSubmissionTableExists(int UserId)
         {
-            MySqlCommand command = MakeCommand("SELECT * FROM Users");
-            command.Prepare();
-            MySqlDataReader reader = command.ExecuteReader();
-
-            while (reader.Read())
+            
+            string tablename = "UserSubmissions" + UserId;
+            MySqlCommand command = MakeCommand("SELECT * FROM " + tablename);
+            try
             {
-                int UserId = reader.GetInt32(0);
-                CreateUserSubmissionTable(UserId);
-
-                List<AnswerSubmission> SubList = GetAnswerSubmissionsByID(UserId);
-                string tablename = "UserSubmissions" + UserId;
-                foreach(AnswerSubmission submission in SubList)
-                {
-                    command = MakeCommand("INSERT INTO " + tablename + "(UserSubmissions_Answer, UserSubmissions_SubmissionDate, UserSubmissions_IsCorrect, USerSubmissions_ProblemID) VALUES(@content, @date, @correct, @problem_id)");
-                    command.Parameters.AddWithValue("@content", submission.Content);
-                    command.Parameters.AddWithValue("@date", submission.SubmissionDate);
-                    command.Parameters.AddWithValue("@correct", submission.IsCorrect);
-                    command.Parameters.AddWithValue("@problem_id", submission.ProblemId);
-                    command.Prepare();
-                    command.ExecuteNonQuery();
-                }
+                command.Prepare();
+                MySqlDataReader reader = command.ExecuteReader();
+                connection.Close();
+                return true;
+            }catch(Exception e)
+            {
+                connection.Close();
+                Debug.Write(e);
+                return false;
             }
 
-        }*/
-        public static void CreateUserSubmissionTable(int ID)
+
+           
+        }
+
+        public static bool CreateUserSubmissionTable(int ID)
         {
             string tablename = "UserSubmissions" + ID;
             MySqlCommand command = MakeCommand("CREATE TABLE " + tablename + " (UserSubmissions_ID INT NOT NULL AUTO_INCREMENT, UserSubmissions_Answer VARCHAR(255) NOT NULL, UserSubmissions_SubmissionDate DATETIME NULL, UserSubmissions_IsCorrect TINYINT NOT NULL, UserSubmissions_ProblemID INT NOT NULL, PRIMARY KEY(UserSubmissions_ID))");
-            command.Prepare();
-            command.ExecuteNonQuery();
-            connection.Close();
-
+            try
+            {
+                command.Prepare();
+                command.ExecuteNonQuery();
+                connection.Close();
+                return true;
+            }catch(Exception e)
+            {
+                Debug.Write(e);
+                connection.Close();
+                return false;
+            }
         }
         public static bool InsertNewProblem(Problem problem)
         {
