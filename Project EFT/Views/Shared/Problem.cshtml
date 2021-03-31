@@ -46,6 +46,49 @@
                 <div></div>
             </form>
         }
+
+        if ((ViewData["isCorrect"] != null && (bool)ViewData["isCorrect"]))
+        {
+            <div style="color:green">Correct!</div>
+        }
+        else if ((ViewData["isCorrect"] != null && !(bool)ViewData["isCorrect"]))
+        {
+            <div style="color:crimson">Incorrect, please try again!</div>
+        }
+
+        <br />
+        <br />
+
+        if (user.Submissions.ContainsKey(problem.ProblemNumber))
+        {
+            <button class="accordion active">Show Your Submissions!</button>
+            <div class="panel" style="display: none;">
+                <table>
+                    <tr>
+                        <th>Answer</th>
+                        <th>Date</th>
+                        <th>Correctness</th>
+                    </tr>
+                    @foreach (AnswerSubmission sub in user.Submissions[problem.ProblemNumber])
+                    {
+                        <tr>
+                            <th>@sub.Content</th>
+                            <th>@sub.SubmissionDate</th>
+                            @if (sub.IsCorrect)
+                            {
+                                <th>Correct</th>
+                            }
+                            else
+                            {
+                                <th>Incorrect</th>
+                            }
+                        </tr>
+                    }
+
+                </table>
+            </div>
+        }
+
     }
     else
     {
@@ -53,18 +96,25 @@
         <br /><div>In order to submit a solution you must sign in to a User account.</div>
     }
 
-    @if ((ViewData["isCorrect"] != null && (bool)ViewData["isCorrect"]))
-    {
-        <div style="color:green">Correct!</div>
-    }
-    else if ((ViewData["isCorrect"] != null && !(bool)ViewData["isCorrect"]))
-    {
-        <div style="color:crimson">Incorrect, please try again!</div>
-    }
 }
 else
 {
     <h1>This problem has not yet been created!</h1>
 }
 
+<script>
+    var acc = document.getElementsByClassName("accordion");
+    var i;
 
+    for (i = 0; i < acc.length; i++) {
+        acc[i].addEventListener("click", function () {
+            this.classList.toggle("active");
+            var panel = this.nextElementSibling;
+            if (panel.style.display === "block") {
+                panel.style.display = "none";
+            } else {
+                panel.style.display = "block";
+            }
+        });
+    }
+</script>
