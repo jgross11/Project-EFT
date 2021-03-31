@@ -101,7 +101,12 @@ else
 {
     <h1>This problem has not yet been created!</h1>
 }
-
+@if (session.ContainsKey("errorMessage"))
+{
+    string error = session.TryGetAndRemoveKey<string>("errorMessage");
+    <br />
+    <br /><div class="error">@error</div>
+}
 <script>
     var acc = document.getElementsByClassName("accordion");
     var i;
