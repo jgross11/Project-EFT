@@ -38,7 +38,11 @@ namespace Project_EFT.Controllers
 
                 //add the problem to the session
                 HttpContext.Session.SetComplexObject("problem", problem);
-                
+
+            }
+            else
+            {
+                HttpContext.Session.Remove("problem");
             }
 
             // attempts to locate cshtml file with name Problem in Problem folder and Shared folder
