@@ -43,7 +43,8 @@ namespace Project_EFT.Database
             return new MySqlCommand(statement, connection);
         }
 
-        //this query is just gross, and I considered deleting it...however, it works...and should at least be in here for documentation as to
+        //this query is just gross, and I considered deleting it...however, it works(update: I should say "worked", now that the subqueries have been changed, this really should be deleted...)
+        //...and should at least be in here for documentation as to
         //how I converted the AnswerSubmissions table into UserSubmissions for specific users without deleting their data...this is how
         /*public static void CreateNewTablesAndPopulateOldData()
         {
