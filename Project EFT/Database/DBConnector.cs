@@ -43,6 +43,46 @@ namespace Project_EFT.Database
             return new MySqlCommand(statement, connection);
         }
 
+        
+        public static bool CheckIfUserSubmissionTableExists(int UserId)
+        {
+            
+            string tablename = "UserSubmissions" + UserId;
+            MySqlCommand command = MakeCommand("SELECT * FROM " + tablename);
+            try
+            {
+                command.Prepare();
+                MySqlDataReader reader = command.ExecuteReader();
+                connection.Close();
+                return true;
+            }catch(Exception e)
+            {
+                connection.Close();
+                Debug.Write(e);
+                return false;
+            }
+
+
+           
+        }
+
+        public static bool CreateUserSubmissionTable(int ID)
+        {
+            string tablename = "UserSubmissions" + ID;
+            MySqlCommand command = MakeCommand("CREATE TABLE " + tablename + " (UserSubmissions_ID INT NOT NULL AUTO_INCREMENT, UserSubmissions_Answer VARCHAR(255) NOT NULL, UserSubmissions_SubmissionDate DATETIME NULL, UserSubmissions_IsCorrect TINYINT NOT NULL, UserSubmissions_ProblemID INT NOT NULL, PRIMARY KEY(UserSubmissions_ID))");
+            try
+            {
+                command.Prepare();
+                command.ExecuteNonQuery();
+                connection.Close();
+                return true;
+            }catch(Exception e)
+            {
+                Debug.Write(e);
+                connection.Close();
+                return false;
+            }
+        }
         public static bool InsertNewProblem(Problem problem)
         {
             MySqlCommand command = MakeCommand("INSERT INTO Problems (Problem_Title, Problem_Question, Problem_Answer) VALUES (@title, @question, @answer)");
@@ -194,8 +234,8 @@ namespace Project_EFT.Database
         {
             List<AnswerSubmission> subs = new List<AnswerSubmission>();
             //this query returns all of a users submissions, in ascending order by date
-            MySqlCommand command = MakeCommand("SELECT * FROM AnswerSubmissions WHERE User_ID = @id ORDER BY AnswerSubmissions_SubmissionDate ASC");
-            command.Parameters.AddWithValue("@id", id);
+            string tablename = "UserSubmissions" + id;
+            MySqlCommand command = MakeCommand("SELECT * FROM " + tablename);
             command.Prepare();
             MySqlDataReader reader = command.ExecuteReader();
             // need row count
@@ -203,11 +243,11 @@ namespace Project_EFT.Database
             {
                 // (string content, DateTime submissionDate, int id, bool isCorrect, int problemID)
                 subs.Add(new AnswerSubmission(
-                    reader.GetString(2),
-                    reader.GetDateTime(3),
-                    reader.GetInt32(1),
-                    reader.GetBoolean(4),
-                    reader.GetInt32(5)
+                    reader.GetString(1),
+                    reader.GetDateTime(2),
+                    id,
+                    reader.GetBoolean(3),
+                    reader.GetInt32(4)
                 ));
             }
             connection.Close();
@@ -285,8 +325,8 @@ namespace Project_EFT.Database
 
         public static bool InsertNewAnswerSubmission(AnswerSubmission submission)
         {
-            MySqlCommand command = MakeCommand("INSERT INTO AnswerSubmissions(User_ID, AnswerSubmissions_Answer, AnswerSubmissions_SubmissionDate, AnswerSubmissions_IsCorrect, AnswerSubmissions_ProblemID) VALUES(@user_id, @content, @date, @correct, @problem_id)");
-            command.Parameters.AddWithValue("@user_id", submission.UserID);
+            string tablename = "UserSubmissions" + submission.UserID;
+            MySqlCommand command = MakeCommand("INSERT INTO " + tablename + "(UserSubmissions_Answer, UserSubmissions_SubmissionDate, UserSubmissions_IsCorrect, UserSubmissions_ProblemID) VALUES(@content, @date, @correct, @problem_id)");
             command.Parameters.AddWithValue("@content", submission.Content);
             command.Parameters.AddWithValue("@date", submission.SubmissionDate);
             command.Parameters.AddWithValue("@correct", submission.IsCorrect);
@@ -497,15 +537,16 @@ namespace Project_EFT.Database
             {
                 int userID = reader.GetInt32(0);
                 connection.Close();
-                command = MakeCommand("SELECT * FROM AnswerSubmissions WHERE User_ID = @id");
+                string tablename = "UserSubmissions" + userID;
+                command = MakeCommand("SELECT * FROM " + tablename);
                 command.Parameters.AddWithValue("@id", userID);
                 command.Prepare();
                 reader = command.ExecuteReader();
                 Dictionary<int, int[]> submissionInfos = new Dictionary<int, int[]>();
                 while (reader.Read())
                 {
-                    int problemID = reader.GetInt32(5);
-                    bool isCorrect = reader.GetBoolean(4);
+                    int problemID = reader.GetInt32(4);
+                    bool isCorrect = reader.GetBoolean(3);
                     if (submissionInfos.ContainsKey(problemID))
                     {
                         int[] attemptsAndCompletions = submissionInfos[problemID];
@@ -541,8 +582,7 @@ namespace Project_EFT.Database
                 }
 
                 // remove user's submissions
-                command.CommandText = "DELETE FROM AnswerSubmissions WHERE User_ID = @id";
-                command.Parameters.AddWithValue("@id", userID);
+                command.CommandText = "DROP TABLE " + tablename;
                 command.Prepare();
                 command.ExecuteNonQuery();
                 command.Parameters.Clear();
