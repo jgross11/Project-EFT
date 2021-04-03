@@ -2,7 +2,6 @@
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 @using Project_EFT.Data_Classes;
 @{ISession session = HttpContextAccessor.HttpContext.Session; }
-
 @{
     ViewData["Title"] = "Home Page";
     if (session.ContainsKey("userInfo"))
@@ -13,6 +12,65 @@
         <h3>@user.Email</h3>
         <br>
         <h3>@user.Username</h3>
+        <br />
+        if (user.Submissions.Count != 0)
+        {
+
+
+            int[] keys = new int[user.Submissions.Count];
+            user.Submissions.Keys.CopyTo(keys, 0);
+            Array.Sort(keys);
+
+            foreach (int i in keys)
+            {
+                <button class="accordion active">Problem @i Submissions </button>
+                <div class="panel" style="display: none;">
+                    <table>
+                        <tr>
+                            <th>Answer</th>
+                            <th>Date</th>
+                            <th>Correctness</th>
+                        </tr>
+                        @foreach (AnswerSubmission sub in user.Submissions[i])
+                        {
+                            <tr>
+                                <th>@sub.Content</th>
+                                <th>@sub.SubmissionDate</th>
+                                @if (sub.IsCorrect)
+                                {
+                                    <th>Correct</th>
+                                }
+                                else
+                                {
+                                    <th>Incorrect</th>
+                                }
+                            </tr>
+                        }
+
+                    </table>
+                </div>
+                <br />
+
+            }
+
+
+        }
+        <script>
+            var acc = document.getElementsByClassName("accordion");
+            var i;
+
+            for (i = 0; i < acc.length; i++) {
+                acc[i].addEventListener("click", function () {
+                    this.classList.toggle("active");
+                    var panel = this.nextElementSibling;
+                    if (panel.style.display === "block") {
+                        panel.style.display = "none";
+                    } else {
+                        panel.style.display = "block";
+                    }
+                });
+            }
+        </script>
     }
     else if (session.ContainsKey("adminInfo"))
     {
@@ -25,7 +83,8 @@
             session.Remove("username");
             errorMessage = session.GetString("errorMessage");
             session.Remove("errorMessage");
-        } else if (session.ContainsKey("successMessage"))
+        }
+        else if (session.ContainsKey("successMessage"))
         {
             successMessage = session.GetString("successMessage");
             session.Remove("successMessage");
@@ -41,14 +100,16 @@
 
         <form id="delete-account" action="/Home/DeleteUserAccount" method="post">
             Enter username of account to delete:<br>
-            <input type="text" id="username" name="username" value="@username"/><br>
+            <input type="text" id="username" name="username" value="@username" /><br>
             <div class="error" id="username-error"></div>
             <input type="button" value="Delete Account" onclick="verifyDeleteAccount()">
             <div class="error">@errorMessage</div>
             <div class="success">@successMessage</div>
         </form>
-        <br><br>
-        if (admin.Submissions.Count > 0) { 
+        <br>
+        <br>
+        if (admin.Submissions.Count > 0)
+        {
             <h3>Previous admin actions</h3>
             <table>
                 <tr>
@@ -57,12 +118,12 @@
                 </tr>
                 @{
                     // generate row for each problem in problems array
-                    foreach (Submission sub in admin.Submissions) 
-                    { 
-                    <tr>
-                        <th>@sub.Content</th>
-                        <th>@sub.SubmissionDate</th>
-                    </tr>
+                    foreach (Submission sub in admin.Submissions)
+                    {
+                        <tr>
+                            <th>@sub.Content</th>
+                            <th>@sub.SubmissionDate</th>
+                        </tr>
                     }
                 }
             </table>
@@ -80,12 +141,14 @@
                     document.getElementById("username-error").innerHTML = "Please enter a valid username.";
                 }
             }
+
         </script>
     }
     else
     {
         string loginErrorMessage = "";
-        if (session.ContainsKey("errorMessage")) {
+        if (session.ContainsKey("errorMessage"))
+        {
             loginErrorMessage = session.GetString("errorMessage");
             session.Remove("errorMessage");
         }

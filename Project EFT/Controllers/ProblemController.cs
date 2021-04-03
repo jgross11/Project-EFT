@@ -38,7 +38,11 @@ namespace Project_EFT.Controllers
 
                 //add the problem to the session
                 HttpContext.Session.SetComplexObject("problem", problem);
-                
+
+            }
+            else
+            {
+                HttpContext.Session.Remove("problem");
             }
 
             // attempts to locate cshtml file with name Problem in Problem folder and Shared folder
@@ -56,27 +60,60 @@ namespace Project_EFT.Controllers
             //retrieves problem from the session
             Problem problem = HttpContext.Session.GetComplexObject<Problem>("problem");
 
-           
-            //Set the correctness information to be passed to the front end
-            ViewData["isCorrect"] = Request.Form["answer"].Equals(problem.Answer);
-            
-
-            //creates a new submission and sends it to the DB
-            AnswerSubmission answer = new AnswerSubmission(Request.Form["answer"], DateTime.Now, user.Id, (bool)ViewData["isCorrect"], problem.ProblemNumber);
-            DBConnector.InsertNewAnswerSubmission(answer);
-
-            //add submission to the current user in the session's map and reset the user in the session
-            if (user.Submissions.ContainsKey(answer.ProblemId))
+            if (!DBConnector.CheckIfUserSubmissionTableExists(user.Id))
             {
-                user.Submissions[answer.ProblemId].Add(answer);
+                if (DBConnector.CreateUserSubmissionTable(user.Id))
+                {
+                    //Set the correctness information to be passed to the front end
+                    ViewData["isCorrect"] = Request.Form["answer"].Equals(problem.Answer);
+
+
+                    //creates a new submission and sends it to the DB
+                    AnswerSubmission answer = new AnswerSubmission(Request.Form["answer"], DateTime.Now, user.Id, (bool)ViewData["isCorrect"], problem.ProblemNumber);
+                    DBConnector.InsertNewAnswerSubmission(answer);
+
+                    //add submission to the current user in the session's map and reset the user in the session
+                    if (user.Submissions.ContainsKey(answer.ProblemId))
+                    {
+                        user.Submissions[answer.ProblemId].Add(answer);
+                    }
+                    else
+                    {
+                        List<AnswerSubmission> newSubList = new List<AnswerSubmission>();
+                        newSubList.Add(answer);
+                        user.Submissions.Add(answer.ProblemId, newSubList);
+                    }
+                    HttpContext.Session.SetComplexObject<StandardUser>("userInfo", user);
+                }
+                else
+                {
+                    HttpContext.Session.SetString("errorMessage", "Something went wrong, please try submitting your answer again.");
+                }
             }
             else
             {
-                List<AnswerSubmission> newSubList = new List<AnswerSubmission>();
-                newSubList.Add(answer);
-                user.Submissions.Add(answer.ProblemId, newSubList);
+                //Set the correctness information to be passed to the front end
+                ViewData["isCorrect"] = Request.Form["answer"].Equals(problem.Answer);
+
+
+                //creates a new submission and sends it to the DB
+                AnswerSubmission answer = new AnswerSubmission(Request.Form["answer"], DateTime.Now, user.Id, (bool)ViewData["isCorrect"], problem.ProblemNumber);
+                DBConnector.InsertNewAnswerSubmission(answer);
+
+                //add submission to the current user in the session's map and reset the user in the session
+                if (user.Submissions.ContainsKey(answer.ProblemId))
+                {
+                    user.Submissions[answer.ProblemId].Add(answer);
+                }
+                else
+                {
+                    List<AnswerSubmission> newSubList = new List<AnswerSubmission>();
+                    newSubList.Add(answer);
+                    user.Submissions.Add(answer.ProblemId, newSubList);
+                }
+                HttpContext.Session.SetComplexObject<StandardUser>("userInfo", user);
             }
-            HttpContext.Session.SetComplexObject<StandardUser>("userInfo", user);
+            
 
             return View("Problem");
         }
