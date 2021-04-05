@@ -28,8 +28,10 @@ namespace Project_EFT.Controllers
             Cipher activeSystem = HttpContext.Session.GetComplexObject<Cipher>("activeSystem");
             foreach (Option opt in activeSystem.EncryptionFormOptions) 
             {
-                opt.SetValue(Request.Form[opt.FieldName].ToString());
+                opt.ObtainValueFromForm(Request.Form);
             }
+
+            activeSystem.ResetErrors();
 
             activeSystem.Encrypt();
 
@@ -46,8 +48,10 @@ namespace Project_EFT.Controllers
             Cipher activeSystem = HttpContext.Session.GetComplexObject<Cipher>("activeSystem");
             foreach (Option opt in activeSystem.DecryptionFormOptions)
             {
-                opt.SetValue(Request.Form[opt.FieldName].ToString());
+                opt.ObtainValueFromForm(Request.Form);
             }
+
+            activeSystem.ResetErrors();
 
             activeSystem.Decrypt();
 
