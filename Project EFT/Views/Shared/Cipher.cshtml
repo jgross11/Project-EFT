@@ -13,24 +13,32 @@
     <h1>@activeSystem.Name</h1>
 
     <!-- encryption form-->
-<form action="~/Cipher/encrypt" method="post">
+<form action="~/Cipher/encrypt" method="post" enctype="multipart/form-data">
     <h6>Encrypt Cipher</h6>
     @{
         foreach (Option opt in activeSystem.EncryptionFormOptions)
         {
             @(new HtmlString(@opt.GetHTML()))<br>
+            if (opt.ErrorMessage != null) 
+            { 
+                @(new HtmlString(opt.GetErrorHTML()))<br>
+            }
         }
     }
     <input type="submit" value="Encrypt">
 </form>
 
     <!-- decryption form-->
-<form action="~/Cipher/decrypt" method="post">
+<form action="~/Cipher/decrypt" method="post" enctype="multipart/form-data">
     <h6>Decrypt Cipher</h6>
     @{
         foreach (Option opt in activeSystem.DecryptionFormOptions)
         {
             @(new HtmlString(@opt.GetHTML()))<br>
+            if (opt.ErrorMessage != null)
+            {
+                @(new HtmlString(opt.GetErrorHTML()))<br>
+            }
         }
     }
     <input type="submit" value="Decrypt">
