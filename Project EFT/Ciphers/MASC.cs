@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Project_EFT.Ciphers.Options;
@@ -10,6 +11,9 @@ namespace Project_EFT.Ciphers
     {
         public override string Name { get { return "Monoalphabetic Substitution Cipher (MASC)"; } }
         private const int SubstitutionAlphabetIndex = 2;
+        private const int DecryptionMethodIndex = 2;
+        private const int KnownSubstitutionAlphabetChoice = 0;
+        private const int DecryptionSubstitutionAlphabetIndex = 0;
 
         public MASC(int numSols) : base(numSols)
         {
@@ -21,15 +25,25 @@ namespace Project_EFT.Ciphers
         public override void GenerateForms()
         {
             EncryptionFormOptions.Add(new TextBoxOption("substitutionAlphabet", "Enter substitution alphabet", "abcdefghijklmnopqrstuvwxyz"));
-            DecryptionFormOptions.Add(new TextBoxOption("substitutionAlphabet", "Enter substitution alphabet", "abcdefghijklmnopqrstuvwxyz"));
+            DecryptionFormOptions.Add(new RadioOptionsSet("Decryption-selection", null, 0, new List<Option> {
+                new TextBoxOption("substitutionAlphabet", "Enter substitution alphabet", "abcdefghijklmnopqrstuvwxyz"),
+                new SimpleRadioStringOption("Unknown substitution alphabet")
+            }));
         }
 
-        public override string Encrypt()
+        public override void Encrypt()
         {
             string ciphertext = "";
             string plaintext = (string)EncryptionFormOptions[InputIndex].GetValue();
             string alphabet = (string)EncryptionFormOptions[AlphabetIndex].GetValue();
             string substitutionAlphabet = (string)EncryptionFormOptions[SubstitutionAlphabetIndex].GetValue();
+
+            if (alphabet.Length != substitutionAlphabet.Length) 
+            {
+                EncryptionFormOptions[SubstitutionAlphabetIndex].ErrorMessage = 
+                    String.Format("Please ensure alphabets contain the same number of characters (Base: {0} characters, Substitution: {1} characters)", alphabet.Length, substitutionAlphabet.Length);
+                return;
+            }
 
             foreach (char c in plaintext)
             {
@@ -50,30 +64,44 @@ namespace Project_EFT.Ciphers
             }
             // TODO store in appropriate option
             DecryptionFormOptions[InputIndex].SetValue(ciphertext);
-            return ciphertext;
         }
 
-        public override string[] Decrypt()
+        public override void Decrypt()
         {
             string[] plaintexts = new string[NumSolutionsToReturn];
+            int decryptionMethod = (int) DecryptionFormOptions[DecryptionMethodIndex].GetValue();
             string ciphertext = (string)DecryptionFormOptions[InputIndex].GetValue();
             string alphabet = (string)DecryptionFormOptions[AlphabetIndex].GetValue();
-            string substitutionAlphabet = (string)DecryptionFormOptions[SubstitutionAlphabetIndex].GetValue();
-            foreach (char c in ciphertext)
+
+            if (decryptionMethod == KnownSubstitutionAlphabetChoice)
             {
-                int index = substitutionAlphabet.IndexOf(c);
-                if (index == -1)
+                string substitutionAlphabet = (string)((RadioOptionsSet)DecryptionFormOptions[DecryptionMethodIndex]).Choices[DecryptionSubstitutionAlphabetIndex].GetValue();
+                if (alphabet.Length != substitutionAlphabet.Length)
                 {
-                    plaintexts[0] += c;
+                    DecryptionFormOptions[SubstitutionAlphabetIndex].ErrorMessage =
+                        String.Format("Please ensure alphabets contain the same number of characters (Base: {0} characters, Substitution: {1} characters)", alphabet.Length, substitutionAlphabet.Length);
+                    return;
                 }
-                else
+
+                foreach (char c in ciphertext)
                 {
-                    plaintexts[0] += alphabet[index];
+                    int index = substitutionAlphabet.IndexOf(c);
+                    if (index == -1)
+                    {
+                        plaintexts[0] += c;
+                    }
+                    else
+                    {
+                        plaintexts[0] += alphabet[index];
+                    }
                 }
+                // TODO store in appropriate option
+                EncryptionFormOptions[InputIndex].SetValue(plaintexts[0]);
             }
-            // TODO store in appropriate option
-            EncryptionFormOptions[InputIndex].SetValue(plaintexts[0]);
-            return plaintexts;
+            else 
+            {
+                EncryptionFormOptions[InputIndex].SetValue("TODO decrypt without knowing alphabet!!!");
+            }
         }
     }
 }
