@@ -35,7 +35,7 @@ namespace Project_EFT.Ciphers
 
         public override void Encrypt()
         {
-            string plaintext = (string)EncryptionFormOptions[InputIndex].GetValue();
+            string plaintext = ((string)EncryptionFormOptions[InputIndex].GetValue()).ToLower();
             int dimension = (int)Math.Ceiling(Math.Sqrt(plaintext.Length));
             Bitmap encryptedImage = new Bitmap(dimension, dimension);
             int count = 0;
@@ -79,7 +79,14 @@ namespace Project_EFT.Ciphers
                     // stored as BGRA instead of RGBA???
                     byte pixR = imageBytes[i+2];
                     byte pixB = imageBytes[i];
-                    plaintext += pixB == 255 ? ' ' : standardAlphabet[pixR / 9];
+                    if (pixB == 0 && pixR == pixB && pixB == imageBytes[i+1] && pixB == imageBytes[i+3]) 
+                    {
+                        continue;
+                    }
+                    else if (pixR < 226)
+                    {
+                        plaintext += pixB != 255 ? standardAlphabet[pixR / 9] : ' ';
+                    }
                 }
 
                 encryptedImage.UnlockBits(data);
