@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Project_EFT.Data_Classes
 {
@@ -12,20 +13,20 @@ namespace Project_EFT.Data_Classes
     {
         public static void SetComplexObject<T>(this ISession session, string keyName, T value) 
         {
-            session.SetString(keyName, JsonConvert.SerializeObject(value));
+            session.SetString(keyName, JsonConvert.SerializeObject(value, Program.DerivedJSONSettings));
         }
 
-        public static T GetComplexObject<T>(this ISession session, string keyName) 
+        public static T GetComplexObject<T>(this ISession session, string keyName)
         {
             string value = session.GetString(keyName);
-            
+
             // insert hacker man + galaxy brain meme
-            if (typeof(T) == typeof(string)) 
+            if (typeof(T) == typeof(string))
             {
                 return JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(value));
             }
 
-            return value == null ? default : JsonConvert.DeserializeObject<T>(value);
+            return value == null ? default : JsonConvert.DeserializeObject<T>(value, Program.DerivedJSONSettings);
         }
 
         public static bool ContainsKey(this ISession session, string keyName)

@@ -1,8 +1,4 @@
 ﻿@using Project_EFT.Data_Classes;
-@{
-    // fetch problem array from view data
-    String[] cipher = (String[])ViewData["ciphers"];
-}
 
 <h1> Ciphers </h1>
 <table>
@@ -11,10 +7,10 @@
     </tr>
     @{
         // generate row for each cipher in cipher array
-        foreach (String cipherName in cipher)
+        for (int i = 0; i < Program.CipherList.Count; i++)
         {
             <tr>
-                <th><a href="/cipher?name=@cipherName">@cipherName</a></th>
+                <th><a href="/cipher?id=@i">@Program.CipherNames[i]</a></th>
             </tr>
         }
     }
