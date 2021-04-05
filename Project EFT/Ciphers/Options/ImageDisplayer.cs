@@ -13,7 +13,7 @@ namespace Project_EFT.Ciphers.Options
 
         public override string GetHTML()
         {
-            return Value != null ? String.Format("<img src='{0}' alt='Encrypted image'>", Value) : null;
+            return Value != null ? String.Format("<img src='{0}' width = 100px height = 100px alt='Encrypted image'>", Value) : null;
         }
     }
 }
