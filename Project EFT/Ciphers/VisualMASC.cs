@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Project_EFT.Ciphers.Options;
 
@@ -39,9 +41,9 @@ namespace Project_EFT.Ciphers
             int count = 0;
             int colorValue;
 
-            for (int x = 0; x < dimension; x++) 
+            for (int y = 0; y < dimension; y++) 
             {
-                for (int y = 0; y < dimension; y++)
+                for (int x = 0; x < dimension; x++)
                 {
                     if (count < plaintext.Length)
                     {
@@ -59,20 +61,29 @@ namespace Project_EFT.Ciphers
             Bitmap encryptedImage = ((ImageUploader)DecryptionFormOptions[ImageUploaderIndex]).Value;
             if (encryptedImage != null)
             {
-                int dimension = encryptedImage.Width;
-                Color currentColor;
 
-                // the runtime on this scales attrociously - encrypting the entire Road to Wigan Pier text took <2 seconds, but decrypting took > 1 minute
-                // an optimization probably lies in directly manipulating the image's data in bit array form, rather than continuously getting the color of the current pixel
-                // but for our purposes, it works..
-                for (int x = 0; x < dimension; x++)
+                // this method is slightly faster than using GetPixel() - 3 min 31 s to decrypt Wigan as opposed to GetPixel() taking 3 min 49 s, 
+                // but https://www.codeproject.com/Articles/617613/Fast-pixel-operations-in-NET-with-and-without-unsa
+                // suggests that it should be running ~300 times faster, so something is definitely amiss.. 
+
+                // Debug.WriteLine(encryptedImage.PixelFormat);
+                // Format32bppArgb
+                BitmapData data = encryptedImage.LockBits(new Rectangle(0, 0, encryptedImage.Width, encryptedImage.Height), ImageLockMode.ReadOnly, encryptedImage.PixelFormat);
+                byte[] imageBytes = new byte[encryptedImage.Width * encryptedImage.Height * 4];
+                IntPtr scanner = data.Scan0;
+
+                Marshal.Copy(scanner, imageBytes, 0, imageBytes.Length);
+
+                for (int i = 0; i < imageBytes.Length; i += 4) 
                 {
-                    for (int y = 0; y < dimension; y++)
-                    {
-                        currentColor = encryptedImage.GetPixel(x, y);
-                        plaintext += currentColor.B == 255 ? ' ' : standardAlphabet[currentColor.R / 9];
-                    }
+                    // stored as BGRA instead of RGBA???
+                    byte pixR = imageBytes[i+2];
+                    byte pixB = imageBytes[i];
+                    plaintext += pixB == 255 ? ' ' : standardAlphabet[pixR / 9];
                 }
+
+                encryptedImage.UnlockBits(data);
+
                 EncryptionFormOptions[ImageDisplayerIndex].SetValue(BitmapToBase64String(encryptedImage));
                 EncryptionFormOptions[InputIndex].SetValue(plaintext);
             }
