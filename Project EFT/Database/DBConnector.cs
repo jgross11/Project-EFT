@@ -295,19 +295,7 @@ namespace Project_EFT.Database
             return problems.ToArray();
         }
 
-        public static String[] GetCipherNameList()
-        {
-            MySqlCommand command = MakeCommand("SELECT * FROM Ciphers");
-            MySqlDataReader reader = command.ExecuteReader();
-            List<String> ciphers = new List<String>();
-            // need row count
-            while (reader.Read())
-            {
-                ciphers.Add(reader.GetString(1));
-            }
-            connection.Close();
-            return ciphers.ToArray();
-        }
+        
 
         public static bool InsertNewAdminSubmission(Submission submission)
         {
@@ -537,58 +525,62 @@ namespace Project_EFT.Database
             {
                 int userID = reader.GetInt32(0);
                 connection.Close();
-                string tablename = "UserSubmissions" + userID;
-                command = MakeCommand("SELECT * FROM " + tablename);
-                command.Parameters.AddWithValue("@id", userID);
-                command.Prepare();
-                reader = command.ExecuteReader();
-                Dictionary<int, int[]> submissionInfos = new Dictionary<int, int[]>();
-                while (reader.Read())
+
+                //if they have a user submissions table, remove their submissions and then drop the table, otherwise just delete the user
+                if (CheckIfUserSubmissionTableExists(userID))
                 {
-                    int problemID = reader.GetInt32(4);
-                    bool isCorrect = reader.GetBoolean(3);
-                    if (submissionInfos.ContainsKey(problemID))
+                    string tablename = "UserSubmissions" + userID;
+                    command = MakeCommand("SELECT * FROM " + tablename);
+                    command.Parameters.AddWithValue("@id", userID);
+                    command.Prepare();
+                    reader = command.ExecuteReader();
+                    Dictionary<int, int[]> submissionInfos = new Dictionary<int, int[]>();
+                    while (reader.Read())
                     {
-                        int[] attemptsAndCompletions = submissionInfos[problemID];
-                        attemptsAndCompletions[0]++;
-                        if (isCorrect)
+                        int problemID = reader.GetInt32(4);
+                        bool isCorrect = reader.GetBoolean(3);
+                        if (submissionInfos.ContainsKey(problemID))
                         {
-                            attemptsAndCompletions[1]++;
+                            int[] attemptsAndCompletions = submissionInfos[problemID];
+                            attemptsAndCompletions[0]++;
+                            if (isCorrect)
+                            {
+                                attemptsAndCompletions[1]++;
+                            }
+                            submissionInfos[problemID] = attemptsAndCompletions;
                         }
-                        submissionInfos[problemID] = attemptsAndCompletions;
+                        else
+                        {
+                            int[] newProblem = new int[2];
+                            newProblem[0] = 1;
+                            newProblem[1] = isCorrect ? 1 : 0;
+                            submissionInfos.Add(problemID, newProblem);
+                        }
                     }
-                    else 
-                    {
-                        int[] newProblem = new int[2];
-                        newProblem[0] = 1;
-                        newProblem[1] = isCorrect ? 1 : 0;
-                        submissionInfos.Add(problemID, newProblem);
-                    }
-                }
-                command.Parameters.Clear();
-                reader.Close();
-                command.CommandText = @"
+                    command.Parameters.Clear();
+                    reader.Close();
+                    command.CommandText = @"
                                         UPDATE Problems SET Problem_Attempts = Problem_Attempts - @attempts, Problem_Completions = Problem_Completions - @completions
                                         WHERE Problem_Number = @pID";
-                foreach (int pID in submissionInfos.Keys)
-                {
-                    int[] aandc = submissionInfos[pID];
-                    command.Parameters.AddWithValue("@attempts", aandc[0]);
-                    command.Parameters.AddWithValue("@completions", aandc[1]);
-                    command.Parameters.AddWithValue("@pID", pID);
+                    foreach (int pID in submissionInfos.Keys)
+                    {
+                        int[] aandc = submissionInfos[pID];
+                        command.Parameters.AddWithValue("@attempts", aandc[0]);
+                        command.Parameters.AddWithValue("@completions", aandc[1]);
+                        command.Parameters.AddWithValue("@pID", pID);
+                        command.Prepare();
+                        command.ExecuteNonQuery();
+                        command.Parameters.Clear();
+                    }
+
+                    // remove user's submissions
+                    command.CommandText = "DROP TABLE " + tablename;
                     command.Prepare();
                     command.ExecuteNonQuery();
                     command.Parameters.Clear();
                 }
-
-                // remove user's submissions
-                command.CommandText = "DROP TABLE " + tablename;
-                command.Prepare();
-                command.ExecuteNonQuery();
-                command.Parameters.Clear();
-
                 // remove user
-                command.CommandText = "DELETE FROM Users WHERE User_ID = @id";
+                command = MakeCommand("DELETE FROM Users WHERE User_ID = @id");
                 command.Parameters.AddWithValue("@id", userID);
                 command.Prepare();
                 int result = command.ExecuteNonQuery();
