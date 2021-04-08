@@ -96,7 +96,6 @@ namespace Project_EFT.Controllers
         {
 
             // fetch problems from DB and render in view
-            ViewData["ciphers"] = DBConnector.GetCipherNameList();
             return View();
         }
 
