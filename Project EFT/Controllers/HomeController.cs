@@ -41,29 +41,50 @@ namespace Project_EFT.Controllers
             string username = Request.Form["username"];
             string password = Request.Form["password"];
 
-            StandardUser user = DBConnector.StandardUserLogin(username, password);
-            if (user.Id != 0)
+            bool formatErrorExists = false;
+
+            if (!InformationValidator.VerifyInformation(username, InformationValidator.UsernameType)) 
             {
-                HttpContext.Session.SetComplexObject("userInfo", user);
-                return RedirectToAction("Index");
+                HttpContext.Session.SetString("usernameFormatError", InformationValidator.InvalidUsernameString);
+                formatErrorExists = true;
+            }
+            if (!InformationValidator.VerifyInformation(password, InformationValidator.PasswordType))
+            {
+                HttpContext.Session.SetString("passwordFormatError", InformationValidator.InvalidPasswordString);
+                formatErrorExists = true;
             }
 
-            Admin admin = DBConnector.AdminLogin(username, password);
-            if (admin.Id != 0)
+            if (!formatErrorExists)
             {
-                admin.Submissions = DBConnector.GetAdminSubmissionsByID(admin.Id);
-                HttpContext.Session.SetComplexObject("adminInfo", admin);
-                return RedirectToAction("Index");
+                StandardUser user = DBConnector.StandardUserLogin(username, password);
+                if (user.Id != 0)
+                {
+                    HttpContext.Session.SetComplexObject("userInfo", user);
+                    return RedirectToAction("Index");
+                }
+
+                Admin admin = DBConnector.AdminLogin(username, password);
+                if (admin.Id != 0)
+                {
+                    admin.Submissions = DBConnector.GetAdminSubmissionsByID(admin.Id);
+                    HttpContext.Session.SetComplexObject("adminInfo", admin);
+                    return RedirectToAction("Index");
+                }
+                HttpContext.Session.SetString("errorMessage", "No user exists with those credentials.");
             }
-            HttpContext.Session.SetString("errorMessage", "No user exists with those credentials.");
             return RedirectToAction("Index");
         }
 
         [HttpPost]
         public IActionResult DeleteUserAccount() 
         {
+            if (!HttpContext.Session.ContainsKey("adminInfo")) return RedirectToAction("Index");
             string username = Request.Form["username"];
-            if (DBConnector.DoesUsernameExist(username))
+            if (!InformationValidator.VerifyInformation(username, InformationValidator.UsernameType))
+            {
+                HttpContext.Session.SetString("errorMessage", InformationValidator.InvalidUsernameString);
+            }
+            else if (DBConnector.DoesUsernameExist(username))
             {
                 if (DBConnector.DeleteUser(username)) {
                     Admin admin = HttpContext.Session.GetComplexObject<Admin>("adminInfo");
@@ -103,6 +124,12 @@ namespace Project_EFT.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+
+        [Route("/Home/HandleError/{code:int}")]
+        public IActionResult Error(int code)
+        {
+            return RedirectToAction("Index");
         }
     }
 }

@@ -74,22 +74,9 @@
     }
     else if (session.ContainsKey("adminInfo"))
     {
-        string errorMessage = "";
-        string successMessage = "";
-        string username = "";
-        if (session.ContainsKey("username"))
-        {
-            username = session.GetString("username");
-            session.Remove("username");
-            errorMessage = session.GetString("errorMessage");
-            session.Remove("errorMessage");
-        }
-        else if (session.ContainsKey("successMessage"))
-        {
-            successMessage = session.GetString("successMessage");
-            session.Remove("successMessage");
-        }
-
+        string errorMessage = session.TryGetAndRemoveKey<string>("errorMessage");
+        string successMessage = session.TryGetAndRemoveKey<string>("successMessage");
+        string username = session.TryGetAndRemoveKey<string>("username");
         Admin admin = session.GetComplexObject<Admin>("adminInfo");
         <h2>Logged in as admin: </h2>
         <br>
@@ -143,26 +130,23 @@
             }
 
         </script>
-    }
+                    }
     else
     {
-        string loginErrorMessage = "";
-        if (session.ContainsKey("errorMessage"))
-        {
-            loginErrorMessage = session.GetString("errorMessage");
-            session.Remove("errorMessage");
-        }
+        string loginErrorMessage = session.TryGetAndRemoveKey<string>("errorMessage");
+        string usernameFormatError = session.TryGetAndRemoveKey<string>("usernameFormatError");
+        string passwordFormatError = session.TryGetAndRemoveKey<string>("passwordFormatError");
         <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.12.0/js/md5.min.js"></script>
         <div>
             <form id="login" action="~/Home/login" method="post">
                 <label>Username:</label>
                 <input type="text" id="username" name="username" /><br />
-                <div class="error" id="username-error"></div>
+                <div class="error" id="username-error">@usernameFormatError</div>
                 <input type="hidden" id="password" name="password" />
             </form>
             <label>Password:</label>
             <input type="password" id="frontPassword" name="frontPassword" /><br />
-            <div class="error" id="password-error"></div>
+            <div class="error" id="password-error">@passwordFormatError</div>
             <input type="button" value="Login!" onclick="verifyLogin()" /><br />
             <div class="error" id="login-error"> @loginErrorMessage</div>
         </div>
@@ -178,13 +162,15 @@
             let passwordSubmissionElement = document.getElementById("password");
             let username = usernameElement.value.trim();
             let password = passwordEntryElement.value.trim();
-            if (username.length > 0 && password.length > 7) {
+            let usernameGood = verifyInformation(username, TYPE_USERNAME);
+            let passwordGood = verifyInformation(password, TYPE_PASSWORD);
+            if (usernameGood && passwordGood) {
                 usernameElement.value = username;
                 passwordSubmissionElement.value = md5(password);
                 document.getElementById("login").submit();
             } else {
-                document.getElementById("username-error").innerHTML = username.length > 0 ? "" : "Please enter a valid username.";
-                document.getElementById("password-error").innerHTML = password.length > 7 ? "" : "Please enter a valid password.";
+                document.getElementById("username-error").innerHTML = usernameGood ? "" : "Please enter a valid username.";
+                document.getElementById("password-error").innerHTML = passwordGood ? "" : "Please enter a valid password.";
             }
         }
     </script>
