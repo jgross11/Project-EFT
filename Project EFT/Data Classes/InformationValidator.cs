@@ -52,8 +52,8 @@ namespace Project_EFT.Data_Classes
                         }
                     }
                     return false;
-                // TODO think of how to validate this? should be encrypted, so reqs should change.
                 case PasswordType:
+                    if (info.Length > MaximumPasswordLength) return false;
                     foreach (char c in info) 
                     {
                         if (!"0123456789".Contains(c) && !"abcdef".Contains(c) && !"ABCDEF".Contains(c)) 
