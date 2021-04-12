@@ -43,6 +43,8 @@ namespace Project_EFT.Controllers
 
             bool formatErrorExists = false;
 
+            if (HttpContext.Session.ContainsKey("userInfo") || HttpContext.Session.ContainsKey("adminInfo")) return RedirectToAction("Index");
+
             if (!InformationValidator.VerifyInformation(username, InformationValidator.UsernameType)) 
             {
                 HttpContext.Session.SetString("usernameFormatError", InformationValidator.InvalidUsernameString);
