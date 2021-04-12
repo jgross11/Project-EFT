@@ -26,19 +26,27 @@ namespace Project_EFT.Controllers
         public IActionResult encrypt()
         {
             Cipher activeSystem = HttpContext.Session.GetComplexObject<Cipher>("activeSystem");
-            foreach (Option opt in activeSystem.EncryptionFormOptions) 
+
+            if (activeSystem != null)
             {
-                opt.ObtainValueFromForm(Request.Form);
+                foreach (Option opt in activeSystem.EncryptionFormOptions)
+                {
+                    opt.ObtainValueFromForm(Request.Form);
+                }
+
+                activeSystem.ResetErrors();
+
+                activeSystem.Encrypt();
+
+                HttpContext.Session.SetComplexObject<Cipher>("activeSystem", activeSystem);
+
+                // refresh page
+                return View("Cipher");
             }
-
-            activeSystem.ResetErrors();
-
-            activeSystem.Encrypt();
-
-            HttpContext.Session.SetComplexObject<Cipher>("activeSystem", activeSystem);
-
-            // refresh page
-            return View("Cipher");
+            else 
+            { 
+                return RedirectToAction("CipherList", "Home"); 
+            }
         }
 
         [HttpPost]
@@ -46,19 +54,26 @@ namespace Project_EFT.Controllers
         {
 
             Cipher activeSystem = HttpContext.Session.GetComplexObject<Cipher>("activeSystem");
-            foreach (Option opt in activeSystem.DecryptionFormOptions)
+            if (activeSystem != null)
             {
-                opt.ObtainValueFromForm(Request.Form);
+                foreach (Option opt in activeSystem.DecryptionFormOptions)
+                {
+                    opt.ObtainValueFromForm(Request.Form);
+                }
+
+                activeSystem.ResetErrors();
+
+                activeSystem.Decrypt();
+
+                HttpContext.Session.SetComplexObject<Cipher>("activeSystem", activeSystem);
+
+                // refresh page
+                return View("Cipher");
             }
-
-            activeSystem.ResetErrors();
-
-            activeSystem.Decrypt();
-
-            HttpContext.Session.SetComplexObject<Cipher>("activeSystem", activeSystem);
-
-            // refresh page
-            return View("Cipher");
+            else
+            {
+                return RedirectToAction("CipherList", "Home");
+            }
         }
 
         public IActionResult cipher(int id)
