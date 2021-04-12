@@ -5,18 +5,24 @@
 
 @if (session.ContainsKey("adminInfo"))
 {
+    string titleErrorMessage = session.TryGetAndRemoveKey<string>("titleErrorMessage");
+    string questionErrorMessage = session.TryGetAndRemoveKey<string>("questionErrorMessage");
+    string answerErrorMessage = session.TryGetAndRemoveKey<string>("answerErrorMessage");
     <h1>You can create a new problem here!</h1>
     <!-- submission form-->
-    <form action="~/Problem/AddProblem" method="post">
-        Enter Problem Title: <br />
-        <input type="text" id="title" name="title" /><br />
-        Enter Problem Question: <br />
-        <textarea name="question" id="question" cols="50" rows="4"></textarea> <br />
-        Enter Problem Answer: <br />
-        <textarea name="answer" id="answer" cols="50" rows="4"></textarea> <br />
-        <input type="submit" value="Submit your new problem!" />
-        <div></div>
-    </form>
+<form action="~/Problem/AddProblem" method="post">
+    Enter Problem Title: <br />
+    <input type="text" id="title" name="title" /><br />
+    <div class="error" id="title-error">@titleErrorMessage</div>
+    Enter Problem Question: <br />
+    <textarea name="question" id="question" cols="50" rows="4"></textarea> <br />
+    <div class="error" id="question-error">@questionErrorMessage</div>
+    Enter Problem Answer: <br />
+    <textarea name="answer" id="answer" cols="50" rows="4"></textarea> <br />
+    <div class="error" id="answer-error">@answerErrorMessage</div>
+    <input type="submit" value="Submit your new problem!" />
+    <div></div>
+</form>
 
     @if (ViewData["message"] != null)
     {
