@@ -68,31 +68,66 @@ namespace Project_EFT.Ciphers
 
                 // Debug.WriteLine(encryptedImage.PixelFormat);
                 // Format32bppArgb
+
                 BitmapData data = encryptedImage.LockBits(new Rectangle(0, 0, encryptedImage.Width, encryptedImage.Height), ImageLockMode.ReadOnly, encryptedImage.PixelFormat);
-                byte[] imageBytes = new byte[encryptedImage.Width * encryptedImage.Height * 4];
-                IntPtr scanner = data.Scan0;
-
-                Marshal.Copy(scanner, imageBytes, 0, imageBytes.Length);
-
-                for (int i = 0; i < imageBytes.Length; i += 4) 
+                
+                // cheap fix for different pixel formats amongst png's
+                if (encryptedImage.PixelFormat == PixelFormat.Format32bppArgb)
                 {
-                    // stored as BGRA instead of RGBA???
-                    byte pixR = imageBytes[i+2];
-                    byte pixB = imageBytes[i];
-                    if (pixB == 0 && pixR == pixB && pixB == imageBytes[i+1] && pixB == imageBytes[i+3]) 
+                    byte[] imageBytes = new byte[encryptedImage.Width * encryptedImage.Height * 4];
+                    IntPtr scanner = data.Scan0;
+
+                    Marshal.Copy(scanner, imageBytes, 0, imageBytes.Length);
+
+                    for (int i = 0; i < imageBytes.Length; i += 4)
                     {
-                        continue;
+                        // stored as BGRA instead of RGBA???
+                        byte pixR = imageBytes[i + 2];
+                        byte pixB = imageBytes[i];
+                        if (pixB == 0 && pixR == pixB && pixB == imageBytes[i + 1] && pixB == imageBytes[i + 3])
+                        {
+                            continue;
+                        }
+                        else if (pixR < 226)
+                        {
+                            plaintext += pixB != 255 ? standardAlphabet[pixR / 9] : ' ';
+                        }
                     }
-                    else if (pixR < 226)
-                    {
-                        plaintext += pixB != 255 ? standardAlphabet[pixR / 9] : ' ';
-                    }
+
+                    encryptedImage.UnlockBits(data);
+
+                    EncryptionFormOptions[ImageDisplayerIndex].SetValue(BitmapToBase64String(encryptedImage));
+                    EncryptionFormOptions[InputIndex].SetValue(plaintext);
                 }
+                else if (encryptedImage.PixelFormat == PixelFormat.Format24bppRgb)
+                {
+                    byte[] imageBytes = new byte[encryptedImage.Width * encryptedImage.Height * 3];
+                    IntPtr scanner = data.Scan0;
 
-                encryptedImage.UnlockBits(data);
+                    Marshal.Copy(scanner, imageBytes, 0, imageBytes.Length);
 
-                EncryptionFormOptions[ImageDisplayerIndex].SetValue(BitmapToBase64String(encryptedImage));
-                EncryptionFormOptions[InputIndex].SetValue(plaintext);
+                    for (int i = 0; i < imageBytes.Length; i += 3)
+                    {
+                        // stored as BGR instead of RGB???
+                        byte pixR = imageBytes[i + 2];
+                        byte pixB = imageBytes[i];
+                        if (pixR < 226)
+                        {
+                            plaintext += pixB != 255 ? standardAlphabet[pixR / 9] : ' ';
+                        }
+                    }
+
+                    encryptedImage.UnlockBits(data);
+
+                    EncryptionFormOptions[ImageDisplayerIndex].SetValue(BitmapToBase64String(encryptedImage));
+                    EncryptionFormOptions[InputIndex].SetValue(plaintext);
+                }
+                else 
+                {
+                    DecryptionFormOptions[ImageUploaderIndex].ErrorMessage = "Please ensure only one .png file was uploaded.";
+                    EncryptionFormOptions[ImageDisplayerIndex].SetValue(null);
+                    EncryptionFormOptions[InputIndex].SetValue(null);
+                }
             }
             else 
             {
