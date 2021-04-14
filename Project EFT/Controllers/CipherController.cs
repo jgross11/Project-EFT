@@ -36,7 +36,7 @@ namespace Project_EFT.Controllers
 
                 activeSystem.ResetErrors();
 
-                activeSystem.Encrypt();
+                activeSystem.VerifyAndEncrypt();
 
                 HttpContext.Session.SetComplexObject<Cipher>("activeSystem", activeSystem);
 
@@ -63,7 +63,7 @@ namespace Project_EFT.Controllers
 
                 activeSystem.ResetErrors();
 
-                activeSystem.Decrypt();
+                activeSystem.VerifyAndDecrypt();
 
                 HttpContext.Session.SetComplexObject<Cipher>("activeSystem", activeSystem);
 
