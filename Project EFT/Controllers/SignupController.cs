@@ -28,7 +28,9 @@ namespace Project_EFT.Controllers
         public IActionResult SubmitSignup() 
         {
             string username = Request.Form["username"];
+            username = username.Trim();
             string email = Request.Form["email"];
+            email = email.Trim();
             string password = Request.Form["password"];
             bool formattingErrorExists = false;
             if (!InformationValidator.VerifyInformation(username, InformationValidator.UsernameType)) {

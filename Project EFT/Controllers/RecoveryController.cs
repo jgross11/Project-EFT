@@ -22,6 +22,7 @@ namespace Project_EFT.Controllers
         public IActionResult forgotPassword()
         {
             string username = Request.Form["username"];
+            username = username.Trim();
             string passwordPlain = InformationValidator.GenerateTemporaryPassword();
             string passwordHash = InformationValidator.MD5Hash(passwordPlain);
 
@@ -64,6 +65,7 @@ namespace Project_EFT.Controllers
         public IActionResult forgotUsername()
         {
             string email = Request.Form["email"];
+            email = email.Trim();
             string passwordPlain = InformationValidator.GenerateTemporaryPassword();
             string passwordHash = InformationValidator.MD5Hash(passwordPlain);
 

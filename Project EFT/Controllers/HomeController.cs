@@ -39,6 +39,7 @@ namespace Project_EFT.Controllers
         public IActionResult login()
         {
             string username = Request.Form["username"];
+            username = username.Trim();
             string password = Request.Form["password"];
 
             bool formatErrorExists = false;
@@ -82,6 +83,7 @@ namespace Project_EFT.Controllers
         {
             if (!HttpContext.Session.ContainsKey("adminInfo")) return RedirectToAction("Index");
             string username = Request.Form["username"];
+            username = username.Trim();
             if (!InformationValidator.VerifyInformation(username, InformationValidator.UsernameType))
             {
                 HttpContext.Session.SetString("errorMessage", InformationValidator.InvalidUsernameString);
