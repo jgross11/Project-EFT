@@ -140,13 +140,14 @@ namespace Project_EFT.Ciphers
             if (decryptionMethod == KnownSubstitutionAlphabetChoice)
             {
                 string substitutionAlphabet = (string)((RadioOptionsSet)DecryptionFormOptions[DecryptionMethodIndex]).Choices[DecryptionSubstitutionAlphabetIndex].GetValue();
-                if (!AlphabetsMatch(alphabet, substitutionAlphabet)) {
-                    EncryptionFormOptions[SubstitutionAlphabetIndex].ErrorMessage = FormatUnequalAlphabetMessage(alphabet, substitutionAlphabet);
-                    error = true;
-                }
                 if (!IsValidAlphabet(substitutionAlphabet))
                 {
                     EncryptionFormOptions[SubstitutionAlphabetIndex].ErrorMessage = InvalidAlphabetMessage;
+                    error = true;
+                }
+                if (!AlphabetsMatch(alphabet, substitutionAlphabet))
+                {
+                    EncryptionFormOptions[SubstitutionAlphabetIndex].ErrorMessage = FormatUnequalAlphabetMessage(alphabet, substitutionAlphabet);
                     error = true;
                 }
             }
