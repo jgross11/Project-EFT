@@ -11,7 +11,7 @@ namespace Project_EFT_Tests
         [SetUp]
         public void Setup()
         {
-            
+
         }
 
         [Test]
@@ -66,7 +66,7 @@ namespace Project_EFT_Tests
         }
 
         [Test]
-        public void TestUsernameValidation() 
+        public void TestUsernameValidation()
         {
             Assert.False(InformationValidator.VerifyInformation("", InformationValidator.UsernameType));
             Assert.False(InformationValidator.VerifyInformation(null, InformationValidator.UsernameType));
@@ -127,7 +127,94 @@ qwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjkqwertyuiopasdfghjklzxcvbnmqwertyuiop
             Assert.True(InformationValidator.VerifyInformation("a valid title", InformationValidator.ProblemTitleType));
             Assert.True(InformationValidator.VerifyInformation("                                                                     a valid title", InformationValidator.ProblemTitleType));
             Assert.True(InformationValidator.VerifyInformation("a valid title                                                                      ", InformationValidator.ProblemTitleType));
-            Assert.True(InformationValidator.VerifyInformation("                                      a valid title                                ", InformationValidator.ProblemTitleType));                                                   
+            Assert.True(InformationValidator.VerifyInformation("                                      a valid title                                ", InformationValidator.ProblemTitleType));
+        }
+
+        [Test]
+        public void TestTemporaryPasswordGeneration()
+        {
+            int testQuantity = 100000;
+            int threshold = 10;
+            string[] generatedPasswords = new string[testQuantity];
+            for (int i = 0; i < testQuantity; i++)
+            {
+                generatedPasswords[i] = InformationValidator.GenerateTemporaryPassword();
+            }
+            HashSet<string> passwordCounts = new HashSet<string>();
+            int numRepeats = 0;
+            foreach (string pass in generatedPasswords) {
+                Assert.True(pass.Length == 16);
+                int lowers = 4;
+                int uppers = 4;
+                int numbers = 4;
+                int symbols = 4;
+                foreach (char c in pass)
+                {
+                    if ("qwertyuiopasdfghjklzxcvbnm".Contains(c)) lowers--;
+                    if ("MNBVCXZQWERTYUIOPHJKLFDSAG".Contains(c)) uppers--;
+                    if ("0512864973".Contains(c)) numbers--;
+                    if (">/?=*@[}^&+.$\\|]~-()`#!_%".Contains(c)) symbols--;
+                }
+
+                Assert.True(lowers == 0);
+                Assert.True(uppers == 0);
+                Assert.True(numbers == 0);
+                Assert.True(symbols == 0);
+
+                if (passwordCounts.Contains(pass))
+                {
+                    numRepeats++;
+                }
+                else {
+                    passwordCounts.Add(pass);
+                }
+            }
+
+            Assert.True(numRepeats < threshold);
+        }
+
+        [Test]
+        public void TestMD5Hash() 
+        {
+            int testQuantity = 100000;
+            string[] plains = new string[testQuantity];
+            string[] hashes = new string[testQuantity];
+            for (int i = 0; i < testQuantity; i++) 
+            {
+                plains[i] = InformationValidator.GenerateTemporaryPassword();
+            }
+            HashSet<string> plainCounts = new HashSet<string>();
+            int repeats = 0;
+            foreach (string plain in plains) 
+            {
+                if (plainCounts.Contains(plain))
+                {
+                    repeats++;
+                }
+                else 
+                {
+                    plainCounts.Add(plain);
+                }
+            }
+            for (int i = 0; i < testQuantity; i++) 
+            {
+                hashes[i] = InformationValidator.MD5Hash(plains[i]);
+                Assert.True(InformationValidator.VerifyInformation(hashes[i], InformationValidator.PasswordType));
+            }
+            HashSet<string> hashCounts = new HashSet<string>();
+            int collisions = 0;
+            foreach (string hash in hashes) 
+            {
+                if (hashCounts.Contains(hash))
+                {
+                    collisions++;
+                }
+                else 
+                {
+                    hashCounts.Add(hash);
+                }
+            }
+            Assert.True(collisions == repeats);
         }
     }
 }
