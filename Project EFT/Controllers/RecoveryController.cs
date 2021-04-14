@@ -22,31 +22,40 @@ namespace Project_EFT.Controllers
         public IActionResult forgotPassword()
         {
             string username = Request.Form["username"];
-            string passwordPlain = Request.Form["recoveryPassword"];
-            string passwordHash = Request.Form["recoveryPasswordCont"];
-            StandardUser user = DBConnector.GetStandardUserByUsername(username);
-            if (user.Id != 0)
+            username = username.Trim();
+            string passwordPlain = InformationValidator.GenerateTemporaryPassword();
+            string passwordHash = InformationValidator.MD5Hash(passwordPlain);
+
+            if (!InformationValidator.VerifyInformation(username, InformationValidator.UsernameType))
             {
-                if (DBConnector.UpdatePassword(user, passwordHash) == DBConnector.CREDENTIAL_CHANGE_SUCCESS)
+                HttpContext.Session.SetString("usernameErrorMessage", InformationValidator.InvalidUsernameString);
+            }
+            else
+            {
+                StandardUser user = DBConnector.GetStandardUserByUsername(username);
+                if (user.Id != 0)
                 {
-                    user.Password = passwordPlain;
-                    if (Mailer.SendPasswordRecoveryEmail(user))
+                    if (DBConnector.UpdatePassword(user, passwordHash) == DBConnector.CREDENTIAL_CHANGE_SUCCESS)
                     {
-                        HttpContext.Session.SetString("passwordResetSuccess", "An email containing your new password has been sent to the email associated with this account.");
+                        user.Password = passwordPlain;
+                        if (Mailer.SendPasswordRecoveryEmail(user))
+                        {
+                            HttpContext.Session.SetString("passwordResetSuccess", "An email containing your new password has been sent to the email associated with this account.");
+                        }
+                        else
+                        {
+                            HttpContext.Session.SetString("passwordResetError", "An error occurred when sending your recovery email. Please try again.");
+                        }
                     }
-                    else 
+                    else
                     {
-                        HttpContext.Session.SetString("passwordResetError", "An error occurred when sending your recovery email. Please try again.");
+                        HttpContext.Session.SetString("passwordResetError", "An error occurred when resetting your password. Please try again.");
                     }
                 }
                 else
                 {
-                    HttpContext.Session.SetString("passwordResetError", "An error occurred when resetting your password. Please try again.");
+                    HttpContext.Session.SetString("passwordResetError", "Unable to find an account with that username. Please try again.");
                 }
-            }
-            else 
-            {
-                HttpContext.Session.SetString("passwordResetError", "Unable to find an account with that username. Please try again.");
             }
 
             return RedirectToAction("RecoverInfo");
@@ -56,31 +65,40 @@ namespace Project_EFT.Controllers
         public IActionResult forgotUsername()
         {
             string email = Request.Form["email"];
-            string passwordPlain = Request.Form["recoveryPassword1"];
-            string passwordHash = Request.Form["recoveryPasswordCont1"];
-            StandardUser user = DBConnector.GetStandardUserByEmail(email);
-            if (user.Id != 0)
+            email = email.Trim();
+            string passwordPlain = InformationValidator.GenerateTemporaryPassword();
+            string passwordHash = InformationValidator.MD5Hash(passwordPlain);
+
+            if (!InformationValidator.VerifyInformation(email, InformationValidator.EmailType))
             {
-                if (DBConnector.UpdatePassword(user, passwordHash) == DBConnector.CREDENTIAL_CHANGE_SUCCESS)
+                HttpContext.Session.SetString("emailErrorMessage", InformationValidator.InvalidEmailString);
+            }
+            else
+            {
+                StandardUser user = DBConnector.GetStandardUserByEmail(email);
+                if (user.Id != 0)
                 {
-                    user.Password = passwordPlain;
-                    if (Mailer.SendAccountRecoveryEmail(user))
+                    if (DBConnector.UpdatePassword(user, passwordHash) == DBConnector.CREDENTIAL_CHANGE_SUCCESS)
                     {
-                        HttpContext.Session.SetString("accountResetSuccess", "An email containing your account information has been sent.");
+                        user.Password = passwordPlain;
+                        if (Mailer.SendAccountRecoveryEmail(user))
+                        {
+                            HttpContext.Session.SetString("accountResetSuccess", "An email containing your account information has been sent.");
+                        }
+                        else
+                        {
+                            HttpContext.Session.SetString("accountResetError", "An error occurred when sending your recovery email. Please try again.");
+                        }
                     }
                     else
                     {
-                        HttpContext.Session.SetString("accountResetError", "An error occurred when sending your recovery email. Please try again.");
+                        HttpContext.Session.SetString("accountResetError", "An error occurred when resetting your account information. Please try again.");
                     }
                 }
                 else
                 {
-                    HttpContext.Session.SetString("accountResetError", "An error occurred when resetting your account information. Please try again.");
+                    HttpContext.Session.SetString("accountResetError", "Unable to find an account with that email. Please try again.");
                 }
-            }
-            else
-            {
-                HttpContext.Session.SetString("accountResetError", "Unable to find an account with that email. Please try again.");
             }
             return RedirectToAction("RecoverInfo");
         }

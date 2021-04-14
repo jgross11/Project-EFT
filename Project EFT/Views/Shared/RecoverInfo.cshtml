@@ -4,19 +4,14 @@
 @{ISession session = HttpContextAccessor.HttpContext.Session; }
 @{
 
-    string username = "";
-    string email = "";
-    string passwordResetError = "";
-    string accountResetError = "";
-    string passwordResetSuccess = "";
-    string accountResetSuccess = "";
-
-    passwordResetError = session.TryGetAndRemoveKey<String>("passwordResetError");
-    username = session.TryGetAndRemoveKey<String>("username");
-    accountResetError = session.TryGetAndRemoveKey<String>("accountResetError");
-    email = session.TryGetAndRemoveKey<String>("email");
-    passwordResetSuccess = session.TryGetAndRemoveKey<String>("passwordResetSuccess");
-    accountResetSuccess = session.TryGetAndRemoveKey<String>("accountResetSuccess");
+    string passwordResetError = session.TryGetAndRemoveKey<String>("passwordResetError");
+    string username = session.TryGetAndRemoveKey<String>("username");
+    string accountResetError = session.TryGetAndRemoveKey<String>("accountResetError");
+    string email = session.TryGetAndRemoveKey<String>("email");
+    string passwordResetSuccess = session.TryGetAndRemoveKey<String>("passwordResetSuccess");
+    string accountResetSuccess = session.TryGetAndRemoveKey<String>("accountResetSuccess");
+    string usernameErrorMessage = session.TryGetAndRemoveKey<String>("usernameErrorMessage");
+    string emailErrorMessage = session.TryGetAndRemoveKey<String>("emailErrorMessage");
 }
 <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.12.0/js/md5.min.js"></script>
 
@@ -24,9 +19,7 @@ Forgot your password? Enter your username below to send a password recovery emai
 <br />
 <form id="forgotPassword" action="~/Recovery/forgotPassword" method="post">
     <input type="text" id="username" name="username" value="@username" /><br>
-    <div class="error" id="username-error"></div>
-    <input type="hidden" id="recoveryPassword" name="recoveryPassword" />
-    <input type="hidden" id="recoveryPasswordCont" name="recoveryPasswordCont" />
+    <div class="error" id="username-error">@usernameErrorMessage</div>
     <input type="button" value="Recover password" onclick="recoverPassword()" />
     <div class="error" id="forgot-password-error">@passwordResetError</div>
     <div class="success" id="forgot-password-success">@passwordResetSuccess</div>
@@ -37,9 +30,7 @@ Forgot your username? Enter your email below to send an account recovery email.
 <br />
 <form id="forgotUsername" action="~/Recovery/forgotUsername" method="post">
     <input type="text" id="email" name="email" value="@email" /><br>
-    <div class="error" id="email-error"></div>
-    <input type="hidden" id="recoveryPassword1" name="recoveryPassword1" />
-    <input type="hidden" id="recoveryPasswordCont1" name="recoveryPasswordCont1" />
+    <div class="error" id="email-error">@emailErrorMessage</div>
     <input type="button" value="Recover account" onclick="recoverAccount()" />
     <div class="error" id="forgot-account-error">@accountResetError</div>
     <div class="success" id="forgot-account-success">@accountResetSuccess</div>
@@ -52,9 +43,6 @@ Forgot your username? Enter your email below to send an account recovery email.
         let username = usernameElement.value.trim();
 
         if (verifyInformation(username, TYPE_USERNAME)) {
-            let generatedPassword = generateTemporaryPassword();
-            document.getElementById("recoveryPassword").value = generatedPassword;
-            document.getElementById("recoveryPasswordCont").value = md5(generatedPassword);
             document.getElementById("forgotPassword").submit();
         } else {
             document.getElementById("username-error").innerHTML = "Please enter a valid username.";
@@ -66,9 +54,6 @@ Forgot your username? Enter your email below to send an account recovery email.
         let email = emailElement.value.trim();
 
         if (verifyInformation(email, TYPE_EMAIL)) {
-            let generatedPassword = generateTemporaryPassword();
-            document.getElementById("recoveryPassword1").value = generatedPassword;
-            document.getElementById("recoveryPasswordCont1").value = md5(generatedPassword);
             document.getElementById("forgotUsername").submit();
         } else {
             document.getElementById("email-error").innerHTML = "Please enter a valid email.";

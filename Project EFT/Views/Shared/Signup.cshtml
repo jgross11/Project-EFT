@@ -5,6 +5,9 @@
 @{
 
     string username = "";
+    string usernameFormatError = session.TryGetAndRemoveKey<string>("usernameFormatError");
+    string emailFormatError = session.TryGetAndRemoveKey<string>("emailFormatError");
+    string passwordFormatError = session.TryGetAndRemoveKey<string>("passwordFormatError");
     string email = "";
     string signupErrorMessage = "";
 
@@ -27,17 +30,17 @@
 <form id="signup" action="~/Signup/SubmitSignup" method="post">
     Enter Username:<br>
     <input type="text" id="username" name="username" value="@username" /><br>
-    <div class="error" id="username-error"></div>
+    <div class="error" id="username-error">@usernameFormatError</div>
     Enter Email:<br>
     <input type="text" id="email" name="email" value="@email" /><br>
-    <div class="error" id="email-error"></div>
+    <div class="error" id="email-error">@emailFormatError</div>
     <input type="hidden" id="password" name="password" />
 </form>
     Enter Password:
 <br>
 <input type="password" id="passwordEntry" name="passwordEntry" />
 <br>
-<div class="error" id="password-error"></div>
+<div class="error" id="password-error">@passwordFormatError</div>
     Confirm Password:
 <br>
 <input type="password" id="confirmPassword" name="confirmPassword" />

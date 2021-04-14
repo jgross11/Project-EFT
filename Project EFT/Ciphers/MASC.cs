@@ -31,19 +31,12 @@ namespace Project_EFT.Ciphers
             }));
         }
 
-        public override void Encrypt()
+        protected override void Encrypt()
         {
             string ciphertext = "";
             string plaintext = (string)EncryptionFormOptions[InputIndex].GetValue();
             string alphabet = (string)EncryptionFormOptions[AlphabetIndex].GetValue();
             string substitutionAlphabet = (string)EncryptionFormOptions[SubstitutionAlphabetIndex].GetValue();
-
-            if (alphabet.Length != substitutionAlphabet.Length) 
-            {
-                EncryptionFormOptions[SubstitutionAlphabetIndex].ErrorMessage = 
-                    String.Format("Please ensure alphabets contain the same number of characters (Base: {0} characters, Substitution: {1} characters)", alphabet.Length, substitutionAlphabet.Length);
-                return;
-            }
 
             foreach (char c in plaintext)
             {
@@ -66,7 +59,7 @@ namespace Project_EFT.Ciphers
             DecryptionFormOptions[InputIndex].SetValue(ciphertext);
         }
 
-        public override void Decrypt()
+        protected override void Decrypt()
         {
             string[] plaintexts = new string[NumSolutionsToReturn];
             int decryptionMethod = (int) DecryptionFormOptions[DecryptionMethodIndex].GetValue();
@@ -76,13 +69,6 @@ namespace Project_EFT.Ciphers
             if (decryptionMethod == KnownSubstitutionAlphabetChoice)
             {
                 string substitutionAlphabet = (string)((RadioOptionsSet)DecryptionFormOptions[DecryptionMethodIndex]).Choices[DecryptionSubstitutionAlphabetIndex].GetValue();
-                if (alphabet.Length != substitutionAlphabet.Length)
-                {
-                    DecryptionFormOptions[SubstitutionAlphabetIndex].ErrorMessage =
-                        String.Format("Please ensure alphabets contain the same number of characters (Base: {0} characters, Substitution: {1} characters)", alphabet.Length, substitutionAlphabet.Length);
-                    return;
-                }
-
                 foreach (char c in ciphertext)
                 {
                     int index = substitutionAlphabet.IndexOf(c);
@@ -102,6 +88,70 @@ namespace Project_EFT.Ciphers
             {
                 EncryptionFormOptions[InputIndex].SetValue("TODO decrypt without knowing alphabet!!!");
             }
+        }
+
+        protected override bool EncryptionFormDataIsValid()
+        {
+            bool error = false;
+            string alphabet = (string)EncryptionFormOptions[AlphabetIndex].GetValue();
+            string substitutionAlphabet = (string)EncryptionFormOptions[SubstitutionAlphabetIndex].GetValue();
+
+
+            if (!IsValidTextInput((string)EncryptionFormOptions[InputIndex].GetValue()))
+            {
+                EncryptionFormOptions[InputIndex].ErrorMessage = InvalidInputMessage;
+                error = true;
+            }
+            if (!IsValidAlphabet(alphabet))
+            {
+                EncryptionFormOptions[AlphabetIndex].ErrorMessage = InvalidAlphabetMessage;
+                error = true;
+            }
+            if (!IsValidAlphabet(substitutionAlphabet))
+            {
+                EncryptionFormOptions[SubstitutionAlphabetIndex].ErrorMessage = InvalidAlphabetMessage;
+                error = true;
+            }
+
+            if (!AlphabetsMatch(alphabet, substitutionAlphabet))
+            {
+                EncryptionFormOptions[SubstitutionAlphabetIndex].ErrorMessage = FormatUnequalAlphabetMessage(alphabet, substitutionAlphabet);
+                error = true;
+            }
+            return !error;
+        }
+
+        protected override bool DecryptionFormDataIsValid()
+        {
+            bool error = false;
+            int decryptionMethod = (int)DecryptionFormOptions[DecryptionMethodIndex].GetValue();
+            string alphabet = (string)DecryptionFormOptions[AlphabetIndex].GetValue();
+
+            if (!IsValidTextInput((string)DecryptionFormOptions[InputIndex].GetValue()))
+            {
+                DecryptionFormOptions[InputIndex].ErrorMessage = InvalidInputMessage;
+                error = true;
+            }
+            if (!IsValidAlphabet(alphabet))
+            {
+                DecryptionFormOptions[AlphabetIndex].ErrorMessage = InvalidAlphabetMessage;
+                error = true;
+            }
+            if (decryptionMethod == KnownSubstitutionAlphabetChoice)
+            {
+                string substitutionAlphabet = (string)((RadioOptionsSet)DecryptionFormOptions[DecryptionMethodIndex]).Choices[DecryptionSubstitutionAlphabetIndex].GetValue();
+                if (!IsValidAlphabet(substitutionAlphabet))
+                {
+                    EncryptionFormOptions[SubstitutionAlphabetIndex].ErrorMessage = InvalidAlphabetMessage;
+                    error = true;
+                }
+                if (!AlphabetsMatch(alphabet, substitutionAlphabet))
+                {
+                    EncryptionFormOptions[SubstitutionAlphabetIndex].ErrorMessage = FormatUnequalAlphabetMessage(alphabet, substitutionAlphabet);
+                    error = true;
+                }
+            }
+            return !error;
         }
     }
 }

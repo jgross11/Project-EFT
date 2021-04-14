@@ -27,10 +27,16 @@ namespace Project_EFT.Controllers
         [HttpPost]
         public IActionResult editUsername() 
         {
+            if (!HttpContext.Session.ContainsKey("userInfo") && !HttpContext.Session.ContainsKey("adminInfo")) return RedirectToAction("Index", "Home");
+
             string username = Request.Form["username"];
-            
+
+            if (!InformationValidator.VerifyInformation(username, InformationValidator.UsernameType)) 
+            {
+                HttpContext.Session.SetString("usernameError", InformationValidator.InvalidUsernameString);
+            }
             // TODO fix specific adminInfo / userInfo session being used, should be one base user class that is cast appropriately
-            if (HttpContext.Session.ContainsKey("userInfo"))
+            else if (HttpContext.Session.ContainsKey("userInfo"))
             {
                 StandardUser user = HttpContext.Session.GetComplexObject<StandardUser>("userInfo");
                 int result = DBConnector.TryUpdateUsername(user, username);
@@ -59,7 +65,7 @@ namespace Project_EFT.Controllers
                     admin.Username = username;
                     HttpContext.Session.SetComplexObject<Admin>("adminInfo", admin);
                 }
-                else if(result == DBConnector.CREDENTIAL_TAKEN) 
+                else if (result == DBConnector.CREDENTIAL_TAKEN)
                 {
                     HttpContext.Session.SetString("usernameError", "That username belongs to another account.");
                 }
@@ -74,10 +80,17 @@ namespace Project_EFT.Controllers
         [HttpPost]
         public IActionResult editEmail()
         {
+            if (!HttpContext.Session.ContainsKey("userInfo") && !HttpContext.Session.ContainsKey("adminInfo")) return RedirectToAction("Index", "Home");
+
             string email = Request.Form["email"];
 
+            if (!InformationValidator.VerifyInformation(email, InformationValidator.EmailType))
+            {
+                HttpContext.Session.SetString("emailError", InformationValidator.InvalidEmailString);
+            }
+
             // TODO fix specific adminInfo / userInfo session being used, should be one base user class that is cast appropriately
-            if (HttpContext.Session.ContainsKey("userInfo"))
+            else if (HttpContext.Session.ContainsKey("userInfo"))
             {
                 StandardUser user = HttpContext.Session.GetComplexObject<StandardUser>("userInfo");
                 int result = DBConnector.TryUpdateEmail(user, email);
@@ -121,10 +134,17 @@ namespace Project_EFT.Controllers
         [HttpPost]
         public IActionResult editPassword()
         {
+            if (!HttpContext.Session.ContainsKey("userInfo") && !HttpContext.Session.ContainsKey("adminInfo")) return RedirectToAction("Index", "Home");
+
             string password = Request.Form["password"];
 
+            if (!InformationValidator.VerifyInformation(password, InformationValidator.PasswordType))
+            {
+                HttpContext.Session.SetString("passwordError", InformationValidator.InvalidPasswordString);
+            }
+
             // TODO fix specific adminInfo / userInfo session being used, should be one base user class that is cast appropriately
-            if (HttpContext.Session.ContainsKey("userInfo"))
+            else if (HttpContext.Session.ContainsKey("userInfo"))
             {
                 StandardUser user = HttpContext.Session.GetComplexObject<StandardUser>("userInfo");
                 int result = DBConnector.UpdatePassword(user, password);

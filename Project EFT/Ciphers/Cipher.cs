@@ -14,15 +14,19 @@ namespace Project_EFT.Ciphers
         public List<Option> EncryptionFormOptions;
         public List<Option> DecryptionFormOptions;
         public abstract void GenerateForms();
-        public abstract void Encrypt();
-        public abstract void Decrypt();
+        protected abstract void Encrypt();
+        protected abstract void Decrypt();
+        protected abstract bool EncryptionFormDataIsValid();
+        protected abstract bool DecryptionFormDataIsValid();
         public const int InputIndex = 0;
         public const int AlphabetIndex = 1;
         public const string standardAlphabet = "abcdefghijklmnopqrstuvwxyz";
+        public const string InvalidAlphabetMessage = "Please ensure the alphabet contains at least one character.";
+        public const string InvalidInputMessage = "Please ensure the input contains at least one character.";
 
         public Cipher(int numSols) 
         {
-            NumSolutionsToReturn = numSols;
+            NumSolutionsToReturn = numSols > 0 ? numSols : 1;
             Init();
         }
 
@@ -44,6 +48,16 @@ namespace Project_EFT.Ciphers
             outputs = new string[NumSolutionsToReturn];
         }
 
+        public void VerifyAndEncrypt()
+        {
+            if (EncryptionFormDataIsValid()) Encrypt();
+        }
+
+        public void VerifyAndDecrypt()
+        {
+            if (DecryptionFormDataIsValid()) Decrypt();
+        }
+
         public void ResetErrors()
         {
             foreach (Option opt in EncryptionFormOptions)
@@ -61,5 +75,23 @@ namespace Project_EFT.Ciphers
             return n > -1 ? n % mod : ((n % mod) + mod) % mod;
         }
 
+        protected bool IsValidAlphabet(string alphabet) 
+        {
+            return !(alphabet == "" || alphabet == null);
+        }
+
+        protected bool IsValidTextInput(string textInput)
+        {
+            return !(textInput == "" || textInput == null);
+        }
+
+        protected bool AlphabetsMatch(string alph1, string alph2)
+        {
+            return alph1 == alph2;
+        }
+
+        protected string FormatUnequalAlphabetMessage(string baseA, string substitution) {
+            return String.Format("Please ensure alphabets contain the same number of characters (Base: {0} characters, Substitution: {1} characters)", baseA.Length, substitution.Length);
+        }
     }
 }
