@@ -36,16 +36,18 @@ namespace Project_EFT.Data_Classes
         public static bool VerifyInformation(string info, int type) 
         {
             if (info == null || info.Length == 0) return false;
+            string testInfo = null;
             switch (type) 
             {
                 case EmailType:
-                    if (info.Length > MaxEmailLength || info.Length < 5) return false;
+                    testInfo = info.Trim();
+                    if (testInfo.Length > MaxEmailLength || testInfo.Length < 5) return false;
                     bool foundAt = false;
-                    for (int i = 1; i < info.Length; i++) 
+                    for (int i = 1; i < testInfo.Length; i++) 
                     {
-                        char c = info[i];
+                        char c = testInfo[i];
                         if (c == '@' && !foundAt) foundAt = true;
-                        else if (foundAt && c == '.' && info[i - 1] != '@' && i != info.Length - 1) return true;
+                        else if (foundAt && c == '.' && testInfo[i - 1] != '@' && i != testInfo.Length - 1) return true;
                         else if (c == '@' && foundAt) 
                         {
                             return false;
@@ -63,11 +65,14 @@ namespace Project_EFT.Data_Classes
                     }
                     return true;
                 case UsernameType:
-                    return info.Length >= MinimumUsernameLength && info.Length <= MaximumUsernameLength;
+                    testInfo = info.Trim();
+                    return testInfo.Length >= MinimumUsernameLength && testInfo.Length <= MaximumUsernameLength;
                 case ProblemSubmissionType:
-                    return info.Length > 0 && info.Length <= MaximumProblemSubmissionLength;
+                    testInfo = info.Trim();
+                    return testInfo.Length > 0 && testInfo.Length <= MaximumProblemSubmissionLength;
                 case ProblemTitleType:
-                    return info.Length > 0 && info.Length <= InformationValidator.MaximumProblemTitleLength;
+                    testInfo = info.Trim();
+                    return testInfo.Length > 0 && testInfo.Length <= MaximumProblemTitleLength;
             }
 
             return false;
