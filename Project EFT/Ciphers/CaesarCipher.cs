@@ -11,10 +11,10 @@ namespace Project_EFT.Ciphers
     public class CaesarCipher : Cipher
     {
         public override string Name { get { return "Caesar Cipher"; } }
-        private const int ShiftIndex = 2;
+        public const int ShiftIndex = 2;
         private const int KnownShiftChoice = 0;
         private const int KnownShiftIndex = 0;
-        private const int DecryptionMethodIndex = 2;
+        public const int DecryptionMethodIndex = 2;
 
         public CaesarCipher(int numSols) : base(numSols)
         {
@@ -32,7 +32,7 @@ namespace Project_EFT.Ciphers
             }));
         }
 
-        public override void Encrypt()
+        protected override void Encrypt()
         {
             string ciphertext = "";
             string plaintext = (string)EncryptionFormOptions[InputIndex].GetValue();
@@ -59,7 +59,7 @@ namespace Project_EFT.Ciphers
             DecryptionFormOptions[InputIndex].SetValue(ciphertext);
         }
 
-        public override void Decrypt()
+        protected override void Decrypt()
         {
             string[] plaintexts = new string[NumSolutionsToReturn];
             string ciphertext = (string)DecryptionFormOptions[InputIndex].GetValue();
@@ -88,6 +88,38 @@ namespace Project_EFT.Ciphers
             {
                 EncryptionFormOptions[InputIndex].SetValue("TODO decrypt without knowing shift amount!!!");
             }
+        }
+
+        protected override bool EncryptionFormDataIsValid()
+        {
+            bool error = false;
+            if (!IsValidTextInput((string)EncryptionFormOptions[InputIndex].GetValue()))
+            {
+                EncryptionFormOptions[InputIndex].ErrorMessage = InvalidInputMessage;
+                error = true;
+            }
+            if (!IsValidAlphabet((string)EncryptionFormOptions[AlphabetIndex].GetValue()))
+            {
+                EncryptionFormOptions[AlphabetIndex].ErrorMessage = InvalidAlphabetMessage;
+                error = true;
+            }
+            return !error;
+        }
+
+        protected override bool DecryptionFormDataIsValid()
+        {
+            bool error = false;
+            if (!IsValidTextInput((string)DecryptionFormOptions[InputIndex].GetValue()))
+            {
+                EncryptionFormOptions[InputIndex].ErrorMessage = InvalidInputMessage;
+                error = true;
+            }
+            if (!IsValidAlphabet((string)DecryptionFormOptions[AlphabetIndex].GetValue()))
+            {
+                EncryptionFormOptions[AlphabetIndex].ErrorMessage = InvalidAlphabetMessage;
+                error = true;
+            }
+            return !error;
         }
     }
 }
