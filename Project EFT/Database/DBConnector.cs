@@ -444,7 +444,7 @@ namespace Project_EFT.Database
                 string email = reader.GetString(3);
                 int rank = reader.GetInt32(4);
                 int id = reader.GetInt32(0);
-
+                connection.Close();
                 Dictionary<int, List<AnswerSubmission>> submissionMap = new Dictionary<int, List<AnswerSubmission>>();
                 //this will contain all of the users submissions in ascending order, by date, and then add them to the correct lists based on id
                 List <AnswerSubmission> submissionList = GetAnswerSubmissionsByID(id);
@@ -474,7 +474,6 @@ namespace Project_EFT.Database
                         Debug.Write(k.Key + " " + a.SubmissionDate + " " + a.Content + "\n");
                     }
                 }*/
-                connection.Close();
                 return new StandardUser(
                     usern, passw, email, rank, id, submissionMap
                 );
