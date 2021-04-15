@@ -49,6 +49,21 @@ namespace Project_EFT.Controllers
             return View();
         }
 
+        public IActionResult WipeProblemSubmissions(int problemID) 
+        {
+            if (!HttpContext.Session.ContainsKey("userInfo") || problemID < 1 || problemID > DBConnector.problems.Count) return Redirect(Request.Headers["Referer"].ToString());
+            StandardUser user = HttpContext.Session.GetComplexObject<StandardUser>("userInfo");
+            if (!user.Submissions.ContainsKey(problemID)) return RedirectToAction("ProblemList", "Home");
+            if (!DBConnector.ResetProblemSubmissions(user, problemID))
+                HttpContext.Session.SetString("problem" + problemID + "error", "Unable to wipe submission information for the selected problem. Please try again.");
+            else
+            {
+                user.Submissions.Remove(problemID);
+                HttpContext.Session.SetComplexObject<StandardUser>("userInfo", user);
+            }
+            return Redirect(Request.Headers["Referer"].ToString());
+        }
+
         //check Answer method POST
         [HttpPost]
         public IActionResult CheckAnswer()
