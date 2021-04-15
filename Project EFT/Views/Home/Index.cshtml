@@ -20,6 +20,7 @@
             int[] keys = new int[user.Submissions.Count];
             user.Submissions.Keys.CopyTo(keys, 0);
             Array.Sort(keys);
+            string clearErrorMessage = null;
 
             foreach (int i in keys)
             {
@@ -38,17 +39,28 @@
                                 <th>@sub.SubmissionDate</th>
                                 @if (sub.IsCorrect)
                                 {
-                                    <th>Correct</th>
+                                    <th class="success">Correct</th>
                                 }
                                 else
                                 {
-                                    <th>Incorrect</th>
+                                    <th class="error">Incorrect</th>
                                 }
                             </tr>
+
+                            if (session.ContainsKey("problem" + i + "error")) 
+                            {
+                                clearErrorMessage = session.GetString("problem" + i + "error");
+                            }
                         }
 
                     </table>
+                    <button onclick="window.location.href='/Problem/WipeProblemSubmissions?problemID='+i">Wipe submissions for problem @i</button>
+
                 </div>
+                if (clearErrorMessage != null) { 
+                    <div class="error">@session.GetString("problem" + i + "error")</div>
+                    session.Remove("problem" + i + "error");
+                }
                 <br />
 
             }
@@ -130,7 +142,7 @@
             }
 
         </script>
-                    }
+    }
     else
     {
         string loginErrorMessage = session.TryGetAndRemoveKey<string>("errorMessage");
