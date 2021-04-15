@@ -66,6 +66,49 @@ namespace Project_EFT.Database
            
         }
 
+        public static bool ResetProblemSubmissions(StandardUser user, int problemID)
+        {
+            if (CheckIfUserSubmissionTableExists(user.Id))
+            {
+                string tablename = "UserSubmissions" + user.Id;
+                MySqlCommand command = MakeCommand("SELECT * FROM " + tablename + " WHERE UserSubmissions_ProblemID = @problemNumber");
+                command.Parameters.AddWithValue("@problemNumber", problemID);
+                command.Prepare();
+                MySqlDataReader reader = command.ExecuteReader();
+                int numAttempts = 0;
+                int numCompletions = 0;
+                while (reader.Read())
+                {
+                    bool isCorrect = reader.GetBoolean(3);
+                    numAttempts++;
+                    if (reader.GetBoolean(3)) numCompletions++;
+                }
+                command.Parameters.Clear();
+                reader.Close();
+                command.CommandText = @"
+                                        UPDATE Problems SET Problem_Attempts = Problem_Attempts - @attempts, Problem_Completions = Problem_Completions - @completions
+                                        WHERE Problem_Number = @pID";
+                command.Parameters.AddWithValue("@attempts", numAttempts);
+                command.Parameters.AddWithValue("@completions", numCompletions);
+                command.Parameters.AddWithValue("@pID", problemID);
+                command.Prepare();
+                command.ExecuteNonQuery();
+                command.Parameters.Clear();
+
+                command.CommandText = "DELETE FROM " + tablename + " WHERE UserSubmissions_ProblemID = @pID";
+                command.Parameters.AddWithValue("@pID", problemID);
+                command.Prepare();
+                command.ExecuteNonQuery();
+                connection.Close();
+
+                // refresh problems attempt / completion count the bad way because time crunch
+                GetProblemsList();
+
+                return true;
+            }
+            return false;
+        }
+
         public static bool CreateUserSubmissionTable(int ID)
         {
             string tablename = "UserSubmissions" + ID;
