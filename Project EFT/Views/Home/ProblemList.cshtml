@@ -1,23 +1,53 @@
-﻿@using Project_EFT.Data_Classes;
+﻿@using Microsoft.AspNetCore.Http;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@using Project_EFT.Data_Classes;
+@{ISession session = HttpContextAccessor.HttpContext.Session; }
 @using Project_EFT.Database;
 @{
     // fetch problem array from view data
     Problem[] problems = DBConnector.problems.ToArray();
+    StandardUser user = session.GetComplexObject<StandardUser>("userInfo");
 }
 
 <h1> Problems </h1>
 <table>
     <tr>
+        @{
+            if (user != null)
+            {
+                <th>Completed</th>
+            }
+        }
         <th>Number</th>
         <th>Title</th>
         <th>Attempts</th>
         <th>Completions</th>
     </tr>
-    @{ 
+    @{
         // generate row for each problem in problems array
-        foreach (Problem problem in problems) 
-        { 
+        foreach (Problem problem in problems)
+        {
         <tr>
+            @{
+                if (user != null)
+                {
+                    if (user.Submissions.ContainsKey(problem.ProblemNumber))
+                    {
+                        if (user.Submissions[problem.ProblemNumber][user.Submissions[problem.ProblemNumber].Count - 1].IsCorrect)
+                        {
+                            <th class="success">Y</th>
+                        }
+                        else 
+                        { 
+                            <th class="error">N</th>
+                        }
+                    }
+                    else
+                    {
+                        <th>N/A</th>
+                    }
+                }
+            }
             <th>@problem.ProblemNumber</th>
             <th><a href="/problem?ID=@problem.ProblemNumber">@problem.Title</a></th>
             <th>@problem.Attempts</th>
