@@ -93,7 +93,8 @@ namespace Project_EFT.Ciphers
                     byte pixG = imageBytes[i + 1];
                     byte pixA = imageBytes[i + 3];
                     if (pixB == 0 && pixR == pixB && pixB == pixG && pixB == pixA) continue;
-                    else {
+                    else
+                    {
                         plaintext += pixR < 226 ? standardAlphabet[pixR / 9] : ' ';
                         plaintext += pixG < 226 ? standardAlphabet[pixG / 9] : ' ';
                         plaintext += pixB < 226 ? standardAlphabet[pixB / 9] : ' ';
