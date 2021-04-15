@@ -73,7 +73,7 @@ namespace Project_EFT.Controllers
                     if (DBConnector.CreateUserSubmissionTable(user.Id))
                     {
                         //Set the correctness information to be passed to the front end
-                        ViewData["isCorrect"] = Request.Form["answer"].Equals(problem.Answer);
+                        ViewData["isCorrect"] = ((string)Request.Form["answer"]).Trim().ToLower().Equals(problem.Answer);
 
 
                         //creates a new submission and sends it to the DB
@@ -108,9 +108,9 @@ namespace Project_EFT.Controllers
                             return View("Problem");
                         }
                     }
-                    
+
                     //Set the correctness information to be passed to the front end
-                    ViewData["isCorrect"] = Request.Form["answer"].Equals(problem.Answer);
+                    ViewData["isCorrect"] = ((string)Request.Form["answer"]).Trim().ToLower().Equals(problem.Answer);
 
 
                     //creates a new submission and sends it to the DB
@@ -148,7 +148,7 @@ namespace Project_EFT.Controllers
             if (HttpContext.Session.ContainsKey("userInfo") || !HttpContext.Session.ContainsKey("adminInfo")) return RedirectToAction("Index", "Home");
             string title = Request.Form["Title"];
             string question = Request.Form["question"];
-            string answer = Request.Form["answer"];
+            string answer = ((string)Request.Form["answer"]).Trim().ToLower();
             bool formattingErrorExists = false;
 
             if (!InformationValidator.VerifyInformation(title, InformationValidator.ProblemTitleType)) 
