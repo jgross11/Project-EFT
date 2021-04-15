@@ -90,6 +90,11 @@ namespace Project_EFT.Ciphers
             return alph1 == alph2;
         }
 
+        protected bool AlphabetSizeMatch(string alph1, string alph2)
+        {
+            return alph1.Length == alph2.Length;
+        }
+
         protected string FormatUnequalAlphabetMessage(string baseA, string substitution) {
             return String.Format("Please ensure alphabets contain the same number of characters (Base: {0} characters, Substitution: {1} characters)", baseA.Length, substitution.Length);
         }

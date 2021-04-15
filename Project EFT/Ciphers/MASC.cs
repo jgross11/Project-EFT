@@ -113,7 +113,7 @@ namespace Project_EFT.Ciphers
                 error = true;
             }
 
-            if (!AlphabetsMatch(alphabet, substitutionAlphabet))
+            if (!AlphabetSizeMatch(alphabet, substitutionAlphabet))
             {
                 EncryptionFormOptions[SubstitutionAlphabetIndex].ErrorMessage = FormatUnequalAlphabetMessage(alphabet, substitutionAlphabet);
                 error = true;
@@ -145,7 +145,7 @@ namespace Project_EFT.Ciphers
                     EncryptionFormOptions[SubstitutionAlphabetIndex].ErrorMessage = InvalidAlphabetMessage;
                     error = true;
                 }
-                if (!AlphabetsMatch(alphabet, substitutionAlphabet))
+                if (!AlphabetSizeMatch(alphabet, substitutionAlphabet))
                 {
                     EncryptionFormOptions[SubstitutionAlphabetIndex].ErrorMessage = FormatUnequalAlphabetMessage(alphabet, substitutionAlphabet);
                     error = true;
