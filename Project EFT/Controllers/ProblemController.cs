@@ -29,7 +29,6 @@ namespace Project_EFT.Controllers
 
         public IActionResult Problem(int ID)
         {
-            
             // check if id is valid before fetching from problem list
             if (ID > 0 && ID <= DBConnector.problems.Count)
             {
@@ -49,8 +48,30 @@ namespace Project_EFT.Controllers
             return View();
         }
 
-        //check Answer method POST
-        [HttpPost]
+        public IActionResult WipeProblemSubmissions(int problemID) 
+        {
+            if (!HttpContext.Session.ContainsKey("userInfo") || problemID < 1 || problemID > DBConnector.problems.Count) return Redirect(Request.Headers["Referer"].ToString());
+            StandardUser user = HttpContext.Session.GetComplexObject<StandardUser>("userInfo");
+            if (!user.Submissions.ContainsKey(problemID)) return RedirectToAction("ProblemList", "Home");
+            if (!DBConnector.ResetProblemSubmissions(user, problemID))
+                HttpContext.Session.SetString("problem" + problemID + "error", "Unable to wipe submission information for the selected problem. Please try again.");
+            else
+            {
+                user.Submissions.Remove(problemID);
+                HttpContext.Session.SetComplexObject<StandardUser>("userInfo", user);
+            }
+            return Redirect(Request.Headers["Referer"].ToString());
+        }
+
+        public IActionResult CheckAnswer(int i)
+        {
+            if (!HttpContext.Session.ContainsKey("problem")) return RedirectToAction("ProblemList", "Home");
+            
+            return View("Problem", HttpContext.Session.GetComplexObject<Problem>("problem").ProblemNumber);
+        }
+
+            //check Answer method POST
+            [HttpPost]
         public IActionResult CheckAnswer()
         {
             if (!HttpContext.Session.ContainsKey("userInfo")) return RedirectToAction("Index", "Home");
