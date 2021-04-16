@@ -29,7 +29,6 @@ namespace Project_EFT.Controllers
 
         public IActionResult Problem(int ID)
         {
-            
             // check if id is valid before fetching from problem list
             if (ID > 0 && ID <= DBConnector.problems.Count)
             {
@@ -64,8 +63,15 @@ namespace Project_EFT.Controllers
             return Redirect(Request.Headers["Referer"].ToString());
         }
 
-        //check Answer method POST
-        [HttpPost]
+        public IActionResult CheckAnswer(int i)
+        {
+            if (!HttpContext.Session.ContainsKey("problem")) return RedirectToAction("ProblemList", "Home");
+            
+            return View("Problem", HttpContext.Session.GetComplexObject<Problem>("problem").ProblemNumber);
+        }
+
+            //check Answer method POST
+            [HttpPost]
         public IActionResult CheckAnswer()
         {
             if (!HttpContext.Session.ContainsKey("userInfo")) return RedirectToAction("Index", "Home");
