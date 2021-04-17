@@ -33,7 +33,7 @@ namespace Project_EFT.Controllers
             else
             {
                 StandardUser user = DBConnector.GetStandardUserByUsername(username);
-                if (user.Id != 0)
+                if (user != null)
                 {
                     if (DBConnector.UpdatePassword(user, passwordHash) == DBConnector.CREDENTIAL_CHANGE_SUCCESS)
                     {
@@ -76,7 +76,7 @@ namespace Project_EFT.Controllers
             else
             {
                 StandardUser user = DBConnector.GetStandardUserByEmail(email);
-                if (user.Id != 0)
+                if (user != null)
                 {
                     if (DBConnector.UpdatePassword(user, passwordHash) == DBConnector.CREDENTIAL_CHANGE_SUCCESS)
                     {

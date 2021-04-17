@@ -50,7 +50,7 @@ namespace Project_EFT.Controllers
 
         public IActionResult WipeProblemSubmissions(int problemID) 
         {
-            if (!HttpContext.Session.ContainsKey("userInfo") || problemID < 1 || problemID > DBConnector.problems.Count) return Redirect(Request.Headers["Referer"].ToString());
+            if (!HttpContext.Session.ContainsKey("userInfo") || problemID < 1 || problemID > DBConnector.problems.Count) return Redirect(Request.Headers["Referer"].ToString() != "" ? Request.Headers["Referer"].ToString() : "/");
             StandardUser user = HttpContext.Session.GetComplexObject<StandardUser>("userInfo");
             if (!user.Submissions.ContainsKey(problemID)) return RedirectToAction("ProblemList", "Home");
             if (!DBConnector.ResetProblemSubmissions(user, problemID))
@@ -60,7 +60,7 @@ namespace Project_EFT.Controllers
                 user.Submissions.Remove(problemID);
                 HttpContext.Session.SetComplexObject<StandardUser>("userInfo", user);
             }
-            return Redirect(Request.Headers["Referer"].ToString());
+            return Redirect(Request.Headers["Referer"].ToString() != "" ? Request.Headers["Referer"].ToString() : "/");
         }
 
         public IActionResult CheckAnswer(int i)
@@ -99,20 +99,25 @@ namespace Project_EFT.Controllers
 
                         //creates a new submission and sends it to the DB
                         AnswerSubmission answer = new AnswerSubmission(Request.Form["answer"], DateTime.Now, user.Id, (bool)ViewData["isCorrect"], problem.ProblemNumber);
-                        DBConnector.InsertNewAnswerSubmission(answer);
-
-                        //add submission to the current user in the session's map and reset the user in the session
-                        if (user.Submissions.ContainsKey(answer.ProblemId))
+                        if (DBConnector.InsertNewAnswerSubmission(answer))
                         {
-                            user.Submissions[answer.ProblemId].Add(answer);
+                            //add submission to the current user in the session's map and reset the user in the session
+                            if (user.Submissions.ContainsKey(answer.ProblemId))
+                            {
+                                user.Submissions[answer.ProblemId].Add(answer);
+                            }
+                            else
+                            {
+                                List<AnswerSubmission> newSubList = new List<AnswerSubmission>();
+                                newSubList.Add(answer);
+                                user.Submissions.Add(answer.ProblemId, newSubList);
+                            }
+                            HttpContext.Session.SetComplexObject<StandardUser>("userInfo", user);
                         }
-                        else
+                        else 
                         {
-                            List<AnswerSubmission> newSubList = new List<AnswerSubmission>();
-                            newSubList.Add(answer);
-                            user.Submissions.Add(answer.ProblemId, newSubList);
+                            HttpContext.Session.SetString("errorMessage", "Something went wrong, please try submitting your answer again.");
                         }
-                        HttpContext.Session.SetComplexObject<StandardUser>("userInfo", user);
                     }
                     else
                     {
@@ -136,20 +141,25 @@ namespace Project_EFT.Controllers
 
                     //creates a new submission and sends it to the DB
                     AnswerSubmission answer = new AnswerSubmission(Request.Form["answer"], DateTime.Now, user.Id, (bool)ViewData["isCorrect"], problem.ProblemNumber);
-                    DBConnector.InsertNewAnswerSubmission(answer);
-
-                    //add submission to the current user in the session's map and reset the user in the session
-                    if (user.Submissions.ContainsKey(answer.ProblemId))
+                    if (DBConnector.InsertNewAnswerSubmission(answer)) 
                     {
-                        user.Submissions[answer.ProblemId].Add(answer);
+                        //add submission to the current user in the session's map and reset the user in the session
+                        if (user.Submissions.ContainsKey(answer.ProblemId))
+                        {
+                            user.Submissions[answer.ProblemId].Add(answer);
+                        }
+                        else
+                        {
+                            List<AnswerSubmission> newSubList = new List<AnswerSubmission>();
+                            newSubList.Add(answer);
+                            user.Submissions.Add(answer.ProblemId, newSubList);
+                        }
+                        HttpContext.Session.SetComplexObject<StandardUser>("userInfo", user);
                     }
                     else
                     {
-                        List<AnswerSubmission> newSubList = new List<AnswerSubmission>();
-                        newSubList.Add(answer);
-                        user.Submissions.Add(answer.ProblemId, newSubList);
+                        HttpContext.Session.SetString("errorMessage", "Something went wrong, please try submitting your answer again.");
                     }
-                    HttpContext.Session.SetComplexObject<StandardUser>("userInfo", user);
                 }
             }
 
@@ -199,8 +209,12 @@ namespace Project_EFT.Controllers
                     {
                         admin.Submissions.Add(sub);
                         HttpContext.Session.SetComplexObject<Admin>("adminInfo", admin);
+                        ViewData["message"] = "Your new problem has been added to the list of problems!";
                     }
-                    ViewData["message"] = "Your new problem has been added to the list of problems!";
+                    else 
+                    {
+                        ViewData["message"] = "Your problem was added but you were not credited as the author due to an error.";
+                    }
                 }
                 else
                 {
