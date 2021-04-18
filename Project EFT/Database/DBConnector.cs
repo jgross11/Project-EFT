@@ -50,7 +50,21 @@ namespace Project_EFT.Database
             return OpenConnection() ? new MySqlCommand(statement, connection) : null;
         }
 
-        
+        public static MySqlTransaction MakeTransaction()
+        {
+            if (OpenConnection())
+                try
+                {
+                    return connection.BeginTransaction();
+                }
+                catch 
+                {
+                    return null;
+                }
+            return null;
+        }
+
+
         public static bool CheckIfUserSubmissionTableExists(int UserId)
         {
             
@@ -79,54 +93,53 @@ namespace Project_EFT.Database
         public static bool ResetProblemSubmissions(StandardUser user, int problemID)
         {
             if (CheckIfUserSubmissionTableExists(user.Id))
-            {
-                try {    
-                    string tablename = "UserSubmissions" + user.Id;
-                    MySqlCommand command = MakeCommand("SELECT * FROM " + tablename + " WHERE UserSubmissions_ProblemID = @problemNumber");
-                    command.Parameters.AddWithValue("@problemNumber", problemID);
-                    command.Prepare();
-                    MySqlDataReader reader = command.ExecuteReader();
-                    int numAttempts = 0;
-                    int numCompletions = 0;
-                    while (reader.Read())
+            {   
+                MySqlTransaction transaction = MakeTransaction();
+                if (transaction != null) 
+                {
+                    try
                     {
-                        bool isCorrect = reader.GetBoolean(3);
-                        numAttempts++;
-                        if (reader.GetBoolean(3)) numCompletions++;
+                        string tablename = "UserSubmissions" + user.Id;
+                        MySqlCommand command = new MySqlCommand("SELECT * FROM " + tablename + " WHERE UserSubmissions_ProblemID = @problemNumber", connection, transaction);
+                        command.Parameters.AddWithValue("@problemNumber", problemID);
+                        command.Prepare();
+                        MySqlDataReader reader = command.ExecuteReader();
+                        int numAttempts = 0;
+                        int numCompletions = 0;
+                        while (reader.Read())
+                        {
+                            bool isCorrect = reader.GetBoolean(3);
+                            numAttempts++;
+                            if (reader.GetBoolean(3)) numCompletions++;
+                        }
+                        command.Parameters.Clear();
+                        reader.Close();
+                        command.CommandText = @"
+                                        UPDATE Problems SET Problem_Attempts = Problem_Attempts - @attempts, Problem_Completions = Problem_Completions - @completions
+                                        WHERE Problem_Number = @pID";
+                        command.Parameters.AddWithValue("@attempts", numAttempts);
+                        command.Parameters.AddWithValue("@completions", numCompletions);
+                        command.Parameters.AddWithValue("@pID", problemID);
+                        command.Prepare();
+                        command.ExecuteNonQuery();
+                        command.Parameters.Clear();
+
+                        command.CommandText = "DELETE FROM " + tablename + " WHERE UserSubmissions_ProblemID = @pID";
+                        command.Parameters.AddWithValue("@pID", problemID);
+                        command.Prepare();
+                        command.ExecuteNonQuery();
+                        transaction.Commit();
+                        connection.Close();
+
+                        // refresh problems attempt / completion count the bad way because time crunch
+                        GetProblemsList();
+
+                        return true;
                     }
-                    command.Parameters.Clear();
-                    reader.Close();
-                    command.CommandText = @"
-                                            UPDATE Problems SET Problem_Attempts = Problem_Attempts - @attempts, Problem_Completions = Problem_Completions - @completions
-                                            WHERE Problem_Number = @pID";
-                    command.Parameters.AddWithValue("@attempts", numAttempts);
-                    command.Parameters.AddWithValue("@completions", numCompletions);
-                    command.Parameters.AddWithValue("@pID", problemID);
-                    command.Prepare();
-                    command.ExecuteNonQuery();
-                    command.Parameters.Clear();
-
-                    command.CommandText = "DELETE FROM " + tablename + " WHERE UserSubmissions_ProblemID = @pID";
-                    command.Parameters.AddWithValue("@pID", problemID);
-                    command.Prepare();
-                    command.ExecuteNonQuery();
-                    connection.Close();
-
-                    // refresh problems attempt / completion count the bad way because time crunch
-                    GetProblemsList();
-
-                    return true;
-                }
-                catch (MySqlException e)
-                {
-                    connection.Close();
-                    Debug.Write(e);
-                    return false;
-                }
-                catch (NullReferenceException e)
-                {
-                    Debug.Write(e);
-                    return false;
+                    catch 
+                    {
+                        transaction.Rollback();
+                    }
                 }
             }
             return false;
@@ -471,8 +484,6 @@ namespace Project_EFT.Database
             }
         }
 
-        
-
         public static bool InsertNewAdminSubmission(Submission submission)
         {
             try
@@ -582,7 +593,6 @@ namespace Project_EFT.Database
                 return null;
             }
         }
-
 
         public static int InsertNewUser(StandardUser user)
         {
@@ -714,8 +724,7 @@ namespace Project_EFT.Database
                             }
                             else
                             {
-                                List<AnswerSubmission> newSubList = new List<AnswerSubmission>();
-                                newSubList.Add(answer);
+                                List<AnswerSubmission> newSubList = new List<AnswerSubmission>() { answer };
                                 submissionMap.Add(answer.ProblemId, newSubList);
                             }
                         }
@@ -799,9 +808,9 @@ namespace Project_EFT.Database
 
         public static bool DeleteUser(string username)
         {
+            MySqlCommand command = MakeCommand("SELECT User_ID FROM Users WHERE User_Username = @username");
             try
             {
-                MySqlCommand command = MakeCommand("SELECT User_ID FROM Users WHERE User_Username = @username");
                 command.Parameters.AddWithValue("@username", username);
                 command.Prepare();
                 MySqlDataReader reader = command.ExecuteReader();
@@ -809,65 +818,74 @@ namespace Project_EFT.Database
                 {
                     int userID = reader.GetInt32(0);
                     connection.Close();
+                    MySqlTransaction transaction = null;
 
                     //if they have a user submissions table, remove their submissions and then drop the table, otherwise just delete the user
                     if (CheckIfUserSubmissionTableExists(userID))
                     {
-                        string tablename = "UserSubmissions" + userID;
-                        command = MakeCommand("SELECT * FROM " + tablename);
-                        command.Parameters.AddWithValue("@id", userID);
-                        command.Prepare();
-                        reader = command.ExecuteReader();
-                        Dictionary<int, int[]> submissionInfos = new Dictionary<int, int[]>();
-                        while (reader.Read())
+                        transaction = MakeTransaction();
+                        if (transaction != null)
                         {
-                            int problemID = reader.GetInt32(4);
-                            bool isCorrect = reader.GetBoolean(3);
-                            if (submissionInfos.ContainsKey(problemID))
+                            string tablename = "UserSubmissions" + userID;
+                            command = new MySqlCommand("SELECT * FROM " + tablename, connection, transaction);
+                            command.Parameters.AddWithValue("@id", userID);
+                            command.Prepare();
+                            reader = command.ExecuteReader();
+                            Dictionary<int, int[]> submissionInfos = new Dictionary<int, int[]>();
+                            while (reader.Read())
                             {
-                                int[] attemptsAndCompletions = submissionInfos[problemID];
-                                attemptsAndCompletions[0]++;
-                                if (isCorrect)
+                                int problemID = reader.GetInt32(4);
+                                bool isCorrect = reader.GetBoolean(3);
+                                if (submissionInfos.ContainsKey(problemID))
                                 {
-                                    attemptsAndCompletions[1]++;
+                                    int[] attemptsAndCompletions = submissionInfos[problemID];
+                                    attemptsAndCompletions[0]++;
+                                    if (isCorrect)
+                                    {
+                                        attemptsAndCompletions[1]++;
+                                    }
+                                    submissionInfos[problemID] = attemptsAndCompletions;
                                 }
-                                submissionInfos[problemID] = attemptsAndCompletions;
+                                else
+                                {
+                                    int[] newProblem = new int[2];
+                                    newProblem[0] = 1;
+                                    newProblem[1] = isCorrect ? 1 : 0;
+                                    submissionInfos.Add(problemID, newProblem);
+                                }
                             }
-                            else
-                            {
-                                int[] newProblem = new int[2];
-                                newProblem[0] = 1;
-                                newProblem[1] = isCorrect ? 1 : 0;
-                                submissionInfos.Add(problemID, newProblem);
-                            }
-                        }
-                        command.Parameters.Clear();
-                        reader.Close();
-                        command.CommandText = @"
+                            command.Parameters.Clear();
+                            reader.Close();
+                            command.CommandText = @"
                                         UPDATE Problems SET Problem_Attempts = Problem_Attempts - @attempts, Problem_Completions = Problem_Completions - @completions
                                         WHERE Problem_Number = @pID";
-                        foreach (int pID in submissionInfos.Keys)
-                        {
-                            int[] aandc = submissionInfos[pID];
-                            command.Parameters.AddWithValue("@attempts", aandc[0]);
-                            command.Parameters.AddWithValue("@completions", aandc[1]);
-                            command.Parameters.AddWithValue("@pID", pID);
+                            foreach (int pID in submissionInfos.Keys)
+                            {
+                                int[] aandc = submissionInfos[pID];
+                                command.Parameters.AddWithValue("@attempts", aandc[0]);
+                                command.Parameters.AddWithValue("@completions", aandc[1]);
+                                command.Parameters.AddWithValue("@pID", pID);
+                                command.Prepare();
+                                command.ExecuteNonQuery();
+                                command.Parameters.Clear();
+                            }
+
+                            // remove user's submissions
+                            command.CommandText = "DROP TABLE " + tablename;
                             command.Prepare();
                             command.ExecuteNonQuery();
                             command.Parameters.Clear();
                         }
-
-                        // remove user's submissions
-                        command.CommandText = "DROP TABLE " + tablename;
-                        command.Prepare();
-                        command.ExecuteNonQuery();
-                        command.Parameters.Clear();
                     }
+                    
                     // remove user
-                    command = MakeCommand("DELETE FROM Users WHERE User_ID = @id");
+                    if (connection.State == ConnectionState.Open) command = new MySqlCommand("DELETE FROM Users WHERE User_ID = @id", connection, transaction);
+                    else if (OpenConnection()) command = new MySqlCommand("DELETE FROM Users WHERE User_ID = @id", connection);
+                    else throw new Exception("Could not open new connection when deleting user");
                     command.Parameters.AddWithValue("@id", userID);
                     command.Prepare();
                     int result = command.ExecuteNonQuery();
+                    if (transaction != null) try { transaction.Commit(); } catch { transaction.Rollback(); }
                     connection.Close();
 
                     // refresh problems attempt / completion count the bad way because time crunch
@@ -875,23 +893,24 @@ namespace Project_EFT.Database
 
                     // user deleted --> one row was affected (the deleted one)
                     return result == 1;
+
                 }
                 else
                 {
                     return false;
                 }
             }
+
             catch (MySqlException e)
             {
-                connection.Close();
-                Debug.Write(e);
-                return false;
+                Debug.WriteLine(e);
+                if (connection.State == ConnectionState.Open) connection.Close();
             }
-            catch (NullReferenceException e)
+            catch (Exception e) 
             {
-                Debug.Write(e);
-                return false;
+                Debug.WriteLine(e);
             }
+            return false;
         }
 
         public static StandardUser GetStandardUserByUsername(string username) 
