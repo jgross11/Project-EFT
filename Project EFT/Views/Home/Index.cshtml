@@ -1,6 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Http;
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 @using Project_EFT.Data_Classes;
+@using Project_EFT.Database; 
 @{ISession session = HttpContextAccessor.HttpContext.Session; }
 @{
     ViewData["Title"] = "Home Page";
@@ -13,6 +14,7 @@
         <br>
         <h3>@user.Username</h3>
         <br />
+        <b>Ranking: @user.Ranking / @DBConnector.UserCount with @user.PointsTotal point(s)</b><br />
         if (user.Submissions.Count != 0)
         {
 
