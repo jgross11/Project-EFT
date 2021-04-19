@@ -1,6 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Http;
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 @using Project_EFT.Data_Classes;
+@using Project_EFT.Database;
 @{ISession session = HttpContextAccessor.HttpContext.Session; }
 <!DOCTYPE html>
 <html lang="en">
@@ -64,6 +65,7 @@
     <footer class="border-top footer text-muted">
         <div class="container">
             &copy; 2021 - Project_EFT - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            Total users: @DBConnector.UserCount
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
