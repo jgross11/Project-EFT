@@ -8,18 +8,22 @@
     string titleErrorMessage = session.TryGetAndRemoveKey<string>("titleErrorMessage");
     string questionErrorMessage = session.TryGetAndRemoveKey<string>("questionErrorMessage");
     string answerErrorMessage = session.TryGetAndRemoveKey<string>("answerErrorMessage");
+    string valueErrorMessage = session.TryGetAndRemoveKey<string>("valueErrorMessage");
     <h1>You can create a new problem here!</h1>
     <!-- submission form-->
 <form action="~/Problem/AddProblem" method="post">
     Enter Problem Title: <br />
-    <input type="text" id="title" name="title" /><br />
+    <input type="text" id="title" name="title" required /><br />
     <div class="error" id="title-error">@titleErrorMessage</div>
     Enter Problem Question: <br />
-    <textarea name="question" id="question" cols="50" rows="4"></textarea> <br />
+    <textarea name="question" id="question" cols="50" rows="4" required></textarea> <br />
     <div class="error" id="question-error">@questionErrorMessage</div>
     Enter Problem Answer: <br />
-    <textarea name="answer" id="answer" cols="50" rows="4"></textarea> <br />
+    <textarea name="answer" id="answer" cols="50" rows="4" required></textarea> <br />
     <div class="error" id="answer-error">@answerErrorMessage</div>
+    Enter Problem Worth
+    <input type="number" name="value" id="value" min="1" max="5" required/><br />
+    <div class="error" id="value-error">@valueErrorMessage</div>
     <input type="submit" value="Submit your new problem!" />
     <div></div>
 </form>
