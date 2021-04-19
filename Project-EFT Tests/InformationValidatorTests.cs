@@ -131,6 +131,26 @@ qwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjkqwertyuiopasdfghjklzxcvbnmqwertyuiop
         }
 
         [Test]
+        public void TestProblemValueValidation() 
+        {
+            Assert.False(InformationValidator.VerifyInformation(null, InformationValidator.ProblemValueType));
+            Assert.False(InformationValidator.VerifyInformation("", InformationValidator.ProblemValueType));
+            Assert.False(InformationValidator.VerifyInformation("1.0", InformationValidator.ProblemValueType));
+            Assert.False(InformationValidator.VerifyInformation("1.2", InformationValidator.ProblemValueType));
+            Assert.False(InformationValidator.VerifyInformation("the number one", InformationValidator.ProblemValueType));
+            Assert.False(InformationValidator.VerifyInformation("0", InformationValidator.ProblemValueType));
+            Assert.False(InformationValidator.VerifyInformation("6", InformationValidator.ProblemValueType));
+            Assert.False(InformationValidator.VerifyInformation("-1", InformationValidator.ProblemValueType));
+            Assert.False(InformationValidator.VerifyInformation("7", InformationValidator.ProblemValueType));
+
+            Assert.True(InformationValidator.VerifyInformation("1", InformationValidator.ProblemValueType));
+            Assert.True(InformationValidator.VerifyInformation("2", InformationValidator.ProblemValueType));
+            Assert.True(InformationValidator.VerifyInformation("3", InformationValidator.ProblemValueType));
+            Assert.True(InformationValidator.VerifyInformation("4", InformationValidator.ProblemValueType));
+            Assert.True(InformationValidator.VerifyInformation("5", InformationValidator.ProblemValueType));
+        }
+
+        [Test]
         public void TestTemporaryPasswordGeneration()
         {
             int testQuantity = 100000;
