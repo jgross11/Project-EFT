@@ -22,6 +22,7 @@
         <th>Title</th>
         <th>Attempts</th>
         <th>Completions</th>
+        <th>Point Value</th>
     </tr>
     @{
         // generate row for each problem in problems array
@@ -52,6 +53,7 @@
             <th><a href="/problem?ID=@problem.ProblemNumber">@problem.Title</a></th>
             <th>@problem.Attempts</th>
             <th>@problem.Completions</th>
+            <th>@problem.PointsValue</th>
         </tr>
         }
     }
