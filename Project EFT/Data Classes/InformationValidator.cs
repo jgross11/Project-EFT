@@ -30,7 +30,7 @@ namespace Project_EFT.Data_Classes
         public const int ProblemValueType = 6;
         private const int MinProblemValue = 1;
         private const int MaxProblemValue = 5;
-        public const string InvalidProblemValueString = "Please enter a valid points value between 1 and 5.";
+        public const string InvalidProblemValueString = "Please enter a valid point value between 1 and 5.";
 
         private const string Lowers = "qwertyuiopasdfghjklzxcvbnm";
         private const string Uppers = "MNBVCXZQWERTYUIOPHJKLFDSAG";
