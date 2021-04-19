@@ -57,6 +57,8 @@ namespace Project_EFT.Controllers
                 HttpContext.Session.SetString("problem" + problemID + "error", "Unable to wipe submission information for the selected problem. Please try again.");
             else
             {
+                user.PointsTotal -= DBConnector.problems[problemID - 1].PointsValue;
+                user.UpdateRanking();
                 user.Submissions.Remove(problemID);
                 HttpContext.Session.SetComplexObject<StandardUser>("userInfo", user);
             }
@@ -91,78 +93,53 @@ namespace Project_EFT.Controllers
 
                 if (!DBConnector.CheckIfUserSubmissionTableExists(user.Id))
                 {
-                    if (DBConnector.CreateUserSubmissionTable(user.Id))
+                    if (!DBConnector.CreateUserSubmissionTable(user.Id))
                     {
-                        //Set the correctness information to be passed to the front end
-                        ViewData["isCorrect"] = ((string)Request.Form["answer"]).Trim().ToLower().Equals(problem.Answer);
+                        HttpContext.Session.SetString("errorMessage", "Something went wrong, please try submitting your answer again.");
+                        return View("Problem");
+                    }
+                }
+                else if (user.Submissions.ContainsKey(problem.ProblemNumber))
+                {
+                    List<AnswerSubmission> subs = user.Submissions[problem.ProblemNumber];
+                    if (subs[subs.Count - 1].IsCorrect)
+                    {
+                        return View("Problem");
+                    }
+                }
+
+                //Set the correctness information to be passed to the front end
+                ViewData["isCorrect"] = ((string)Request.Form["answer"]).Trim().ToLower().Equals(problem.Answer);
 
 
-                        //creates a new submission and sends it to the DB
-                        AnswerSubmission answer = new AnswerSubmission(Request.Form["answer"], DateTime.Now, user.Id, (bool)ViewData["isCorrect"], problem.ProblemNumber);
-                        if (DBConnector.InsertNewAnswerSubmission(answer))
-                        {
-                            //add submission to the current user in the session's map and reset the user in the session
-                            if (user.Submissions.ContainsKey(answer.ProblemId))
-                            {
-                                user.Submissions[answer.ProblemId].Add(answer);
-                            }
-                            else
-                            {
-                                List<AnswerSubmission> newSubList = new List<AnswerSubmission>();
-                                newSubList.Add(answer);
-                                user.Submissions.Add(answer.ProblemId, newSubList);
-                            }
-                            HttpContext.Session.SetComplexObject<StandardUser>("userInfo", user);
-                        }
-                        else 
-                        {
-                            HttpContext.Session.SetString("errorMessage", "Something went wrong, please try submitting your answer again.");
-                        }
+                //creates a new submission and sends it to the DB
+                AnswerSubmission answer = new AnswerSubmission(Request.Form["answer"], DateTime.Now, user.Id, (bool)ViewData["isCorrect"], problem.ProblemNumber);
+                if (DBConnector.InsertNewAnswerSubmission(answer, user.PointsTotal, problem.PointsValue))
+                {
+                    //add submission to the current user in the session's map and reset the user in the session
+                    if (user.Submissions.ContainsKey(answer.ProblemId))
+                    {
+                        user.Submissions[answer.ProblemId].Add(answer);
                     }
                     else
                     {
-                        HttpContext.Session.SetString("errorMessage", "Something went wrong, please try submitting your answer again.");
+                        List<AnswerSubmission> newSubList = new List<AnswerSubmission>();
+                        newSubList.Add(answer);
+                        user.Submissions.Add(answer.ProblemId, newSubList);
                     }
+
+                    if ((bool)ViewData["isCorrect"]) 
+                    {
+                        user.PointsTotal += problem.PointsValue;
+                        user.UpdateRanking();
+                    }
+                    HttpContext.Session.SetComplexObject<StandardUser>("userInfo", user);
                 }
                 else
                 {
-                    if (user.Submissions.ContainsKey(problem.ProblemNumber))
-                    {
-                        List<AnswerSubmission> subs = user.Submissions[problem.ProblemNumber];
-                        if (subs[subs.Count - 1].IsCorrect)
-                        {
-                            return View("Problem");
-                        }
-                    }
-
-                    //Set the correctness information to be passed to the front end
-                    ViewData["isCorrect"] = ((string)Request.Form["answer"]).Trim().ToLower().Equals(problem.Answer);
-
-
-                    //creates a new submission and sends it to the DB
-                    AnswerSubmission answer = new AnswerSubmission(Request.Form["answer"], DateTime.Now, user.Id, (bool)ViewData["isCorrect"], problem.ProblemNumber);
-                    if (DBConnector.InsertNewAnswerSubmission(answer)) 
-                    {
-                        //add submission to the current user in the session's map and reset the user in the session
-                        if (user.Submissions.ContainsKey(answer.ProblemId))
-                        {
-                            user.Submissions[answer.ProblemId].Add(answer);
-                        }
-                        else
-                        {
-                            List<AnswerSubmission> newSubList = new List<AnswerSubmission>();
-                            newSubList.Add(answer);
-                            user.Submissions.Add(answer.ProblemId, newSubList);
-                        }
-                        HttpContext.Session.SetComplexObject<StandardUser>("userInfo", user);
-                    }
-                    else
-                    {
-                        HttpContext.Session.SetString("errorMessage", "Something went wrong, please try submitting your answer again.");
-                    }
+                    HttpContext.Session.SetString("errorMessage", "Something went wrong, please try submitting your answer again.");
                 }
             }
-
             return View("Problem");
         }
 
@@ -180,6 +157,7 @@ namespace Project_EFT.Controllers
             string title = Request.Form["Title"];
             string question = Request.Form["question"];
             string answer = ((string)Request.Form["answer"]).Trim().ToLower();
+            string value = (string)Request.Form["value"];
             bool formattingErrorExists = false;
 
             if (!InformationValidator.VerifyInformation(title, InformationValidator.ProblemTitleType)) 
@@ -197,9 +175,14 @@ namespace Project_EFT.Controllers
                 HttpContext.Session.SetString("answerErrorMessage", InformationValidator.InvalidProblemSubmissionString);
                 formattingErrorExists = true;
             }
+            if (!InformationValidator.VerifyInformation(value, InformationValidator.ProblemValueType)) 
+            {
+                HttpContext.Session.SetString("valueErrorMessage", InformationValidator.InvalidProblemValueString);
+                formattingErrorExists = true;
+            }
             if (!formattingErrorExists)
             {
-                Problem problem = new Problem(0, title, question, answer, 0, 0);
+                Problem problem = new Problem(0, title, question, answer, 0, 0, int.Parse(value));
                 if (DBConnector.InsertNewProblem(problem))
                 {
                     Admin admin = HttpContext.Session.GetComplexObject<Admin>("adminInfo");
