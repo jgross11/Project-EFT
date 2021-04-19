@@ -24,7 +24,12 @@ namespace Project_EFT.Controllers
         // attempts to locate cshtml file with name Index in Home folder and Shared folder
         public IActionResult Index()
         {
-            // TODO conditional formatting for logged in users
+            if (HttpContext.Session.ContainsKey("userInfo")) 
+            {
+                StandardUser user = HttpContext.Session.GetComplexObject<StandardUser>("userInfo");
+                user.UpdateRanking();
+                HttpContext.Session.SetComplexObject<StandardUser>("userInfo", user);
+            }
             return View();
         }
 
