@@ -24,7 +24,12 @@ namespace Project_EFT.Controllers
         // attempts to locate cshtml file with name Index in Home folder and Shared folder
         public IActionResult Index()
         {
-            // TODO conditional formatting for logged in users
+            if (HttpContext.Session.ContainsKey("userInfo")) 
+            {
+                StandardUser user = HttpContext.Session.GetComplexObject<StandardUser>("userInfo");
+                user.UpdateRanking();
+                HttpContext.Session.SetComplexObject<StandardUser>("userInfo", user);
+            }
             return View();
         }
 
@@ -60,17 +65,18 @@ namespace Project_EFT.Controllers
             if (!formatErrorExists)
             {
                 StandardUser user = DBConnector.StandardUserLogin(username, password);
-                if (user.Id != 0)
+                if (user != null && user.Submissions != null)
                 {
                     HttpContext.Session.SetComplexObject("userInfo", user);
                     return RedirectToAction("Index");
                 }
 
                 Admin admin = DBConnector.AdminLogin(username, password);
-                if (admin.Id != 0)
+                if (admin != null)
                 {
                     admin.Submissions = DBConnector.GetAdminSubmissionsByID(admin.Id);
-                    HttpContext.Session.SetComplexObject("adminInfo", admin);
+                    if (admin.Submissions != null) HttpContext.Session.SetComplexObject("adminInfo", admin);
+                    else HttpContext.Session.SetString("errorMessage", "Found admin information but could not load submissions. Please try again.");
                     return RedirectToAction("Index");
                 }
                 HttpContext.Session.SetString("errorMessage", "No user exists with those credentials.");
@@ -93,10 +99,13 @@ namespace Project_EFT.Controllers
                 if (DBConnector.DeleteUser(username)) {
                     Admin admin = HttpContext.Session.GetComplexObject<Admin>("adminInfo");
                     Submission deleteUserSubmission = new Submission("Deleted account with username: " + username, DateTime.Now, admin.Id);
-                    admin.Submissions.Add(deleteUserSubmission);
-                    DBConnector.InsertNewAdminSubmission(deleteUserSubmission);
-                    HttpContext.Session.SetComplexObject<Admin>("adminInfo", admin);
-                    HttpContext.Session.SetString("successMessage", "The account was successfully deleted.");
+                    if (DBConnector.InsertNewAdminSubmission(deleteUserSubmission))
+                    {
+                        admin.Submissions.Add(deleteUserSubmission);
+                        HttpContext.Session.SetComplexObject<Admin>("adminInfo", admin);
+                        HttpContext.Session.SetString("successMessage", "The account was successfully deleted.");
+                    }
+                    else HttpContext.Session.SetString("errorMessage", "The account was deleted, but the deletion was not recorded as a submission.");
                 }
             else
             {

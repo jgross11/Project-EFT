@@ -14,6 +14,7 @@ namespace Project_EFT.Data_Classes
         public string Answer { get; set; }
         public int Attempts { get; set; }
         public int Completions { get; set; }
+        public int PointsValue { get; set; }
 
         // null constructor for convenience / piecewise field setting
         public Problem() 
@@ -21,7 +22,7 @@ namespace Project_EFT.Data_Classes
         
         }
 
-        public Problem(int number, string title, string question, string answer, int attempts, int completions) 
+        public Problem(int number, string title, string question, string answer, int attempts, int completions, int pointsValue) 
         {
             ProblemNumber = number;
             Title = title;
@@ -29,6 +30,7 @@ namespace Project_EFT.Data_Classes
             Answer = answer;
             Attempts = attempts;
             Completions = completions;
+            PointsValue = pointsValue;
         }
     }
 }

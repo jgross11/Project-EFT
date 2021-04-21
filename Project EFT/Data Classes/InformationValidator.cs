@@ -27,6 +27,10 @@ namespace Project_EFT.Data_Classes
         public const int ProblemTitleType = 5;
         private const int MaximumProblemTitleLength = 40;
         public const string InvalidProblemTitleString = "Please enter a valid problem title between 1 and 40 characters.";
+        public const int ProblemValueType = 6;
+        private const int MinProblemValue = 1;
+        private const int MaxProblemValue = 5;
+        public const string InvalidProblemValueString = "Please enter a valid point value between 1 and 5.";
 
         private const string Lowers = "qwertyuiopasdfghjklzxcvbnm";
         private const string Uppers = "MNBVCXZQWERTYUIOPHJKLFDSAG";
@@ -73,6 +77,13 @@ namespace Project_EFT.Data_Classes
                 case ProblemTitleType:
                     testInfo = info.Trim();
                     return testInfo.Length > 0 && testInfo.Length <= MaximumProblemTitleLength;
+                case ProblemValueType:
+                    try
+                    {
+                        int actualValue = int.Parse(info);
+                        return actualValue >= MinProblemValue && actualValue <= MaxProblemValue;
+                    }
+                    catch { return false; }
             }
 
             return false;
