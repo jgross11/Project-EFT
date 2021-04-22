@@ -46,8 +46,6 @@ namespace Project_EFT.Data_Classes
 
         public bool IsEqualWithSubMap(StandardUser otherUser)
         {
-            bool subMapEqual = true;
-            bool shouldBreak = false;
 
             //checks the equality of the values in the submission dictionary....
             foreach (KeyValuePair<int, List<AnswerSubmission>> kv in otherUser.Submissions)
@@ -60,23 +58,18 @@ namespace Project_EFT.Data_Classes
                     {
                         if (!this.Submissions[kv.Key][count].IsEqual(a))
                         {
-                            subMapEqual = false;
-                            shouldBreak = true;
+                            return false;
                         }
                         count++;
                     }
                 }
-                else if (shouldBreak)
-                {
-                    break;
-                }
                 else
                 {
-                    subMapEqual = false;
-                    break;
+                    return false;
                 }
             }
-            return (this.Username.Equals(otherUser.Username) && this.Password.Equals(otherUser.Password) && this.Email.Equals(otherUser.Email) && this.Id == otherUser.Id && subMapEqual);
+
+            return (this.Username.Equals(otherUser.Username) && this.Password.Equals(otherUser.Password) && this.Email.Equals(otherUser.Email) && this.Id == otherUser.Id);
         }
 
         public bool IsEqual(StandardUser otherUser)
