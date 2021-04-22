@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -31,6 +32,17 @@ namespace Project_EFT.Data_Classes
             Attempts = attempts;
             Completions = completions;
             PointsValue = pointsValue;
+        }
+
+        //the attempts/completions of a problem is variable, so tests involving them would fail
+        //this is really testing whether or not the query is going to return the values in the first place
+        //and I see no other use case for equating problems in this way, or any way
+        public bool IsEqual(Problem prob)
+        {
+            return (this.ProblemNumber == prob.ProblemNumber
+                && this.Title.Equals(prob.Title)
+                && this.Question.Equals(prob.Question) && this.Answer.Equals(prob.Answer)
+                && this.PointsValue == prob.PointsValue);
         }
     }
 }
