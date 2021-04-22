@@ -33,6 +33,18 @@ namespace Project_EFT.Database
             if (!GetNumberUsersInDB()) throw new Exception("Could not get initial number of users in DB");
         }
 
+        public static void InitForTests()
+        {
+            string[] lines = System.IO.File.ReadAllLines("../../../../../info.txt");
+            connectionString = @"server=" + lines[0] + ";userid=" + lines[1] + ";password=" + lines[2] + ";database=" + lines[3];
+
+            // cache list of all problems currently in db
+            if (!GetProblemsList()) throw new Exception("Could not read initial problem list from DB");
+
+            // cache number of users in db
+            if (!GetNumberUsersInDB()) throw new Exception("Could not get initial number of users in DB");
+        }
+
         public static bool OpenConnection()
         {
             // dependent on the structure of the file...
@@ -71,7 +83,6 @@ namespace Project_EFT.Database
 
         public static bool CheckIfUserSubmissionTableExists(int UserId)
         {
-            
             string tablename = "UserSubmissions" + UserId;
             MySqlCommand command = MakeCommand("SELECT * FROM " + tablename);
             try
