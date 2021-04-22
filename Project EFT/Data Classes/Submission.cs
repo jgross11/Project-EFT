@@ -21,7 +21,7 @@ namespace Project_EFT.Data_Classes
 
         //for posterity sake, this used to be an override of Equals, which required a custom GetHashCode function as well...it was never committed, for good reason...
         //I will allow you to picture what that monstrosity looked like
-        public bool IsEqual(Submission subs)
+        public virtual bool IsEqual(Submission subs)
         {
             return (this.Content.Equals(subs.Content)
                     && this.SubmissionDate.Equals(subs.SubmissionDate)
