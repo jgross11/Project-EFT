@@ -28,5 +28,10 @@ namespace Project_EFT.Data_Classes
         {
             return new Admin();
         }
+
+        public bool IsEqual(Admin otherAdmin)
+        {
+            return (this.Username.Equals(otherAdmin.Username) && this.Password.Equals(otherAdmin.Password) && this.Email.Equals(otherAdmin.Email) && this.Id == otherAdmin.Id);
+        }
     }
 }
