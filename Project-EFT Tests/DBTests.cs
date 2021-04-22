@@ -84,17 +84,19 @@ namespace Project_EFT_Tests
         {
             //gets the submission list for the test user
             List<AnswerSubmission> testResults = DBConnector.GetAnswerSubmissionsByID(userID);
+            bool nextTestRun;
 
-            //iterates through the specific list and checks to see if they equal the expected values set in the setup function
-            int counter = 0;
-            foreach(AnswerSubmission sub in testResults)
-            {
-                Assert.True(sub.IsEqual(usersSubmissions[counter]));
-                counter++;
+            //checks the size of the expected list and the returned list
+            Assert.True(nextTestRun = testResults.Count == usersSubmissions.Count);
 
-                if (counter > usersSubmissions.Count)
+            //if the above test fails, this test would throw an error (index out of bounds) so it is not run
+            if (nextTestRun) {
+                //iterates through the specific list and checks to see if they equal the expected values set in the setup function
+                int counter = 0;
+                foreach (AnswerSubmission sub in testResults)
                 {
-                    break;
+                    Assert.True(sub.IsEqual(usersSubmissions[counter]));
+                    counter++;
                 }
             }
         }
@@ -105,17 +107,17 @@ namespace Project_EFT_Tests
 
             //gets the submission list for the test user
             List<Submission> testResults = DBConnector.GetAdminSubmissionsByID(adminID);
+            bool nextTestRun;
 
-            //iterates through the specific list and checks to see if they equal the expected values set in the setup function
-            int counter = 0;
-            foreach (Submission sub in testResults)
-            {
-                Assert.True(sub.IsEqual(adminSubmissions[counter]));
-                counter++;
-
-                if (counter > adminSubmissions.Count)
+            Assert.True(nextTestRun = testResults.Count == adminSubmissions.Count);
+            //if the above test fails, this test would throw an error (index out of bounds) so it is not run
+            if (nextTestRun) {
+                //iterates through the specific list and checks to see if they equal the expected values set in the setup function
+                int counter = 0;
+                foreach (Submission sub in testResults)
                 {
-                    break;
+                    Assert.True(sub.IsEqual(adminSubmissions[counter]));
+                    counter++;
                 }
             }
 
