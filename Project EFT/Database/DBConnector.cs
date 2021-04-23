@@ -20,11 +20,42 @@ namespace Project_EFT.Database
         public const int DB_FAILURE = -1;
         public const int CREDENTIAL_CHANGE_SUCCESS = 100;
         public const int CREDENTIAL_TAKEN = 101;
+        public const int EXPECTED_THREADS_CONNECTED = 2;
 
         public static void Init()
         {
-            string[] lines = System.IO.File.ReadAllLines("../../info.txt");
+            string[] lines = System.IO.File.ReadAllLines("info.txt");
             connectionString = @"server=" + lines[0] + ";userid=" + lines[1] + ";password=" + lines[2] + ";database=" + lines[3];
+
+            // cache list of all problems currently in db
+            if (!GetProblemsList()) throw new Exception("Could not read initial problem list from DB");
+
+            // cache number of users in db
+            if (!GetNumberUsersInDB()) throw new Exception("Could not get initial number of users in DB");
+        }
+
+        public static void InitForTests()
+        {
+
+            string[] lines = System.IO.File.ReadAllLines("../../../../Project EFT/info.txt");
+            connectionString = @"server=" + lines[0] + ";userid=" + lines[1] + ";password=" + lines[2] + ";database=" + lines[3];
+
+
+            MySqlCommand command = MakeCommand("SHOW STATUS LIKE 'Threads_Connected'");
+            
+            command.Prepare();
+            MySqlDataReader reader = command.ExecuteReader();
+            if (reader.Read())
+            {
+                Console.WriteLine(reader.GetInt32(1));
+                if (reader.GetInt32(1) != EXPECTED_THREADS_CONNECTED)
+                {
+                    connection.Close();
+                    throw new Exception("Shouldn't run database tests since there are users connected to the DB");
+                }
+            }
+            reader.Close();
+            connection.Close();
 
             // cache list of all problems currently in db
             if (!GetProblemsList()) throw new Exception("Could not read initial problem list from DB");
@@ -71,7 +102,6 @@ namespace Project_EFT.Database
 
         public static bool CheckIfUserSubmissionTableExists(int UserId)
         {
-            
             string tablename = "UserSubmissions" + UserId;
             MySqlCommand command = MakeCommand("SELECT * FROM " + tablename);
             try
@@ -638,6 +668,9 @@ namespace Project_EFT.Database
                     reader.Close();
                     return problem;
                 }
+
+                connection.Close();
+                reader.Close();
                 return null;
             }
             catch (Exception e) 
@@ -685,7 +718,8 @@ namespace Project_EFT.Database
                     connection.Close();
                     return true;
                 }
-                command = MakeCommand("SELECT Admin_ID FROM Admins WHERE Admin_Email = @email");
+                command.CommandText = "SELECT Admin_ID FROM Admins WHERE Admin_Email = @email";
+                command.Parameters.Clear();
                 command.Parameters.AddWithValue("@email", email);
                 command.Prepare();
                 reader = command.ExecuteReader();
@@ -716,7 +750,8 @@ namespace Project_EFT.Database
                     connection.Close();
                     return true;
                 }
-                command = MakeCommand("SELECT Admin_ID FROM Admins WHERE Admin_Username = @username");
+                command.CommandText = "SELECT Admin_ID FROM Admins WHERE Admin_Username = @username";
+                command.Parameters.Clear();
                 command.Parameters.AddWithValue("@username", username);
                 command.Prepare();
                 reader = command.ExecuteReader();
@@ -1017,6 +1052,7 @@ namespace Project_EFT.Database
                 if (reader.Read())
                 {
                     UserCount = reader.GetInt32(0);
+                    connection.Close();
                     reader.Close();
                     return true;
                 }

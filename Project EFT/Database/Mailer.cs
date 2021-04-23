@@ -18,7 +18,7 @@ namespace Project_EFT.Database
         public static void Init() 
         {
             noReplyAddress = new MailboxAddress("Project EFT", "no-reply-ycpcsp481@gmail.com"); 
-            string[] lines = System.IO.File.ReadAllLines("../../info.txt");
+            string[] lines = System.IO.File.ReadAllLines("info.txt");
             client = new SmtpClient();
             client.Connect("smtp.gmail.com", 465, true);
             client.Authenticate(lines[4], lines[5]);
