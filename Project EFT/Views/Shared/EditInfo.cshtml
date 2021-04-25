@@ -11,9 +11,15 @@
     string usernameError = session.TryGetAndRemoveKey<string>("usernameError");
     string emailError = session.TryGetAndRemoveKey<string>("emailError");
     string passwordError = session.TryGetAndRemoveKey<string>("passwordError");
+    string aboutError = session.TryGetAndRemoveKey<string>("aboutError");
+    string aboutSuccess = session.TryGetAndRemoveKey<string>("aboutSuccess");
+    string pictureError = session.TryGetAndRemoveKey<string>("pictureError");
+    string pictureSuccess = session.TryGetAndRemoveKey<string>("pictureSuccess");
+    StandardUser user = null;
 
-    if (session.ContainsKey("userInfo")) {
-        StandardUser user = session.GetComplexObject<StandardUser>("userInfo");
+    if (session.ContainsKey("userInfo"))
+    {
+        user = session.GetComplexObject<StandardUser>("userInfo");
         username = user.Username;
         email = user.Email;
     }
@@ -25,6 +31,42 @@
     }
 }
 <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.12.0/js/md5.min.js"></script>
+
+@if (user != null)
+{
+    <form id="profilePicForm" action="~/EditInfo/editProfilePic" method="post" enctype="multipart/form-data">
+        <img id="profileDisplay" width="150" height="150" src="@user.GetImagePathString()" /><br /><br />
+        <input type='file' name='profilePic' id='profilePic' accept='image/*'><br />
+        <input type="submit" value="Update Profile Picture" /><br />
+        <div class="error">@pictureError</div>
+        <div class="success">@pictureSuccess</div>
+    </form>
+
+    <form id="about" action="~/EditInfo/editAbout" method="post">
+        <br />
+        <textarea name='newAbout' id='newAbout' maxlength='255' cols='50' rows='4' placeholder='Enter a brief description about yourself.'>@user.About</textarea><br />
+        <div class="error">@aboutError</div>
+        <input type="submit" value="Update About" />
+        <div class="success">@aboutSuccess</div>
+    </form>
+
+    // adapted from https://stackoverflow.com/questions/14069421/show-an-image-preview-before-upload
+    // tyvm
+    <script>
+        document.getElementById("profilePic").onchange = function () {
+            var reader = new FileReader();
+
+            reader.onload = function (e) {
+                // get loaded data and render thumbnail.
+                document.getElementById("profileDisplay").src = e.target.result;
+            };
+
+            // read the image file as a data URL.
+            reader.readAsDataURL(this.files[0]);
+        };
+    </script>
+}
+
 <form id="usernameForm" action="~/EditInfo/editUsername" method="post">
     Enter New Username:<br>
     <input type="text" id="username" name="username" value="@username" /><br>
@@ -59,7 +101,6 @@
 <div class="success">@passwordSuccess</div>
 
 <script>
-
     function verifyUsername() {
         let usernameElement = document.getElementById("username");
         let username = usernameElement.value.trim();
