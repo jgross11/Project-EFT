@@ -111,10 +111,9 @@ namespace Project_EFT.Database
                 connection.Close();
                 return true;
             }
-            catch (Exception e)
+            catch
             {
                 if (connection != null && connection.State == ConnectionState.Open) connection.Close();
-                Debug.Write(e);
                 return false;
             }
         }
@@ -784,6 +783,7 @@ namespace Project_EFT.Database
                     int rank = reader.GetInt32(4);
                     int points = reader.GetInt32(5);
                     int id = reader.GetInt32(0);
+                    string about = reader.GetString(6);
                     connection.Close();
                     Dictionary<int, List<AnswerSubmission>> submissionMap = new Dictionary<int, List<AnswerSubmission>>();
                     //this will contain all of the users submissions in ascending order, by date, and then add them to the correct lists based on id
@@ -816,9 +816,11 @@ namespace Project_EFT.Database
                             Debug.Write(k.Key + " " + a.SubmissionDate + " " + a.Content + "\n");
                         }
                     }*/
-                    return new StandardUser(
+                    StandardUser result = new StandardUser(
                         usern, passw, email, rank, points, id, submissionMap
                     );
+                    result.About = about;
+                    return result;
                 }
                 else
                 {
@@ -959,6 +961,8 @@ namespace Project_EFT.Database
 
                 UserCount--;
 
+                if (File.Exists(InformationValidator.ImageProjectPath + "/" + user.Id + ".png")) File.Delete(InformationValidator.ImageProjectPath + "/" + user.Id + ".png");
+
                 // user deleted --> one row was affected (the deleted one)
                 return true;
             }
@@ -1056,6 +1060,8 @@ namespace Project_EFT.Database
                     reader.Close();
                     return true;
                 }
+                connection.Close();
+                reader.Close();
             }
             catch 
             {
@@ -1064,5 +1070,149 @@ namespace Project_EFT.Database
             return false;
         }
 
+        public static List<StandardUser> GetTopFiveUsers() 
+        {
+            MySqlCommand command = MakeCommand("SELECT * FROM Users WHERE User_Ranking < 6 ORDER BY User_Ranking ASC");
+            MySqlDataReader reader = null;
+            try
+            {
+                reader = command.ExecuteReader();
+                if (reader.Read())
+                {
+                    List<StandardUser> result = new List<StandardUser>();
+                    do
+                    {
+                        StandardUser user = new StandardUser();
+                        user.Id = reader.GetInt32(0);
+                        user.Username = reader.GetString(1);
+                        user.Ranking = reader.GetInt32(4);
+                        user.PointsTotal = reader.GetInt32(5);
+                        result.Add(user);
+                    } while (reader.Read());
+                    connection.Close();
+                    reader.Close();
+                    return result;
+                }
+                connection.Close();
+                reader.Close();
+            }
+            catch
+            {
+                if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
+            }
+            return null;
+        }
+
+        public static StandardUser GetUserProfileInformationByUsername(string username)
+        {
+            MySqlCommand command = MakeCommand("SELECT * FROM Users WHERE User_Username = @username");
+            MySqlDataReader reader = null;
+            try
+            {
+                command.Parameters.AddWithValue("@username", username);
+                command.Prepare();
+                reader = command.ExecuteReader();
+                if (reader.Read())
+                {
+                    StandardUser user = new StandardUser();
+                    user.Id = reader.GetInt32(0);
+                    user.Username = reader.GetString(1);
+                    user.Ranking = reader.GetInt32(4);
+                    user.PointsTotal = reader.GetInt32(5);
+                    user.About = reader.GetString(6);
+                    connection.Close();
+                    reader.Close();
+                    if (CheckIfUserSubmissionTableExists(user.Id))
+                    {
+                        List<AnswerSubmission> submissionList = GetAnswerSubmissionsByID(user.Id);
+                        Dictionary<int, List<AnswerSubmission>> submissionMap = new Dictionary<int, List<AnswerSubmission>>();
+                        if (submissionList != null)
+                        {
+                            foreach (AnswerSubmission answer in submissionList)
+                            {
+                                if (submissionMap.ContainsKey(answer.ProblemId))
+                                {
+                                    submissionMap[answer.ProblemId].Add(answer);
+                                }
+                                else
+                                {
+                                    List<AnswerSubmission> newSubList = new List<AnswerSubmission>() { answer };
+                                    submissionMap.Add(answer.ProblemId, newSubList);
+                                }
+                            }
+                        }
+                        else submissionMap = null;
+                        user.Submissions = submissionMap;
+                    }
+                    return user;
+                }
+                connection.Close();
+                reader.Close();
+            }
+            catch
+            {
+                if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
+            }
+            return null;
+        }
+
+        public static List<StandardUser> SearchForUser(string query) 
+        {
+            string relativeQuery = '%' + query + '%';
+            MySqlCommand command = MakeCommand("SELECT * FROM Users WHERE User_Username LIKE @query ORDER BY User_Ranking ASC");
+            MySqlDataReader reader = null;
+            try
+            {
+                command.Parameters.AddWithValue("@query", relativeQuery);
+                command.Prepare();
+                reader = command.ExecuteReader();
+                if (reader.Read()) 
+                {
+                    List<StandardUser> results = new List<StandardUser>();
+                    do
+                    {
+                        StandardUser user = new StandardUser();
+                        user.Id = reader.GetInt32(0);
+                        user.Username = reader.GetString(1);
+                        user.Ranking = reader.GetInt32(4);
+                        user.PointsTotal = reader.GetInt32(5);
+                        results.Add(user);
+                    } while (reader.Read());
+                    connection.Close();
+                    reader.Close();
+                    return results;
+                }
+                connection.Close();
+                reader.Close();
+                return null;
+            }
+            catch
+            {
+                if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
+            }
+            return null;
+        }
+
+        public static bool UpdateAbout(string newAbout, int Id) 
+        {
+            MySqlCommand command = MakeCommand("UPDATE Users SET User_About = @newAbout WHERE User_ID = @id");
+            try
+            {
+                command.Parameters.AddWithValue("@newAbout", newAbout);
+                command.Parameters.AddWithValue("@id", Id);
+                command.Prepare();
+                int result = command.ExecuteNonQuery();
+                connection.Close();
+                return result == 1;
+            }
+            catch 
+            {
+                if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+            }
+            return false;
+        }
     }
 }
