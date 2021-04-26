@@ -142,12 +142,12 @@ namespace Project_EFT.Ciphers
                 string substitutionAlphabet = (string)((RadioOptionsSet)DecryptionFormOptions[DecryptionMethodIndex]).Choices[DecryptionSubstitutionAlphabetIndex].GetValue();
                 if (!IsValidAlphabet(substitutionAlphabet))
                 {
-                    EncryptionFormOptions[SubstitutionAlphabetIndex].ErrorMessage = InvalidAlphabetMessage;
+                    DecryptionFormOptions[DecryptionMethodIndex].ErrorMessage = InvalidAlphabetMessage;
                     error = true;
                 }
                 if (!AlphabetSizeMatch(alphabet, substitutionAlphabet))
                 {
-                    EncryptionFormOptions[SubstitutionAlphabetIndex].ErrorMessage = FormatUnequalAlphabetMessage(alphabet, substitutionAlphabet);
+                    DecryptionFormOptions[DecryptionMethodIndex].ErrorMessage = FormatUnequalAlphabetMessage(alphabet, substitutionAlphabet);
                     error = true;
                 }
             }
