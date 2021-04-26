@@ -12,7 +12,7 @@ namespace Project_EFT.Ciphers.Options
         public override string GetHTML()
         {
             // <input type="text" name="alphabet" value="@activeSystem.Alphabet" />
-            return String.Format("{0}: <input type='text' name='{1}' value='{2}' required />", DisplayName, FieldName, Value);
+            return String.Format("{0}: <input type='text' name='{1}' value='{2}' />", DisplayName, FieldName, Value);
         }
     }
 }

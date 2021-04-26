@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Project_EFT.Database;
@@ -12,6 +13,7 @@ namespace Project_EFT.Data_Classes
         public int Ranking { get; set; }
         public Dictionary<int, List<AnswerSubmission>> Submissions { get; set; }
         public int PointsTotal { get; set; }
+        public string About { get; set; }
 
 
         public StandardUser(string username, string password, string email, int ranking, int pointsTotal, int id, Dictionary<int, List<AnswerSubmission>> subMap) : base(username, password, email, id)
@@ -42,6 +44,11 @@ namespace Project_EFT.Data_Classes
         {
             int newRanking = DBConnector.GetUserRanking(Id);
             if (newRanking != DBConnector.DB_FAILURE) Ranking = newRanking;
+        }
+
+        public string GetImagePathString() 
+        {
+            return InformationValidator.ImageWebPath + "/" + (File.Exists(InformationValidator.ImageProjectPath + "/" + Id + ".png") ? Id.ToString() + ".png" : "default.png");
         }
 
         public bool IsEqualWithSubMap(StandardUser otherUser)

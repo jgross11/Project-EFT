@@ -1,18 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Project_EFT.Database;
-using MailKit.Net.Smtp;
-using MimeKit;
-using System.Diagnostics;
 using System.Reflection;
 using Project_EFT.Ciphers;
-using Project_EFT.Ciphers.Options;
 using Newtonsoft.Json;
 
 namespace Project_EFT

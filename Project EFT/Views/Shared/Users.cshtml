@@ -1,0 +1,131 @@
+﻿@using Microsoft.AspNetCore.Http;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@using Project_EFT.Data_Classes;
+@using Microsoft.AspNetCore.Html;
+@using System.Diagnostics;
+@using Project_EFT.Ciphers
+@using Project_EFT.Ciphers.Options
+@using Project_EFT.Database
+@{ISession session = HttpContextAccessor.HttpContext.Session; }
+
+@{
+    if (session.ContainsKey("userToView"))
+    {
+        StandardUser user = session.GetComplexObject<StandardUser>("userToView");
+        <img width="150" height="150" src="@user.GetImagePathString()">
+        <h1>@user.Username</h1>
+        <h4>Rank: @user.Ranking / @DBConnector.UserCount | Points: @user.PointsTotal</h4>
+        <br>
+        <h3>About me</h3>
+        <div id="about">
+            @if (user.About != null && user.About != "")
+            {
+                <div>@user.About</div>
+            }
+            else 
+            { 
+                <div>This user has no about.</div>
+            }
+        </div>
+        <h3>Submission History</h3>
+        @if (user.Submissions != null && user.Submissions.Count != 0)
+        {
+            int[] keys = new int[user.Submissions.Count];
+            user.Submissions.Keys.CopyTo(keys, 0);
+            Array.Sort(keys);
+
+            @foreach (int i in keys)
+            {
+                <button class="accordion active">Problem @i Submissions </button>
+                <div class="panel" style="display: none;">
+                    <table>
+                        <tr>
+                            <th>Date</th>
+                            <th>Correctness</th>
+                        </tr>
+                        @foreach (AnswerSubmission sub in user.Submissions[i])
+                        {
+                            <tr>
+                                <th>@sub.SubmissionDate</th>
+                                @if (sub.IsCorrect)
+                                {
+                                    <th class="success">Correct</th>
+                                }
+                                else
+                                {
+                                    <th class="error">Incorrect</th>
+                                }
+                            </tr>
+                        }
+                    </table>
+                </div>
+            }
+            <script>
+                var acc = document.getElementsByClassName("accordion");
+                var i;
+
+                for (i = 0; i < acc.length; i++) {
+                    acc[i].addEventListener("click", function () {
+                        this.classList.toggle("active");
+                        var panel = this.nextElementSibling;
+                        if (panel.style.display === "block") {
+                            panel.style.display = "none";
+                        } else {
+                            panel.style.display = "block";
+                        }
+                    });
+                }
+            </script>
+        }
+        else
+        {
+            <bold>This user hasn't submitted anything yet!</bold>
+        }
+    }
+    else
+    {
+        List<StandardUser> top5 = session.GetComplexObject<List<StandardUser>>("top5");
+        <h3>Top 5 Users:</h3>
+        <ol>
+            @foreach (StandardUser user in top5)
+            {
+                <li> <img width="50" height="50" src="@user.GetImagePathString()"><a href="/Users/User/@user.Username">@user.Username</a> | @user.PointsTotal point(s)</li>
+                <br />
+            }
+        </ol>
+        <h3>Search for user:</h3>
+        <form id="search-users" action="/Users/Search" method="post">
+            <input type="text" name="searchCriteria" id="searchCriteria" placeholder="Enter username">
+            <input type="submit" value="Search for user">
+        </form>
+        @if (session.ContainsKey("searchResults"))
+        {
+            List<StandardUser> results = session.GetComplexObject<List<StandardUser>>("searchResults");
+            session.Remove("searchResults");
+            if (results != null)
+            {
+                <table>
+                    <tr>
+                        <th></th>
+                        <th>Username</th>
+                        <th>Ranking</th>
+                        <th>Points</th>
+                    </tr>
+                    @foreach (StandardUser result in results)
+                    {
+                        <tr>
+                            <th><img width="50" height="50" src="@result.GetImagePathString()"></th>
+                            <th><a href="/Users/User/@result.Username">@result.Username</a></th>
+                            <th>@result.Ranking</th>
+                            <th>@result.PointsTotal</th>
+                        </tr>
+                    }
+                </table>
+            }
+            else
+            {
+                <bold>No users found.</bold>
+            }
+        }
+    }
+}

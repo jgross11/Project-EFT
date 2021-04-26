@@ -1,7 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Http;
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
 @using Project_EFT.Data_Classes;
-@using Project_EFT.Database; 
+@using Project_EFT.Database;
 @{ISession session = HttpContextAccessor.HttpContext.Session; }
 @{
     ViewData["Title"] = "Home Page";
@@ -10,11 +10,13 @@
         StandardUser user = session.GetComplexObject<StandardUser>("userInfo");
         <h2>Logged in as standard user: </h2>
         <br>
+        <img width="150" height="150" src="@user.GetImagePathString()">
         <h3>@user.Email</h3>
         <br>
         <h3>@user.Username</h3>
         <br />
-        <b>Ranking: @user.Ranking / @DBConnector.UserCount with @user.PointsTotal point(s)</b><br />
+        <b>Ranking: @user.Ranking / @DBConnector.UserCount with @user.PointsTotal point(s)</b>
+        <br />
         if (user.Submissions.Count != 0)
         {
 
@@ -49,7 +51,7 @@
                                 }
                             </tr>
 
-                            if (session.ContainsKey("problem" + i + "error")) 
+                            if (session.ContainsKey("problem" + i + "error"))
                             {
                                 clearErrorMessage = session.GetString("problem" + i + "error");
                             }
@@ -59,7 +61,8 @@
                     <button onclick="window.location.href='/Problem/WipeProblemSubmissions?problemID='+@i">Wipe submissions for problem @i</button>
 
                 </div>
-                if (clearErrorMessage != null) { 
+                if (clearErrorMessage != null)
+                {
                     <div class="error">@session.GetString("problem" + i + "error")</div>
                     session.Remove("problem" + i + "error");
                 }

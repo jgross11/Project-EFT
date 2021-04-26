@@ -31,6 +31,8 @@ namespace Project_EFT.Data_Classes
         private const int MinProblemValue = 1;
         private const int MaxProblemValue = 5;
         public const string InvalidProblemValueString = "Please enter a valid point value between 1 and 5.";
+        public const string ImageWebPath = "/Images";
+        public const string ImageProjectPath = "wwwroot/Images";
 
         private const string Lowers = "qwertyuiopasdfghjklzxcvbnm";
         private const string Uppers = "MNBVCXZQWERTYUIOPHJKLFDSAG";
@@ -52,7 +54,7 @@ namespace Project_EFT.Data_Classes
                         char c = testInfo[i];
                         if (c == '@' && !foundAt) foundAt = true;
                         else if (foundAt && c == '.' && testInfo[i - 1] != '@' && i != testInfo.Length - 1) return true;
-                        else if (c == '@' && foundAt) 
+                        else if (c == '@' && foundAt)
                         {
                             return false;
                         }

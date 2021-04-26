@@ -73,9 +73,8 @@ namespace Project_EFT.Database
                 connection.Open();
                 return true;
             }
-            catch (Exception e)
+            catch
             {
-                Debug.WriteLine(e);
                 return false;
             }
         }
@@ -104,17 +103,19 @@ namespace Project_EFT.Database
         {
             string tablename = "UserSubmissions" + UserId;
             MySqlCommand command = MakeCommand("SELECT * FROM " + tablename);
+            MySqlDataReader reader = null;
             try
             {
                 command.Prepare();
-                MySqlDataReader reader = command.ExecuteReader();
+                reader = command.ExecuteReader();
                 connection.Close();
+                reader.Close();
                 return true;
             }
-            catch (Exception e)
+            catch
             {
                 if (connection != null && connection.State == ConnectionState.Open) connection.Close();
-                Debug.Write(e);
+                if (reader != null && !reader.IsClosed) reader.Close();
                 return false;
             }
         }
@@ -124,6 +125,7 @@ namespace Project_EFT.Database
             if (CheckIfUserSubmissionTableExists(user.Id))
             {
                 MySqlTransaction transaction = MakeTransaction();
+                MySqlDataReader reader = null;
                 if (transaction != null) 
                 {
                     try
@@ -132,7 +134,7 @@ namespace Project_EFT.Database
                         MySqlCommand command = new MySqlCommand("SELECT * FROM " + tablename + " WHERE UserSubmissions_ProblemID = @problemNumber", connection, transaction);
                         command.Parameters.AddWithValue("@problemNumber", problemID);
                         command.Prepare();
-                        MySqlDataReader reader = command.ExecuteReader();
+                        reader = command.ExecuteReader();
                         int numAttempts = 0;
                         int numCompletions = 0;
                         while (reader.Read())
@@ -205,6 +207,7 @@ namespace Project_EFT.Database
                             if(transaction != null) transaction.Rollback();
                             connection.Close();
                         }
+                        if (reader != null && !reader.IsClosed) reader.Close();
                     }
                 }
             }
@@ -261,6 +264,7 @@ namespace Project_EFT.Database
 
         public static int TryUpdateUsername(User user, string newUsername)
         {
+            MySqlDataReader reader = null;
             try
             {
                 string firstCommand;
@@ -281,15 +285,17 @@ namespace Project_EFT.Database
                 MySqlCommand command = MakeCommand(firstCommand);
                 command.Parameters.AddWithValue("@username", newUsername);
                 command.Prepare();
-                MySqlDataReader reader = command.ExecuteReader();
+                reader = command.ExecuteReader();
                 if (reader.Read())
                 {
                     connection.Close();
+                    reader.Close();
                     return CREDENTIAL_TAKEN;
                 }
                 else
                 {
                     connection.Close();
+                    reader.Close();
                     command = MakeCommand(secondCommand);
                     command.Parameters.AddWithValue("@id", user.Id);
                     command.Parameters.AddWithValue("@username", newUsername);
@@ -303,12 +309,14 @@ namespace Project_EFT.Database
             {
                 Debug.WriteLine(e);
                 if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
             }
             return DB_FAILURE;
         }
 
         public static int TryUpdateEmail(User user, string newEmail)
         {
+            MySqlDataReader reader = null;
             try
             {
                 string firstCommand;
@@ -329,15 +337,17 @@ namespace Project_EFT.Database
                 MySqlCommand command = MakeCommand(firstCommand);
                 command.Parameters.AddWithValue("@email", newEmail);
                 command.Prepare();
-                MySqlDataReader reader = command.ExecuteReader();
+                reader = command.ExecuteReader();
                 if (reader.Read())
                 {
                     connection.Close();
+                    reader.Close();
                     return CREDENTIAL_TAKEN;
                 }
                 else
                 {
                     connection.Close();
+                    reader.Close();
                     command = MakeCommand(secondCommand);
                     command.Parameters.AddWithValue("@id", user.Id);
                     command.Parameters.AddWithValue("@email", newEmail);
@@ -351,6 +361,7 @@ namespace Project_EFT.Database
             {
                 Debug.WriteLine(e);
                 if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
             }
             return DB_FAILURE;
         }
@@ -385,6 +396,25 @@ namespace Project_EFT.Database
                 if (connection != null && connection.State == ConnectionState.Open) connection.Close();
             }
             return DB_FAILURE;
+        }
+
+        public static bool UpdateAbout(string newAbout, int Id)
+        {
+            MySqlCommand command = MakeCommand("UPDATE Users SET User_About = @newAbout WHERE User_ID = @id");
+            try
+            {
+                command.Parameters.AddWithValue("@newAbout", newAbout);
+                command.Parameters.AddWithValue("@id", Id);
+                command.Prepare();
+                int result = command.ExecuteNonQuery();
+                connection.Close();
+                return result == 1;
+            }
+            catch
+            {
+                if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+            }
+            return false;
         }
 
         public static int UpdateProblem(Problem problem)
@@ -424,6 +454,7 @@ namespace Project_EFT.Database
 
         public static List<AnswerSubmission> GetAnswerSubmissionsByID(int id)
         {
+            MySqlDataReader reader = null;
             try
             {
                 List<AnswerSubmission> subs = new List<AnswerSubmission>();
@@ -431,7 +462,7 @@ namespace Project_EFT.Database
                 string tablename = "UserSubmissions" + id;
                 MySqlCommand command = MakeCommand("SELECT * FROM " + tablename);
                 command.Prepare();
-                MySqlDataReader reader = command.ExecuteReader();
+                reader = command.ExecuteReader();
                 // need row count
                 while (reader.Read())
                 {
@@ -444,6 +475,7 @@ namespace Project_EFT.Database
                         reader.GetInt32(4)
                     ));
                 }
+                reader.Close();
                 connection.Close();
                 return subs;
             }
@@ -451,19 +483,21 @@ namespace Project_EFT.Database
             {
                 Debug.WriteLine(e);
                 if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
             }
             return null;
         }
 
         public static List<Submission> GetAdminSubmissionsByID(int id)
         {
+            MySqlDataReader reader = null;
             try
             {
                 List<Submission> subs = new List<Submission>();
                 MySqlCommand command = MakeCommand("SELECT * FROM AdminSubmissions WHERE Admin_ID = @id");
                 command.Parameters.AddWithValue("@id", id);
                 command.Prepare();
-                MySqlDataReader reader = command.ExecuteReader();
+                reader = command.ExecuteReader();
                 // need row count
                 while (reader.Read())
                 {
@@ -473,6 +507,7 @@ namespace Project_EFT.Database
                         reader.GetInt32(1)
                     ));
                 }
+                reader.Close();
                 connection.Close();
                 return subs;
             }
@@ -480,17 +515,19 @@ namespace Project_EFT.Database
             {
                 Debug.WriteLine(e);
                 if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
             }
             return null;
         }
 
         public static bool GetProblemsList()
         {
+            MySqlDataReader reader = null;
             try
             {
                 problems = new List<Problem>();
                 MySqlCommand command = MakeCommand("SELECT * FROM Problems");
-                MySqlDataReader reader = command.ExecuteReader();
+                reader = command.ExecuteReader();
                 // need row count
                 while (reader.Read())
                 {
@@ -504,6 +541,7 @@ namespace Project_EFT.Database
                         reader.GetInt32(6)
                     ));
                 }
+                reader.Close();
                 connection.Close();
                 return true;
             }
@@ -511,6 +549,7 @@ namespace Project_EFT.Database
             {
                 Debug.WriteLine(e);
                 if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
             }
             return false;
         }
@@ -541,22 +580,22 @@ namespace Project_EFT.Database
         public static int GetUserRanking(int userID) 
         {
             MySqlCommand command = MakeCommand("SELECT User_Ranking FROM Users WHERE User_ID = @id");
+            MySqlDataReader reader = null;
             try
             {
                 command.Parameters.AddWithValue("@id", userID);
                 command.Prepare();
-                MySqlDataReader reader = command.ExecuteReader();
+                reader = command.ExecuteReader();
                 int result = DB_FAILURE;
-                if (reader.Read())
-                {
-                    result = reader.GetInt32(0);
-                    connection.Close();
-                }
+                if (reader.Read()) result = reader.GetInt32(0);
+                connection.Close();
+                reader.Close();
                 return result;
             }
             catch (Exception e){
                 Debug.WriteLine(e);
                 if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
             }
             return DB_FAILURE;
         }
@@ -644,12 +683,13 @@ namespace Project_EFT.Database
 
         public static Problem GetProblemByID(int ID)
         {
+            MySqlDataReader reader = null;
             try
             {
                 MySqlCommand command = MakeCommand("SELECT * FROM Problems WHERE Problem_Number = @id");
                 command.Parameters.AddWithValue("@id", ID);
                 command.Prepare();
-                MySqlDataReader reader = command.ExecuteReader();
+                reader = command.ExecuteReader();
 
                 //if a problem was returned, read it and create a new problem to return
                 if (reader.Read())
@@ -677,6 +717,7 @@ namespace Project_EFT.Database
             {
                 Debug.WriteLine(e);
                 if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
             }
             return null;
         }
@@ -705,16 +746,18 @@ namespace Project_EFT.Database
 
         public static bool DoesEmailExist(string email)
         {
+            MySqlDataReader reader = null;
             try
             {
                 MySqlCommand command = MakeCommand("SELECT User_ID FROM Users WHERE User_Email = @email");
                 command.Parameters.AddWithValue("@email", email);
                 command.Prepare();
-                MySqlDataReader reader = command.ExecuteReader();
+                reader = command.ExecuteReader();
 
                 // user exists in standard users table
                 if (reader.Read())
                 {
+                    reader.Close();
                     connection.Close();
                     return true;
                 }
@@ -722,31 +765,36 @@ namespace Project_EFT.Database
                 command.Parameters.Clear();
                 command.Parameters.AddWithValue("@email", email);
                 command.Prepare();
+                reader.Close();
                 reader = command.ExecuteReader();
                 bool result = reader.Read();
                 connection.Close();
+                reader.Close();
                 return result;
             }
             catch (Exception e) 
             {
                 Debug.WriteLine(e);
                 if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
             }
             return false;
         }
 
         public static bool DoesUsernameExist(string username)
         {
+            MySqlDataReader reader = null;
             try
             {
                 MySqlCommand command = MakeCommand("SELECT User_ID FROM Users WHERE User_Username = @username");
                 command.Parameters.AddWithValue("@username", username);
                 command.Prepare();
-                MySqlDataReader reader = command.ExecuteReader();
+                reader = command.ExecuteReader();
 
                 // user exists in standard users table
                 if (reader.Read())
                 {
+                    reader.Close();
                     connection.Close();
                     return true;
                 }
@@ -754,28 +802,32 @@ namespace Project_EFT.Database
                 command.Parameters.Clear();
                 command.Parameters.AddWithValue("@username", username);
                 command.Prepare();
+                reader.Close();
                 reader = command.ExecuteReader();
                 bool result = reader.Read();
                 connection.Close();
+                reader.Close();
                 return result;
             }
             catch (Exception e) 
             {
                 Debug.WriteLine(e);
                 if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
             }
             return false;
         }
 
         public static StandardUser StandardUserLogin(string username, string password)
         {
+            MySqlDataReader reader = null;
             try
             {
                 MySqlCommand command = MakeCommand("SELECT * FROM Users WHERE User_Username = @username AND User_Password = @password");
                 command.Parameters.AddWithValue("@username", username);
                 command.Parameters.AddWithValue("@password", password);
                 command.Prepare();
-                MySqlDataReader reader = command.ExecuteReader();
+                reader = command.ExecuteReader();
                 if (reader.Read())
                 {
                     string usern = reader.GetString(1);
@@ -784,7 +836,9 @@ namespace Project_EFT.Database
                     int rank = reader.GetInt32(4);
                     int points = reader.GetInt32(5);
                     int id = reader.GetInt32(0);
+                    string about = reader.GetString(6);
                     connection.Close();
+                    reader.Close();
                     Dictionary<int, List<AnswerSubmission>> submissionMap = new Dictionary<int, List<AnswerSubmission>>();
                     //this will contain all of the users submissions in ascending order, by date, and then add them to the correct lists based on id
                     if (CheckIfUserSubmissionTableExists(id))
@@ -816,12 +870,16 @@ namespace Project_EFT.Database
                             Debug.Write(k.Key + " " + a.SubmissionDate + " " + a.Content + "\n");
                         }
                     }*/
-                    return new StandardUser(
+                    StandardUser result = new StandardUser(
                         usern, passw, email, rank, points, id, submissionMap
                     );
+                    result.About = about;
+
+                    return result;
                 }
                 else
                 {
+                    reader.Close();
                     connection.Close();
                     return null;
                 }
@@ -830,19 +888,21 @@ namespace Project_EFT.Database
             {
                 Debug.WriteLine(e);
                 if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
             }
             return null;
         }
 
         public static Admin AdminLogin(string username, string password)
         {
+            MySqlDataReader reader = null;
             try
             {
                 MySqlCommand command = MakeCommand("SELECT * FROM Admins WHERE Admin_Username = @username AND Admin_Password = @password");
                 command.Parameters.AddWithValue("@username", username);
                 command.Parameters.AddWithValue("@password", password);
                 command.Prepare();
-                MySqlDataReader reader = command.ExecuteReader();
+                reader = command.ExecuteReader();
                 if (reader.Read())
                 {
                     // TODO must get submissions for admin before returning
@@ -851,6 +911,7 @@ namespace Project_EFT.Database
                     string email = reader.GetString(3);
                     int id = reader.GetInt32(0);
                     connection.Close();
+                    reader.Close();
                     return new Admin(
                         usern,
                         passw,
@@ -861,6 +922,7 @@ namespace Project_EFT.Database
                 else
                 {
                     connection.Close();
+                    reader.Close();
                     return null;
                 }
             }
@@ -868,6 +930,7 @@ namespace Project_EFT.Database
             {
                 Debug.WriteLine(e);
                 if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
             }
             return null;
         }
@@ -877,10 +940,10 @@ namespace Project_EFT.Database
             StandardUser user = GetStandardUserByUsername(username);
             MySqlTransaction transaction = null;
             if (user == null) return false;
+            MySqlDataReader reader = null;
             try
             {
                 MySqlCommand command = null;
-                MySqlDataReader reader = null;
                 //if they have a user submissions table, remove their submissions and then drop the table, otherwise just delete the user
                 if (CheckIfUserSubmissionTableExists(user.Id))
                 {
@@ -959,6 +1022,8 @@ namespace Project_EFT.Database
 
                 UserCount--;
 
+                if (File.Exists(InformationValidator.ImageProjectPath + "/" + user.Id + ".png")) File.Delete(InformationValidator.ImageProjectPath + "/" + user.Id + ".png");
+
                 // user deleted --> one row was affected (the deleted one)
                 return true;
             }
@@ -970,18 +1035,20 @@ namespace Project_EFT.Database
                     if (transaction != null) transaction.Rollback();
                     connection.Close();
                 }
+                if (reader != null && !reader.IsClosed) reader.Close();
             }
             return false;
         }
 
         public static StandardUser GetStandardUserByUsername(string username) 
         {
+            MySqlDataReader reader = null;
             try
             {
                 MySqlCommand command = MakeCommand("SELECT * FROM Users WHERE User_Username = @username");
                 command.Parameters.AddWithValue("@username", username);
                 command.Prepare();
-                MySqlDataReader reader = command.ExecuteReader();
+                reader = command.ExecuteReader();
                 if (reader.Read())
                 {
                     string usern = reader.GetString(1);
@@ -991,6 +1058,7 @@ namespace Project_EFT.Database
                     int id = reader.GetInt32(0);
                     int points = reader.GetInt32(5);
                     connection.Close();
+                    reader.Close();
                     return new StandardUser(
                         usern, passw, email, rank, points, id
                     );
@@ -998,6 +1066,7 @@ namespace Project_EFT.Database
                 else
                 {
                     connection.Close();
+                    reader.Close();
                     return null;
                 }
             }
@@ -1005,18 +1074,20 @@ namespace Project_EFT.Database
             {
                 Debug.WriteLine(e);
                 if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
             }
             return null;
         }
 
         public static StandardUser GetStandardUserByEmail(string email)
         {
+            MySqlDataReader reader = null;
             try
             {
                 MySqlCommand command = MakeCommand("SELECT * FROM Users WHERE User_Email = @email");
                 command.Parameters.AddWithValue("@email", email);
                 command.Prepare();
-                MySqlDataReader reader = command.ExecuteReader();
+                reader = command.ExecuteReader();
                 if (reader.Read())
                 {
                     string usern = reader.GetString(1);
@@ -1025,6 +1096,7 @@ namespace Project_EFT.Database
                     int id = reader.GetInt32(0);
                     int points = reader.GetInt32(5);
                     connection.Close();
+                    reader.Close();
                     return new StandardUser(
                         usern, passw, email, rank, points, id
                     );
@@ -1032,6 +1104,7 @@ namespace Project_EFT.Database
                 else
                 {
                     connection.Close();
+                    reader.Close();
                     return null;
                 }
             }
@@ -1039,6 +1112,7 @@ namespace Project_EFT.Database
             {
                 Debug.WriteLine(e);
                 if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
             }
             return null;
         }
@@ -1046,9 +1120,10 @@ namespace Project_EFT.Database
         public static bool GetNumberUsersInDB() 
         {
             MySqlCommand command = MakeCommand("SELECT COUNT(User_ID) FROM Users");
+            MySqlDataReader reader = null;
             try
             {
-                MySqlDataReader reader = command.ExecuteReader();
+                reader = command.ExecuteReader();
                 if (reader.Read())
                 {
                     UserCount = reader.GetInt32(0);
@@ -1056,13 +1131,141 @@ namespace Project_EFT.Database
                     reader.Close();
                     return true;
                 }
+                connection.Close();
+                reader.Close();
             }
             catch 
             {
                 if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
             }
             return false;
         }
 
+        public static List<StandardUser> GetTopFiveUsers() 
+        {
+            MySqlCommand command = MakeCommand("SELECT * FROM Users WHERE User_Ranking < 6 ORDER BY User_Ranking ASC");
+            MySqlDataReader reader = null;
+            try
+            {
+                reader = command.ExecuteReader();
+                if (reader.Read())
+                {
+                    List<StandardUser> result = new List<StandardUser>();
+                    do
+                    {
+                        StandardUser user = new StandardUser();
+                        user.Id = reader.GetInt32(0);
+                        user.Username = reader.GetString(1);
+                        user.Ranking = reader.GetInt32(4);
+                        user.PointsTotal = reader.GetInt32(5);
+                        result.Add(user);
+                    } while (reader.Read());
+                    connection.Close();
+                    reader.Close();
+                    return result;
+                }
+                connection.Close();
+                reader.Close();
+            }
+            catch
+            {
+                if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
+            }
+            return null;
+        }
+
+        public static StandardUser GetUserProfileInformationByUsername(string username)
+        {
+            MySqlCommand command = MakeCommand("SELECT * FROM Users WHERE User_Username = @username");
+            MySqlDataReader reader = null;
+            try
+            {
+                command.Parameters.AddWithValue("@username", username);
+                command.Prepare();
+                reader = command.ExecuteReader();
+                if (reader.Read())
+                {
+                    StandardUser user = new StandardUser();
+                    user.Id = reader.GetInt32(0);
+                    user.Username = reader.GetString(1);
+                    user.Ranking = reader.GetInt32(4);
+                    user.PointsTotal = reader.GetInt32(5);
+                    user.About = reader.GetString(6);
+                    connection.Close();
+                    reader.Close();
+                    if (CheckIfUserSubmissionTableExists(user.Id))
+                    {
+                        List<AnswerSubmission> submissionList = GetAnswerSubmissionsByID(user.Id);
+                        Dictionary<int, List<AnswerSubmission>> submissionMap = new Dictionary<int, List<AnswerSubmission>>();
+                        if (submissionList != null)
+                        {
+                            foreach (AnswerSubmission answer in submissionList)
+                            {
+                                if (submissionMap.ContainsKey(answer.ProblemId))
+                                {
+                                    submissionMap[answer.ProblemId].Add(answer);
+                                }
+                                else
+                                {
+                                    List<AnswerSubmission> newSubList = new List<AnswerSubmission>() { answer };
+                                    submissionMap.Add(answer.ProblemId, newSubList);
+                                }
+                            }
+                        }
+                        else submissionMap = null;
+                        user.Submissions = submissionMap;
+                    }
+                    return user;
+                }
+                connection.Close();
+                reader.Close();
+            }
+            catch
+            {
+                if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
+            }
+            return null;
+        }
+
+        public static List<StandardUser> SearchForUser(string query) 
+        {
+            string relativeQuery = '%' + query + '%';
+            MySqlCommand command = MakeCommand("SELECT * FROM Users WHERE User_Username LIKE @query ORDER BY User_Ranking ASC");
+            MySqlDataReader reader = null;
+            try
+            {
+                command.Parameters.AddWithValue("@query", relativeQuery);
+                command.Prepare();
+                reader = command.ExecuteReader();
+                if (reader.Read()) 
+                {
+                    List<StandardUser> results = new List<StandardUser>();
+                    do
+                    {
+                        StandardUser user = new StandardUser();
+                        user.Id = reader.GetInt32(0);
+                        user.Username = reader.GetString(1);
+                        user.Ranking = reader.GetInt32(4);
+                        user.PointsTotal = reader.GetInt32(5);
+                        results.Add(user);
+                    } while (reader.Read());
+                    connection.Close();
+                    reader.Close();
+                    return results;
+                }
+                connection.Close();
+                reader.Close();
+                return null;
+            }
+            catch
+            {
+                if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
+            }
+            return null;
+        }
     }
 }

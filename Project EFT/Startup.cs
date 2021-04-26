@@ -88,6 +88,9 @@ namespace Project_EFT
                     name: "editInfo",
                     pattern: "{controller=EditInfo}/{action=EditInfo}");
                 endpoints.MapControllerRoute(
+                    name: "specificUser",
+                    pattern: "{controller=Users}/{action=Users}/{username?}");
+                endpoints.MapControllerRoute(
                     name: "cipherRoute",
                     pattern: "{controller=Cipher}/{action=Cipher}");
                 endpoints.MapControllerRoute(
