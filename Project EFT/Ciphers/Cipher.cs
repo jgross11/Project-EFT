@@ -22,7 +22,9 @@ namespace Project_EFT.Ciphers
         public const int AlphabetIndex = 1;
         public const string standardAlphabet = "abcdefghijklmnopqrstuvwxyz";
         public const string InvalidAlphabetMessage = "Please ensure the alphabet contains at least one character.";
+        public const string MismatchedKeyAndAlphabetMessage = "Please ensure the alphabet contains every character in the key.";
         public const string InvalidInputMessage = "Please ensure the input contains at least one character.";
+        public const string InvalidKeyMessage = "Please ensure the key contains at least one character.";
 
         public Cipher(int numSols) 
         {
@@ -93,6 +95,15 @@ namespace Project_EFT.Ciphers
         protected bool AlphabetSizeMatch(string alph1, string alph2)
         {
             return alph1.Length == alph2.Length;
+        }
+
+        protected bool AlphabetContainsKey(string alphabet, string key) 
+        {
+            foreach (char c in key) 
+            {
+                if (alphabet.IndexOf(c) == -1) return false;
+            }
+            return true;
         }
 
         protected string FormatUnequalAlphabetMessage(string baseA, string substitution) {
