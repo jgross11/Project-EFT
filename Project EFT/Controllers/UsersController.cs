@@ -40,7 +40,7 @@ namespace Project_EFT.Controllers
                 return View();
             }
             StandardUser user = DBConnector.GetUserProfileInformationByUsername(username);
-            HttpContext.Session.SetComplexObject<StandardUser>("userToView", user);
+            if(user!=null)HttpContext.Session.SetComplexObject<StandardUser>("userToView", user);
             return View();
         }
 
