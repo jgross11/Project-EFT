@@ -20,11 +20,11 @@ namespace Project_EFT_Tests
         StandardUser user;
         Admin admin;
         int userID, fakeUserID, adminID;
-        string userEmail, fakeUserEmail, updateEmail, username, fakeUsername, updateUsername;
+        string userEmail, fakeUserEmail, updateEmail, username, fakeUsername, updateUsername, updatePassword, updateAbout;
         AnswerSubmission sub1, sub2;
         List<AnswerSubmission> usersSubmissions;
         List<Submission> adminSubmissions;
-        Problem problem;
+        Problem problem, updateProblem;
 
         [SetUp]
         public void Setup()
@@ -46,7 +46,7 @@ namespace Project_EFT_Tests
             adminSubmissions.Add(new Submission("Deleted account with username: new19", new DateTime(2021, 4, 21, 19, 52, 37), 2));
 
             problem = new Problem(1, "A Simple Caesar", "Decrypt the following Caesar cipher: brx'yh vroyhg wkh iluvw sureohp!", "you've solved the first problem!", -1, -1, 1);
-
+            updateProblem = new Problem(1, "This should be different", "this too", "the answer?", 5, 5, 2);
 
             userEmail = "doNotDelete@doNotDelete.com";
             fakeUserEmail = "whyWouldAnyoneMakeThis@anEmail.com";
@@ -64,7 +64,9 @@ namespace Project_EFT_Tests
             user.About = "Dont Delete This About Me";
             admin = new Admin("doNotDeleteAdmin", "7c008e2d5c3a4e283dd97ad218534ee7", "doNotDeleteAdmin@doNotDelete.com", adminID);
 
+            updatePassword = "thisWouldBeHashed";
 
+            updateAbout = "thisShouldBeReset";
 
             DBConnector.InitForTests();
 
@@ -224,26 +226,75 @@ namespace Project_EFT_Tests
         public void testTryUpdateEmail()
         {
             String resetEmail = user.Email;
-            //runs the initial update query, and checks to see if it was updated to the expected username change
+            //runs the initial update query, and checks to see if it was updated to the expected email change
             DBConnector.TryUpdateEmail(user, updateEmail);
             Assert.True(DBConnector.GetStandardUserByUsername(user.Username).Email.Equals(updateEmail));
 
-            //sets the username back to its correct value, so as to work for the future and other tests
+            //sets the email back to its correct value, so as to work for the future and other tests
             DBConnector.TryUpdateEmail(user, resetEmail);
             Assert.True(DBConnector.GetStandardUserByUsername(user.Username).Email.Equals(resetEmail));
 
             String resetAdminEmail = admin.Email;
-            //runs the initial update query, and checks to see if it was updated to the expected username change
+            //runs the initial update query, and checks to see if it was updated to the expected email change
             DBConnector.TryUpdateEmail(admin, updateEmail);
             Assert.True(DBConnector.GetAdminByUsername(admin.Username).Email.Equals(updateEmail));
 
-            //sets the username back to its correct value, so as to work for the future and other tests
+            //sets the email back to its correct value, so as to work for the future and other tests
             DBConnector.TryUpdateEmail(admin, resetAdminEmail);
             Assert.True(DBConnector.GetAdminByUsername(admin.Username).Email.Equals(resetAdminEmail));
         }
 
+        [Test]
+        public void testUpdatePassword()
+        {
+            String resetPassword = user.Password;
+            //runs the initial update query, and checks to see if it was updated to the expected password change
+            DBConnector.UpdatePassword(user, updatePassword);
+            Assert.True(DBConnector.GetStandardUserByUsername(user.Username).Password.Equals(updatePassword));
 
+            //sets the password back to its correct value, so as to work for the future and other tests
+            DBConnector.UpdatePassword(user, resetPassword);
+            Assert.True(DBConnector.GetStandardUserByUsername(user.Username).Password.Equals(resetPassword));
 
+            String resetAdminPassword = admin.Password;
+            //runs the initial update query, and checks to see if it was updated to the expected password change
+            DBConnector.UpdatePassword(admin, updatePassword);
+            Assert.True(DBConnector.GetAdminByUsername(admin.Username).Password.Equals(updatePassword));
+
+            //sets the password back to its correct value, so as to work for the future and other tests
+            DBConnector.UpdatePassword(admin, resetAdminPassword);
+            Assert.True(DBConnector.GetAdminByUsername(admin.Username).Password.Equals(resetAdminPassword));
+        }
+
+        [Test]
+        public void testUpdateAbout()
+        {
+            String resetAbout = user.About;
+            //runs the initial update query, and checks to see if it was updated to the expected "about" change
+            DBConnector.UpdateAbout(updateAbout, user.Id);
+            Assert.True(DBConnector.GetStandardUserByUsername(user.Username).About.Equals(updateAbout));
+
+            //sets the "about" back to its correct value, so as to work for the future and other tests
+            DBConnector.UpdateAbout(resetAbout, user.Id);
+            Assert.True(DBConnector.GetStandardUserByUsername(user.Username).About.Equals(resetAbout));
+        }
+
+        [Test]
+        public void testUpdateProblem()
+        {
+            //store the original problem so as to revert all changes back to normal
+            Problem resetProblem = DBConnector.GetProblemByID(updateProblem.ProblemNumber);
+
+            //update to the "new" problem values
+            DBConnector.UpdateProblem(updateProblem);
+
+            Assert.True(DBConnector.GetProblemByID(updateProblem.ProblemNumber).IsEqual(updateProblem));
+
+            //change the values back
+            DBConnector.UpdateProblem(resetProblem);
+
+            Assert.True(DBConnector.GetProblemByID(updateProblem.ProblemNumber).IsEqual(resetProblem));
+        }
 
 
         //TODO inserts/deletes
