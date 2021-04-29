@@ -102,7 +102,7 @@ namespace Project_EFT.Controllers
                 else if (user.Submissions.ContainsKey(problem.ProblemNumber))
                 {
                     List<AnswerSubmission> subs = user.Submissions[problem.ProblemNumber];
-                    if (subs[subs.Count - 1].IsCorrect)
+                    if (subs[^1].IsCorrect)
                     {
                         return View("Problem");
                     }
@@ -123,8 +123,7 @@ namespace Project_EFT.Controllers
                     }
                     else
                     {
-                        List<AnswerSubmission> newSubList = new List<AnswerSubmission>();
-                        newSubList.Add(answer);
+                        List<AnswerSubmission> newSubList = new List<AnswerSubmission> { answer };
                         user.Submissions.Add(answer.ProblemId, newSubList);
                     }
 
@@ -186,7 +185,7 @@ namespace Project_EFT.Controllers
                 if (DBConnector.InsertNewProblem(problem))
                 {
                     Admin admin = HttpContext.Session.GetComplexObject<Admin>("adminInfo");
-                    Problem newProblem = DBConnector.problems[DBConnector.problems.Count - 1];
+                    Problem newProblem = DBConnector.problems[^1];
                     Submission sub = new Submission("Created problem #" + newProblem.ProblemNumber + ": " + newProblem.Title, DateTime.Now, admin.Id);
                     if (DBConnector.InsertNewAdminSubmission(sub))
                     {

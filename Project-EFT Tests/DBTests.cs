@@ -369,7 +369,7 @@ namespace Project_EFT_Tests
             //insert the new admin submission, and check if it is the most recent submission in the admins submissionList
             DBConnector.InsertNewAdminSubmission(deleteSubmission);
             List<Submission> testSubList = DBConnector.GetAdminSubmissionsByID(admin.Id);
-            Assert.True(testSubList[testSubList.Count - 1].IsEqual(deleteSubmission));
+            Assert.True(testSubList[^1].IsEqual(deleteSubmission));
 
             //deletes the inserted submission so that the table is reset to how it should be
             DBConnector.DeleteAdminSubmissionByContent(deleteSubmission.Content);
@@ -397,7 +397,7 @@ namespace Project_EFT_Tests
             //insert the new answer submission, and check if it is the most recent submission in the admins submissionList
             DBConnector.InsertNewAnswerSubmission(deleteSubmission, user.PointsTotal, 1);
             List<AnswerSubmission> testSubList = DBConnector.GetAnswerSubmissionsByID(user.Id);
-            Assert.True(testSubList[testSubList.Count - 1].IsEqual(deleteSubmission));
+            Assert.True(testSubList[^1].IsEqual(deleteSubmission));
 
             //checks if newProblem values is same as old + 1 attempt
             Problem newProblem = DBConnector.GetProblemByID(problem.ProblemNumber);
