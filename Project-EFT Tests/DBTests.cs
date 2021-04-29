@@ -20,7 +20,7 @@ namespace Project_EFT_Tests
         StandardUser user;
         Admin admin;
         int userID, fakeUserID, adminID;
-        string userEmail, fakeUserEmail, username, fakeUsername;
+        string userEmail, fakeUserEmail, updateEmail, username, fakeUsername, updateUsername;
         AnswerSubmission sub1, sub2;
         List<AnswerSubmission> usersSubmissions;
         List<Submission> adminSubmissions;
@@ -50,17 +50,20 @@ namespace Project_EFT_Tests
 
             userEmail = "doNotDelete@doNotDelete.com";
             fakeUserEmail = "whyWouldAnyoneMakeThis@anEmail.com";
+            updateEmail = "youCantMakeThisEmail";
 
             username = "doNotDelete";
             fakeUsername = "thisOneHasToBePastTheUserNameCharacterLimitsRightthisOneHasToBePastTheUserNameCharacterLimitsRightthisOneHasToBePastTheUserNameCharacterLimitsRightthisOneHasToBePastTheUserNameCharacterLimitsRightthisOneHasToBePastTheUserNameCharacterLimitsRight";
+            updateUsername = "thisWontWorkIfSomeonePickedThisUsername";
 
             Dictionary<int, List<AnswerSubmission>> userSubMap = new Dictionary<int, List<AnswerSubmission>>();
             userSubMap.Add(1, new List<AnswerSubmission>() { sub1 });
             userSubMap.Add(2, new List<AnswerSubmission>() { sub2 });
 
-            user = new StandardUser(username, "49e5d4e3749b2f33b75dddc984878cdc", userEmail, -1, -1, 80, userSubMap);
-
+            user = new StandardUser(username, "49e5d4e3749b2f33b75dddc984878cdc", userEmail, -1, 1, 80, userSubMap);
+            user.About = "Dont Delete This About Me";
             admin = new Admin("doNotDeleteAdmin", "7c008e2d5c3a4e283dd97ad218534ee7", "doNotDeleteAdmin@doNotDelete.com", adminID);
+
 
 
             DBConnector.InitForTests();
@@ -68,8 +71,6 @@ namespace Project_EFT_Tests
         }
 
         
-
-
         //gets/checks
         [Test]
         public void testCheckIfUserSubmissionTableExists()
@@ -169,12 +170,83 @@ namespace Project_EFT_Tests
         public void testGetStandardUserByEmail()
         {
             Assert.True(DBConnector.GetStandardUserByEmail(user.Email).IsEqual(user));
-            Assert.IsNull(DBConnector.GetStandardUserByUsername(fakeUserEmail));
+            Assert.IsNull(DBConnector.GetStandardUserByEmail(fakeUserEmail));
         }
 
+        [Test]
+        public void testGetAdminByUsername()
+        {
+            Assert.True(DBConnector.GetAdminByUsername(admin.Username).IsEqual(admin));
+            Assert.IsNull(DBConnector.GetAdminByUsername(fakeUsername));
+        }
+
+        [Test]
+        public void testGetAdminByEmail()
+        {
+            Assert.True(DBConnector.GetAdminByEmail(admin.Email).IsEqual(admin));
+            Assert.IsNull(DBConnector.GetAdminByEmail(fakeUserEmail));
+        }
+
+        [Test]
+        public void testGetUserProfileInformationByUsername()
+        {
+            Assert.True(DBConnector.GetUserProfileInformationByUsername(user.Username).IsEqualForProfile(user));
+            Assert.IsNull(DBConnector.GetUserProfileInformationByUsername(fakeUsername));
+        }
         
 
-        //TODO Possibly inserts/deletes/updates
+
+        //updates
+        [Test]
+        public void testTryUpdateUsername()
+        {
+            String resetUsername = user.Username;
+            //runs the initial update query, and checks to see if it was updated to the expected username change
+            DBConnector.TryUpdateUsername(user, updateUsername);
+            Assert.True(DBConnector.GetStandardUserByEmail(user.Email).Username.Equals(updateUsername));
+
+            //sets the username back to its correct value, so as to work for the future and other tests
+            DBConnector.TryUpdateUsername(user, resetUsername);
+            Assert.True(DBConnector.GetStandardUserByEmail(user.Email).Username.Equals(resetUsername));
+
+            String resetAdminUsername = admin.Username;
+            //runs the initial update query, and checks to see if it was updated to the expected username change
+            DBConnector.TryUpdateUsername(admin, updateUsername);
+            Assert.True(DBConnector.GetAdminByEmail(admin.Email).Username.Equals(updateUsername));
+
+            //sets the username back to its correct value, so as to work for the future and other tests
+            DBConnector.TryUpdateUsername(admin, resetAdminUsername);
+            Assert.True(DBConnector.GetAdminByEmail(admin.Email).Username.Equals(resetAdminUsername));
+
+        }
+
+        [Test]
+        public void testTryUpdateEmail()
+        {
+            String resetEmail = user.Email;
+            //runs the initial update query, and checks to see if it was updated to the expected username change
+            DBConnector.TryUpdateEmail(user, updateEmail);
+            Assert.True(DBConnector.GetStandardUserByUsername(user.Username).Email.Equals(updateEmail));
+
+            //sets the username back to its correct value, so as to work for the future and other tests
+            DBConnector.TryUpdateEmail(user, resetEmail);
+            Assert.True(DBConnector.GetStandardUserByUsername(user.Username).Email.Equals(resetEmail));
+
+            String resetAdminEmail = admin.Email;
+            //runs the initial update query, and checks to see if it was updated to the expected username change
+            DBConnector.TryUpdateEmail(admin, updateEmail);
+            Assert.True(DBConnector.GetAdminByUsername(admin.Username).Email.Equals(updateEmail));
+
+            //sets the username back to its correct value, so as to work for the future and other tests
+            DBConnector.TryUpdateEmail(admin, resetAdminEmail);
+            Assert.True(DBConnector.GetAdminByUsername(admin.Username).Email.Equals(resetAdminEmail));
+        }
+
+
+
+
+
+        //TODO inserts/deletes
 
     }
 }
