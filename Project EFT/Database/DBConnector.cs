@@ -436,15 +436,9 @@ namespace Project_EFT.Database
                 // update info in cached problem list
                 if (result == 1)
                 {
-                    for (int i = 0; i < problems.Count; i++)
-                    {
-                        if (problems[i].ProblemNumber == problem.ProblemNumber)
-                        {
-                            problems[i] = problem;
-                            break;
-                        }
-                    }
+                    problems[problem.ProblemNumber - 1] = problem;
                 }
+                connection.Close();
                 return result;
             }
             catch (Exception e) 
@@ -463,7 +457,7 @@ namespace Project_EFT.Database
                 List<AnswerSubmission> subs = new List<AnswerSubmission>();
                 //this query returns all of a users submissions, in ascending order by date
                 string tablename = "UserSubmissions" + id;
-                MySqlCommand command = MakeCommand("SELECT * FROM " + tablename);
+                MySqlCommand command = MakeCommand("SELECT * FROM " + tablename + " ORDER BY UserSubmissions_SubmissionDate ASC");
                 command.Prepare();
                 reader = command.ExecuteReader();
                 // need row count
@@ -497,7 +491,7 @@ namespace Project_EFT.Database
             try
             {
                 List<Submission> subs = new List<Submission>();
-                MySqlCommand command = MakeCommand("SELECT * FROM AdminSubmissions WHERE Admin_ID = @id");
+                MySqlCommand command = MakeCommand("SELECT * FROM AdminSubmissions WHERE Admin_ID = @id  ORDER BY AdminSubmissions_SubmissionDate ASC");
                 command.Parameters.AddWithValue("@id", id);
                 command.Prepare();
                 reader = command.ExecuteReader();
@@ -529,7 +523,7 @@ namespace Project_EFT.Database
             try
             {
                 problems = new List<Problem>();
-                MySqlCommand command = MakeCommand("SELECT * FROM Problems");
+                MySqlCommand command = MakeCommand("SELECT * FROM Problems ORDER BY Problem_Number ASC");
                 reader = command.ExecuteReader();
                 // need row count
                 while (reader.Read())
@@ -1347,5 +1341,117 @@ namespace Project_EFT.Database
             }
             return null;
         }
+
+        //currently only used for tests
+        public static void DeleteAdminSubmissionByContent(string content)
+        {
+            MySqlTransaction transaction = MakeTransaction();
+            if (transaction != null)
+            {
+                try
+                {
+                    MySqlCommand command = new MySqlCommand("DELETE FROM AdminSubmissions WHERE AdminSubmissions_Content = @content", connection, transaction);
+                    command.Parameters.AddWithValue("@content", content);
+                    command.Prepare();
+                    command.ExecuteNonQuery();
+                    
+                    transaction.Commit();
+                    connection.Close();
+                }
+                catch
+                {
+                    if (connection != null && connection.State == ConnectionState.Open)
+                    {
+                        if (transaction != null) transaction.Rollback();
+                        connection.Close();
+                    }
+                }
+            }
+        }
+
+        //currently only used for tests
+        public static void DeleteAnswerSubmissionByAnswer(string answer, int userID)
+        {
+            //if this occurs *after* the transaction is made, the connection is closed....
+            if (CheckIfUserSubmissionTableExists(userID))
+            {
+                MySqlTransaction transaction = MakeTransaction();
+                if (transaction != null)
+                {
+                    try
+                    {
+                        string tableName = "UserSubmissions" + userID;
+                        MySqlCommand command = new MySqlCommand("DELETE FROM " + tableName + " WHERE UserSubmissions_Answer = @answer", connection, transaction);
+                        command.Parameters.AddWithValue("@answer", answer);
+                        command.Prepare();
+                        command.ExecuteNonQuery();
+                        transaction.Commit();
+                        connection.Close();
+                    }
+                    catch
+                    {
+                        if (connection != null && connection.State == ConnectionState.Open)
+                        {
+                            if (transaction != null) transaction.Rollback();
+                            connection.Close();
+                        }
+                    }
+                }
+            }
+        }
+
+        //currently only used for tests, but could be added into "deleteUser()" query
+       public static void DropUserSubmissionTable(int tableID)
+        {
+            MySqlTransaction transaction = MakeTransaction();
+            if (transaction != null)
+            {
+                try
+                {
+                    string tableName = "UserSubmissions" + tableID;
+                    MySqlCommand command = new MySqlCommand("DROP TABLE " + tableName, connection, transaction);
+                    command.Prepare();
+                    command.ExecuteNonQuery();
+                    transaction.Commit();
+                    connection.Close();
+                }
+                catch
+                {
+                    if (connection != null && connection.State == ConnectionState.Open)
+                    {
+                        if (transaction != null) transaction.Rollback();
+                        connection.Close();
+                    }
+                }
+            }
+        }
+
+        //currently only used for tests, but could be used by admin with some adjustments to update all problems in front's id...updateProblem()
+        public static void DeleteProblemByID(int problemID)
+        {
+            MySqlTransaction transaction = MakeTransaction();
+            if (transaction != null)
+            {
+                try
+                {
+                    MySqlCommand command = new MySqlCommand("DELETE FROM Problems WHERE Problem_Number = @pID", connection, transaction);
+                    command.Parameters.AddWithValue("@pID", problemID);
+                    command.Prepare();
+                    command.ExecuteNonQuery();
+
+                    transaction.Commit();
+                    connection.Close();
+                }
+                catch
+                {
+                    if (connection != null && connection.State == ConnectionState.Open)
+                    {
+                        if (transaction != null) transaction.Rollback();
+                        connection.Close();
+                    }
+                }
+            }
+        }
+
     }
 }
