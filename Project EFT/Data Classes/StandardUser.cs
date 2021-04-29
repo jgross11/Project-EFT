@@ -118,5 +118,12 @@ namespace Project_EFT.Data_Classes
             }
             return (this.Username.Equals(otherUser.Username) && this.Id == otherUser.Id && this.PointsTotal == otherUser.PointsTotal && this.About.Equals(otherUser.About));
         }
+
+        //when inserting a new user, we dont have their id, about, points, etc.
+        public bool IsEqualWithOnlyUsernameEmailPassword(StandardUser otherUser)
+        {
+            Console.WriteLine(this.Username.Equals(otherUser.Username) + " " + this.Password.Equals(otherUser.Password) + " " + this.Email.Equals(otherUser.Email));
+            return (this.Username.Equals(otherUser.Username) && this.Password.Equals(otherUser.Password) && this.Email.Equals(otherUser.Email));
+        }
     }
 }
