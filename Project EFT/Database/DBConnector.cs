@@ -422,11 +422,13 @@ namespace Project_EFT.Database
         {
             try
             {
-                MySqlCommand command = MakeCommand("UPDATE Problems SET Problem_Title = @title, Problem_Answer = @answer, Problem_Attempts = @attempts, Problem_Completions = @completions WHERE Problem_Number = @id");
+                MySqlCommand command = MakeCommand("UPDATE Problems SET Problem_Title = @title, Problem_Question = @question, Problem_Answer = @answer, Problem_Attempts = @attempts, Problem_Completions = @completions, Problem_PointValue = @value WHERE Problem_Number = @id");
                 command.Parameters.AddWithValue("@title", problem.Title);
+                command.Parameters.AddWithValue("@question", problem.Question);
                 command.Parameters.AddWithValue("@answer", problem.Answer);
                 command.Parameters.AddWithValue("@attempts", problem.Attempts);
                 command.Parameters.AddWithValue("@completions", problem.Completions);
+                command.Parameters.AddWithValue("@value", problem.PointsValue);
                 command.Parameters.AddWithValue("@id", problem.ProblemNumber);
                 command.Prepare();
                 int result = command.ExecuteNonQuery();
