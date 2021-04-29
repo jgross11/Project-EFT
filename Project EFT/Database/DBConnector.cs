@@ -237,18 +237,19 @@ namespace Project_EFT.Database
         {
             try
             {
-                MySqlCommand command = MakeCommand("INSERT INTO Problems (Problem_Title, Problem_Question, Problem_Answer, Problem_PointValue) VALUES (@title, @question, @answer, @pointValue)");
+                MySqlCommand command = MakeCommand("INSERT INTO Problems (Problem_Title, Problem_Question, Problem_Answer, Problem_PointValue, Problem_Number) VALUES (@title, @question, @answer, @pointValue, @problemnumber)");
                 command.Parameters.AddWithValue("@title", problem.Title);
                 command.Parameters.AddWithValue("@question", problem.Question);
                 command.Parameters.AddWithValue("@answer", problem.Answer);
                 command.Parameters.AddWithValue("@pointValue", problem.PointsValue);
+                command.Parameters.AddWithValue("@problemnumber", problems.Count + 1);
                 command.Prepare();
                 int numRowsAffected = command.ExecuteNonQuery();
                 connection.Close();
 
                 if (numRowsAffected == 1)
                 {
-                    problem.ProblemNumber = (int)command.LastInsertedId;
+                    problem.ProblemNumber = problems.Count + 1;
                     problems.Add(problem);
                     return true;
                 }
@@ -532,7 +533,7 @@ namespace Project_EFT.Database
                 while (reader.Read())
                 {
                     problems.Add(new Problem(
-                        reader.GetInt32(0),
+                        reader.GetInt32(7),
                         reader.GetString(1),
                         reader.GetString(2),
                         reader.GetString(3),
@@ -695,7 +696,7 @@ namespace Project_EFT.Database
                 if (reader.Read())
                 {
                     Problem problem = new Problem(
-                            reader.GetInt32(0),
+                            reader.GetInt32(7),
                             reader.GetString(1),
                             reader.GetString(2),
                             reader.GetString(3),
@@ -1057,10 +1058,11 @@ namespace Project_EFT.Database
                     int rank = reader.GetInt32(4);
                     int id = reader.GetInt32(0);
                     int points = reader.GetInt32(5);
+                    string about = reader.GetString(6);
                     connection.Close();
                     reader.Close();
                     return new StandardUser(
-                        usern, passw, email, rank, points, id
+                        usern, passw, email, rank, points, id, about
                     );
                 }
                 else
@@ -1095,10 +1097,11 @@ namespace Project_EFT.Database
                     int rank = reader.GetInt32(4);
                     int id = reader.GetInt32(0);
                     int points = reader.GetInt32(5);
+                    string about = reader.GetString(6);
                     connection.Close();
                     reader.Close();
                     return new StandardUser(
-                        usern, passw, email, rank, points, id
+                        usern, passw, email, rank, points, id, about
                     );
                 }
                 else
@@ -1109,6 +1112,81 @@ namespace Project_EFT.Database
                 }
             }
             catch (Exception e) 
+            {
+                Debug.WriteLine(e);
+                if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
+            }
+            return null;
+        }
+
+        //currently only for tests
+        public static Admin GetAdminByUsername(string username)
+        {
+            MySqlDataReader reader = null;
+            try
+            {
+                MySqlCommand command = MakeCommand("SELECT * FROM Admins WHERE Admin_Username = @username");
+                command.Parameters.AddWithValue("@username", username);
+                command.Prepare();
+                reader = command.ExecuteReader();
+                if (reader.Read())
+                {
+                    int id = reader.GetInt32(0);
+                    string usern = reader.GetString(1);
+                    string passw = reader.GetString(2);
+                    string email = reader.GetString(3);
+                    connection.Close();
+                    reader.Close();
+                    return new Admin(
+                        usern, passw, email, id
+                    );
+                }
+                else
+                {
+                    connection.Close();
+                    reader.Close();
+                    return null;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+                if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
+            }
+            return null;
+        }
+
+        //currently only for tests
+        public static Admin GetAdminByEmail(string email)
+        {
+            MySqlDataReader reader = null;
+            try
+            {
+                MySqlCommand command = MakeCommand("SELECT * FROM Admins WHERE Admin_Email = @email");
+                command.Parameters.AddWithValue("@email", email);
+                command.Prepare();
+                reader = command.ExecuteReader();
+                if (reader.Read())
+                {
+                    int id = reader.GetInt32(0);
+                    string usern = reader.GetString(1);
+                    string passw = reader.GetString(2);
+                    connection.Close();
+                    reader.Close();
+                    return new Admin(
+                        usern, passw, email, id
+                    );
+                }
+                else
+                {
+                    connection.Close();
+                    reader.Close();
+                    return null;
+                }
+            }
+            catch (Exception e)
             {
                 Debug.WriteLine(e);
                 if (connection != null && connection.State == ConnectionState.Open) connection.Close();
