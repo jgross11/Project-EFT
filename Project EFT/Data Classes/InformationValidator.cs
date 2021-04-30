@@ -14,8 +14,7 @@ namespace Project_EFT.Data_Classes
         private const int MaxEmailLength = 45;
         public const string InvalidEmailString = "Please enter a properly formatted email between 5 and 45 characters.";
         public const int PasswordType = 2;
-        private const int MinimumPasswordLength = 8;
-        private const int MaximumPasswordLength = 40;
+        private const int HashPasswordLength = 32;
         public const string InvalidPasswordString = "Please enter a valid password between 8 and 40 characters, consisting of at least one uppercase letter, one number, and one special character.";
         public const int UsernameType = 3;
         private const int MinimumUsernameLength = 1;
@@ -61,7 +60,7 @@ namespace Project_EFT.Data_Classes
                     }
                     return false;
                 case PasswordType:
-                    if (info.Length > MaximumPasswordLength) return false;
+                    if (info.Length != HashPasswordLength) return false;
                     foreach (char c in info) 
                     {
                         if (!"0123456789".Contains(c) && !"abcdef".Contains(c) && !"ABCDEF".Contains(c)) 

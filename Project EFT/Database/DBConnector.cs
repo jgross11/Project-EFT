@@ -237,18 +237,19 @@ namespace Project_EFT.Database
         {
             try
             {
-                MySqlCommand command = MakeCommand("INSERT INTO Problems (Problem_Title, Problem_Question, Problem_Answer, Problem_PointValue) VALUES (@title, @question, @answer, @pointValue)");
+                MySqlCommand command = MakeCommand("INSERT INTO Problems (Problem_Title, Problem_Question, Problem_Answer, Problem_PointValue, Problem_Number) VALUES (@title, @question, @answer, @pointValue, @problemnumber)");
                 command.Parameters.AddWithValue("@title", problem.Title);
                 command.Parameters.AddWithValue("@question", problem.Question);
                 command.Parameters.AddWithValue("@answer", problem.Answer);
                 command.Parameters.AddWithValue("@pointValue", problem.PointsValue);
+                command.Parameters.AddWithValue("@problemnumber", problems.Count + 1);
                 command.Prepare();
                 int numRowsAffected = command.ExecuteNonQuery();
                 connection.Close();
 
                 if (numRowsAffected == 1)
                 {
-                    problem.ProblemNumber = (int)command.LastInsertedId;
+                    problem.ProblemNumber = problems.Count + 1;
                     problems.Add(problem);
                     return true;
                 }
@@ -421,11 +422,13 @@ namespace Project_EFT.Database
         {
             try
             {
-                MySqlCommand command = MakeCommand("UPDATE Problems SET Problem_Title = @title, Problem_Answer = @answer, Problem_Attempts = @attempts, Problem_Completions = @completions WHERE Problem_Number = @id");
+                MySqlCommand command = MakeCommand("UPDATE Problems SET Problem_Title = @title, Problem_Question = @question, Problem_Answer = @answer, Problem_Attempts = @attempts, Problem_Completions = @completions, Problem_PointValue = @value WHERE Problem_Number = @id");
                 command.Parameters.AddWithValue("@title", problem.Title);
+                command.Parameters.AddWithValue("@question", problem.Question);
                 command.Parameters.AddWithValue("@answer", problem.Answer);
                 command.Parameters.AddWithValue("@attempts", problem.Attempts);
                 command.Parameters.AddWithValue("@completions", problem.Completions);
+                command.Parameters.AddWithValue("@value", problem.PointsValue);
                 command.Parameters.AddWithValue("@id", problem.ProblemNumber);
                 command.Prepare();
                 int result = command.ExecuteNonQuery();
@@ -433,15 +436,9 @@ namespace Project_EFT.Database
                 // update info in cached problem list
                 if (result == 1)
                 {
-                    for (int i = 0; i < problems.Count; i++)
-                    {
-                        if (problems[i].ProblemNumber == problem.ProblemNumber)
-                        {
-                            problems[i] = problem;
-                            break;
-                        }
-                    }
+                    problems[problem.ProblemNumber - 1] = problem;
                 }
+                connection.Close();
                 return result;
             }
             catch (Exception e) 
@@ -460,7 +457,7 @@ namespace Project_EFT.Database
                 List<AnswerSubmission> subs = new List<AnswerSubmission>();
                 //this query returns all of a users submissions, in ascending order by date
                 string tablename = "UserSubmissions" + id;
-                MySqlCommand command = MakeCommand("SELECT * FROM " + tablename);
+                MySqlCommand command = MakeCommand("SELECT * FROM " + tablename + " ORDER BY UserSubmissions_SubmissionDate ASC");
                 command.Prepare();
                 reader = command.ExecuteReader();
                 // need row count
@@ -494,7 +491,7 @@ namespace Project_EFT.Database
             try
             {
                 List<Submission> subs = new List<Submission>();
-                MySqlCommand command = MakeCommand("SELECT * FROM AdminSubmissions WHERE Admin_ID = @id");
+                MySqlCommand command = MakeCommand("SELECT * FROM AdminSubmissions WHERE Admin_ID = @id  ORDER BY AdminSubmissions_SubmissionDate ASC");
                 command.Parameters.AddWithValue("@id", id);
                 command.Prepare();
                 reader = command.ExecuteReader();
@@ -526,13 +523,13 @@ namespace Project_EFT.Database
             try
             {
                 problems = new List<Problem>();
-                MySqlCommand command = MakeCommand("SELECT * FROM Problems");
+                MySqlCommand command = MakeCommand("SELECT * FROM Problems ORDER BY Problem_Number ASC");
                 reader = command.ExecuteReader();
                 // need row count
                 while (reader.Read())
                 {
                     problems.Add(new Problem(
-                        reader.GetInt32(0),
+                        reader.GetInt32(7),
                         reader.GetString(1),
                         reader.GetString(2),
                         reader.GetString(3),
@@ -695,7 +692,7 @@ namespace Project_EFT.Database
                 if (reader.Read())
                 {
                     Problem problem = new Problem(
-                            reader.GetInt32(0),
+                            reader.GetInt32(7),
                             reader.GetString(1),
                             reader.GetString(2),
                             reader.GetString(3),
@@ -1057,10 +1054,11 @@ namespace Project_EFT.Database
                     int rank = reader.GetInt32(4);
                     int id = reader.GetInt32(0);
                     int points = reader.GetInt32(5);
+                    string about = reader.GetString(6);
                     connection.Close();
                     reader.Close();
                     return new StandardUser(
-                        usern, passw, email, rank, points, id
+                        usern, passw, email, rank, points, id, about
                     );
                 }
                 else
@@ -1095,10 +1093,11 @@ namespace Project_EFT.Database
                     int rank = reader.GetInt32(4);
                     int id = reader.GetInt32(0);
                     int points = reader.GetInt32(5);
+                    string about = reader.GetString(6);
                     connection.Close();
                     reader.Close();
                     return new StandardUser(
-                        usern, passw, email, rank, points, id
+                        usern, passw, email, rank, points, id, about
                     );
                 }
                 else
@@ -1109,6 +1108,81 @@ namespace Project_EFT.Database
                 }
             }
             catch (Exception e) 
+            {
+                Debug.WriteLine(e);
+                if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
+            }
+            return null;
+        }
+
+        //currently only for tests
+        public static Admin GetAdminByUsername(string username)
+        {
+            MySqlDataReader reader = null;
+            try
+            {
+                MySqlCommand command = MakeCommand("SELECT * FROM Admins WHERE Admin_Username = @username");
+                command.Parameters.AddWithValue("@username", username);
+                command.Prepare();
+                reader = command.ExecuteReader();
+                if (reader.Read())
+                {
+                    int id = reader.GetInt32(0);
+                    string usern = reader.GetString(1);
+                    string passw = reader.GetString(2);
+                    string email = reader.GetString(3);
+                    connection.Close();
+                    reader.Close();
+                    return new Admin(
+                        usern, passw, email, id
+                    );
+                }
+                else
+                {
+                    connection.Close();
+                    reader.Close();
+                    return null;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+                if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
+            }
+            return null;
+        }
+
+        //currently only for tests
+        public static Admin GetAdminByEmail(string email)
+        {
+            MySqlDataReader reader = null;
+            try
+            {
+                MySqlCommand command = MakeCommand("SELECT * FROM Admins WHERE Admin_Email = @email");
+                command.Parameters.AddWithValue("@email", email);
+                command.Prepare();
+                reader = command.ExecuteReader();
+                if (reader.Read())
+                {
+                    int id = reader.GetInt32(0);
+                    string usern = reader.GetString(1);
+                    string passw = reader.GetString(2);
+                    connection.Close();
+                    reader.Close();
+                    return new Admin(
+                        usern, passw, email, id
+                    );
+                }
+                else
+                {
+                    connection.Close();
+                    reader.Close();
+                    return null;
+                }
+            }
+            catch (Exception e)
             {
                 Debug.WriteLine(e);
                 if (connection != null && connection.State == ConnectionState.Open) connection.Close();
@@ -1267,5 +1341,117 @@ namespace Project_EFT.Database
             }
             return null;
         }
+
+        //currently only used for tests
+        public static void DeleteAdminSubmissionByContent(string content)
+        {
+            MySqlTransaction transaction = MakeTransaction();
+            if (transaction != null)
+            {
+                try
+                {
+                    MySqlCommand command = new MySqlCommand("DELETE FROM AdminSubmissions WHERE AdminSubmissions_Content = @content", connection, transaction);
+                    command.Parameters.AddWithValue("@content", content);
+                    command.Prepare();
+                    command.ExecuteNonQuery();
+                    
+                    transaction.Commit();
+                    connection.Close();
+                }
+                catch
+                {
+                    if (connection != null && connection.State == ConnectionState.Open)
+                    {
+                        if (transaction != null) transaction.Rollback();
+                        connection.Close();
+                    }
+                }
+            }
+        }
+
+        //currently only used for tests
+        public static void DeleteAnswerSubmissionByAnswer(string answer, int userID)
+        {
+            //if this occurs *after* the transaction is made, the connection is closed....
+            if (CheckIfUserSubmissionTableExists(userID))
+            {
+                MySqlTransaction transaction = MakeTransaction();
+                if (transaction != null)
+                {
+                    try
+                    {
+                        string tableName = "UserSubmissions" + userID;
+                        MySqlCommand command = new MySqlCommand("DELETE FROM " + tableName + " WHERE UserSubmissions_Answer = @answer", connection, transaction);
+                        command.Parameters.AddWithValue("@answer", answer);
+                        command.Prepare();
+                        command.ExecuteNonQuery();
+                        transaction.Commit();
+                        connection.Close();
+                    }
+                    catch
+                    {
+                        if (connection != null && connection.State == ConnectionState.Open)
+                        {
+                            if (transaction != null) transaction.Rollback();
+                            connection.Close();
+                        }
+                    }
+                }
+            }
+        }
+
+        //currently only used for tests, but could be added into "deleteUser()" query
+       public static void DropUserSubmissionTable(int tableID)
+        {
+            MySqlTransaction transaction = MakeTransaction();
+            if (transaction != null)
+            {
+                try
+                {
+                    string tableName = "UserSubmissions" + tableID;
+                    MySqlCommand command = new MySqlCommand("DROP TABLE " + tableName, connection, transaction);
+                    command.Prepare();
+                    command.ExecuteNonQuery();
+                    transaction.Commit();
+                    connection.Close();
+                }
+                catch
+                {
+                    if (connection != null && connection.State == ConnectionState.Open)
+                    {
+                        if (transaction != null) transaction.Rollback();
+                        connection.Close();
+                    }
+                }
+            }
+        }
+
+        //currently only used for tests, but could be used by admin with some adjustments to update all problems in front's id...updateProblem()
+        public static void DeleteProblemByID(int problemID)
+        {
+            MySqlTransaction transaction = MakeTransaction();
+            if (transaction != null)
+            {
+                try
+                {
+                    MySqlCommand command = new MySqlCommand("DELETE FROM Problems WHERE Problem_Number = @pID", connection, transaction);
+                    command.Parameters.AddWithValue("@pID", problemID);
+                    command.Prepare();
+                    command.ExecuteNonQuery();
+
+                    transaction.Commit();
+                    connection.Close();
+                }
+                catch
+                {
+                    if (connection != null && connection.State == ConnectionState.Open)
+                    {
+                        if (transaction != null) transaction.Rollback();
+                        connection.Close();
+                    }
+                }
+            }
+        }
+
     }
 }
