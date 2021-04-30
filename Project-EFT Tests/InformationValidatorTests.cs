@@ -58,11 +58,10 @@ namespace Project_EFT_Tests
             Assert.False(InformationValidator.VerifyInformation("abcdef!", InformationValidator.PasswordType));
             Assert.False(InformationValidator.VerifyInformation("abcdefABCDEF0123456789abcdefABCDEF0123456789", InformationValidator.PasswordType));
 
-            Assert.True(InformationValidator.VerifyInformation("abcdef", InformationValidator.PasswordType));
-            Assert.True(InformationValidator.VerifyInformation("ABCDEF", InformationValidator.PasswordType));
-            Assert.True(InformationValidator.VerifyInformation("0123456789", InformationValidator.PasswordType));
-            Assert.True(InformationValidator.VerifyInformation("012abcDEF", InformationValidator.PasswordType));
-            Assert.True(InformationValidator.VerifyInformation("ABCDEF", InformationValidator.PasswordType));
+            Assert.True(InformationValidator.VerifyInformation("abcdefabcdefabcdefabcdefabcdefab", InformationValidator.PasswordType));
+            Assert.True(InformationValidator.VerifyInformation("ABCDEFABCDEFABCDEFABCDEFABCDEFAB", InformationValidator.PasswordType));
+            Assert.True(InformationValidator.VerifyInformation("01234567890123456789012345678901", InformationValidator.PasswordType));
+            Assert.True(InformationValidator.VerifyInformation("012abcDEF012abcDEF012abcDEF012ab", InformationValidator.PasswordType));
         }
 
         [Test]
