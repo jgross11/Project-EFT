@@ -10,8 +10,14 @@ using Project_EFT.Database;
 
 namespace Project_EFT.Controllers
 {
+    /// <summary>Handles GETs and POSTs for: <br/>
+    /// - Submitting a standard user signup (POST).<br/>
+    /// - Accessing the Signup page (GET).
+    /// </summary>
     public class SignupController : Controller
     {
+        /// <summary>Retrieves the Signup page.</summary>
+        /// <returns>The Signup page, if the user is not logged in. Otherwise, the home page.</returns>
         public IActionResult Signup()
         {
             if (HttpContext.Session.ContainsKey("userInfo") || HttpContext.Session.ContainsKey("adminInfo"))
@@ -24,6 +30,10 @@ namespace Project_EFT.Controllers
             }
         }
 
+        /// <summary>Attempts to sign the user up with the given information. <br/>
+        /// If any of the information is invalid, the information is already attached to an account, or a DB error occurs during signup,
+        /// an appropriate error message is generated for displaying in the response.</summary>
+        /// <returns>The home page with the new user in the session, if the signup is successful. Otherwise, the signup page, with error message(s).</returns>
         [HttpPost]
         public IActionResult SubmitSignup() 
         {

@@ -13,6 +13,10 @@ using Project_EFT.Database;
 
 namespace Project_EFT.Controllers
 {
+    /// <summary>Handles GETs and POSTs for: <br/>
+    /// - Searching for a user by username (POST).
+    /// - Retrieving and displaying a user's profile (GET).
+    /// </summary>
     public class UsersController : Controller
     {
         private readonly ILogger<UsersController> _logger;
@@ -22,6 +26,8 @@ namespace Project_EFT.Controllers
             _logger = logger;
         }
 
+        /// <summary>Searches for a user with the given information.</summary>
+        /// <returns>The Users page, populated with the results of the DB user search query.</returns>
         [HttpPost]
         public IActionResult search() 
         {
@@ -30,6 +36,12 @@ namespace Project_EFT.Controllers
             return RedirectToAction("users");
         }
 
+        /// <summary>Attempts to load a user's profile with the given information.<br/>
+        /// If the given username is valid, a user exists with the given username, and the user's profile can be retrieved,
+        /// the profile will be displayed. Otherwise, the user is redirected to the User search page.
+        /// </summary>
+        /// <param name="username">The username of the user whose profile is desired.</param>
+        /// <returns>The user's profile, if the above criteria are met. Otherwise, the user search page.</returns>
         public IActionResult users(string username)
         {
             HttpContext.Session.Remove("userToView");
@@ -44,6 +56,12 @@ namespace Project_EFT.Controllers
             return View();
         }
 
+        /// <summary>Attempts to load a user's profile with the given information.<br/>
+        /// If the given username is valid, a user exists with the given username, and the user's profile can be retrieved,
+        /// the profile will be displayed. Otherwise, the user is redirected to the User search page.
+        /// </summary>
+        /// <param name="username">The username of the user whose profile is desired.</param>
+        /// <returns>The user's profile, if the above criteria are met. Otherwise, the user search page.</returns>
         public IActionResult user(string username) 
         {
             HttpContext.Session.Remove("userToView");
