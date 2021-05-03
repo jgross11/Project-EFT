@@ -28,7 +28,7 @@ namespace Project_EFT.Controllers
             _logger = logger;
         }
 
-        /// <summary>Front facing retrieval of a problem's information by it's problem number.</summary>
+        /// <summary>Front facing retrieval of a <see cref="Data_Classes.Problem"/>'s information by it's problem number.</summary>
         /// <param name="ID">The number of the problem whose information is desired.</param>
         /// <returns>The Problem page, with the desired problem's information if given a valid number; an invalid problem error page otherwise.</returns>
         public IActionResult GetPage(int ID)
@@ -36,7 +36,7 @@ namespace Project_EFT.Controllers
             return Problem(ID);
         }
 
-        /// <summary>Workhorse retrieval of a problem's information by it's problem number. <br/>
+        /// <summary>Workhorse retrieval of a <see cref="Data_Classes.Problem"/>'s information by it's problem number. <br/>
         /// If the given problem number if valid, the problem will be stored in the session. <br/>
         /// Otherwise, an invalid problem number error message is displayed.</summary>
         /// <param name="ID">The number of the problem whose information is desired.</param>
@@ -62,7 +62,7 @@ namespace Project_EFT.Controllers
             return View();
         }
 
-        /// <summary>Attempts to wipe a user's submission for the given problem.<br/>
+        /// <summary>Attempts to wipe a <see cref="StandardUser"/>'s submission for the given <see cref="Data_Classes.Problem"/>.<br/>
         /// If the problem ID is invalid, or the user is not logged in as a standard user, the user is redirected to the previous page. <br/>
         /// If the user does not have any submissions for the given problem, the user is redirected to the Problem List page. <br/>
         /// Otherwise, the user's submissions for the given problem are deleted from the DB.</summary>
@@ -95,7 +95,7 @@ namespace Project_EFT.Controllers
             return View("Problem", HttpContext.Session.GetComplexObject<Problem>("problem").ProblemNumber);
         }
 
-        /// <summary>Attempts to verify a user's submitted solution to a problem. <br/>
+        /// <summary>Attempts to verify a <see cref="StandardUser"/>'s submitted solution to a <see cref="Data_Classes.Problem"/>. <br/>
         /// Redirects to the home page if the user is not logged in as a standard user. <br/>
         /// Redirects to the Problem List page if the user does not have a problem in the session. <br/>
         /// If the submission is invalid, an error message is generated. <br/>
@@ -172,15 +172,15 @@ namespace Project_EFT.Controllers
         }
 
         /// <summary>Determines if the Add Problem page should be retrieved and acts accordingly.</summary>
-        /// <returns>The Add Problem page, if the user is logged in as an admin. The home page, otherwise.</returns>
+        /// <returns>The Add Problem page, if the user is logged in as an <see cref="Admin"/>. The home page, otherwise.</returns>
         public IActionResult AddProblemPage()
         {
             if (HttpContext.Session.ContainsKey("userInfo") || !HttpContext.Session.ContainsKey("adminInfo")) return RedirectToAction("Index", "Home");
             return View();
         }
 
-        /// <summary>Attempts to add a new problem to the system with the given information.<br/>
-        /// If the user is not logged in as an admin, redirects to the home page. <br/>
+        /// <summary>Attempts to add a new <see cref="Data_Classes.Problem"/> to the system with the given information.<br/>
+        /// If the user is not logged in as an <see cref="Admin"/>, redirects to the home page. <br/>
         /// All aspects of the problem are verified, and if any validation errors occur, appropriate error messages are generated for rendering in the response. <br/>
         /// If no validation errors occur, the problem is added to the DB - DB errors are treated exactly as validation errors.</summary>
         /// <returns>The home page, if the user is not logged in as an admin. Otherwise, the Add Problem page, with either error or success message(s).</returns>

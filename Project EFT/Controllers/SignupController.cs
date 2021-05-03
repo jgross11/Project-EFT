@@ -30,7 +30,7 @@ namespace Project_EFT.Controllers
             }
         }
 
-        /// <summary>Attempts to sign the user up with the given information. <br/>
+        /// <summary>Attempts to sign the user up (as a <see cref="StandardUser"/>) with the given information. <br/>
         /// If any of the information is invalid, the information is already attached to an account, or a DB error occurs during signup,
         /// an appropriate error message is generated for displaying in the response.</summary>
         /// <returns>The home page with the new user in the session, if the signup is successful. Otherwise, the signup page, with error message(s).</returns>

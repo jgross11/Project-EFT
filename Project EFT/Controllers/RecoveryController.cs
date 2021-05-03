@@ -23,7 +23,7 @@ namespace Project_EFT.Controllers
             return View();
         }
 
-        /// <summary>Attempts to reset a user's password based off the given username. <br/>
+        /// <summary>Attempts to reset a <see cref="User"/>'s password based off the given username. <br/>
         /// If the username is invalid, generates an error message for displaying in the response. <br/>
         /// Otherwise, attempts to set the user's password to a randomly generated one and send a recovery email with the generated password. <br/>
         /// If the password cannot be reset, or the email cannot be sent, an error message is generated for displaying in the response.</summary>
@@ -71,7 +71,7 @@ namespace Project_EFT.Controllers
             return RedirectToAction("RecoverInfo");
         }
 
-        /// <summary>Attempts to reset a user's username based off the given email. <br/>
+        /// <summary>Attempts to reset a <see cref="User"/>'s username based off the given email. <br/>
         /// If the email is invalid, generates an error message for displaying in the response. <br/>
         /// Otherwise, attempts to set the user's password to a randomly generated one and send a recovery email with the generated password and username. <br/>
         /// If the password cannot be reset, or the email cannot be sent, an error message is generated for displaying in the response.</summary>

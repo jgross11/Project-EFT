@@ -24,8 +24,8 @@ namespace Project_EFT.Controllers
             _logger = logger;
         }
 
-        
-        /// <summary>Attempts to execute the selected cipher system's encrypt method, based on the submitted encryption form data.<br/>
+
+        /// <summary>Attempts to execute the selected <see cref="Cipher"/> system's encrypt method, based on the submitted encryption form data.<br/>
         /// If no system is selected, the user is redirected to the CipherList page. <br/>
         /// If encryption errors occur, generates error messages to be displayed in front end response.<br/>
         /// If a system is selected, regardless of whether encryption is successfully or not, the user is then redirected to the Cipher page to display results / errors.
@@ -58,7 +58,7 @@ namespace Project_EFT.Controllers
             }
         }
 
-        /// <summary>Attempts to execute the selected cipher system's decrypt method, based on the submitted decryption form data.<br/>
+        /// <summary>Attempts to execute the selected <see cref="Cipher"/> system's decrypt method, based on the submitted decryption form data.<br/>
         /// If no system is selected, the user is redirected to the CipherList page. <br/>
         /// If decryption errors occur, generates error messages to be displayed in front end response.<br/>
         /// If a system is selected, regardless of whether decryption is successfully or not, the user is then redirected to the Cipher page to display results / errors.

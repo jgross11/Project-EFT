@@ -29,7 +29,7 @@ namespace Project_EFT.Controllers
             _logger = logger;
         }
 
-        /// <summary>If the user is logged in as a standard user, updates the user's ranking. Otherwise, it only...</summary>
+        /// <summary>If the user is logged in as a <see cref="StandardUser"/>, updates the user's ranking. Otherwise, it only...</summary>
         /// <returns>The home page.</returns>
         public IActionResult Index()
         {
@@ -51,7 +51,7 @@ namespace Project_EFT.Controllers
             return RedirectToAction("Index");
         }
 
-        /// <summary>Attempts to log the user in with the given information. <br/>
+        /// <summary>Attempts to log the <see cref="User"/> in with the given information. <br/>
         /// If the username or password are invalid, or no user with those credentials exists, an error message is generated to be displayed in the response.<br/>
         /// Otherwise, the user information retrieved from the DB is stored in the session. <br/>
         /// In either case, this...</summary>
@@ -100,7 +100,7 @@ namespace Project_EFT.Controllers
             return RedirectToAction("Index");
         }
 
-        /// <summary>Attempts to delete the standard user with the given information. <br/>
+        /// <summary>Attempts to delete the <see cref="StandardUser"/> with the given information. <br/>
         /// If the user is not logged in as an admin, the user is redirected to the home page. <br/>
         /// If the submitted username is invalid, or does not belong to a standard user, an error message is generated to be displayed in the response. <br/>
         /// Otherwise, the given username's user information is removed from the DB. <br/>

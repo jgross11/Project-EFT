@@ -22,7 +22,7 @@ namespace Project_EFT.Controllers
     public class EditInfoController : Controller
     {
         /// <summary>Determines if the user should be able to access the edit information page.</summary>
-        /// <returns>The edit information page, if the user is logged in as a standard user or admin. Otherwise, the home page.</returns>
+        /// <returns>The edit information page, if the user is logged in as a <see cref="StandardUser"/> or <see cref="Admin"/>. Otherwise, the home page.</returns>
         public IActionResult editInfo()
         {
             if (HttpContext.Session.ContainsKey("userInfo") || HttpContext.Session.ContainsKey("adminInfo"))
@@ -35,7 +35,7 @@ namespace Project_EFT.Controllers
             }
         }
 
-        /// <summary>Attempts to modify a user's username based on the submitted form. <br/>
+        /// <summary>Attempts to modify a <see cref="User"/>'s <see cref="User.Username"/> based on the submitted form. <br/>
         /// If the user is not logged in, the user is redirected to the home page. <br/>
         /// If the submitted username is a valid username, and does not belong to another user of the same type, the user's username is updated in the DB. <br/>
         /// If any errors occur, the appropriate error messages are generated for displaying in the response.</summary>
@@ -93,7 +93,7 @@ namespace Project_EFT.Controllers
             return RedirectToAction("editInfo", "EditInfo");
         }
 
-        /// <summary>Attempts to modify a user's email based on the submitted form. <br/>
+        /// <summary>Attempts to modify a <see cref="User"/>'s <see cref="User.Email"/> based on the submitted form. <br/>
         /// If the user is not logged in, the user is redirected to the home page. <br/>
         /// If the submitted email is a valid email, and does not belong to another user of the same type, the user's email is updated in the DB. <br/>
         /// If any errors occur, the appropriate error messages are generated for displaying in the response.</summary>
@@ -152,7 +152,7 @@ namespace Project_EFT.Controllers
             return RedirectToAction("editInfo", "EditInfo");
         }
 
-        /// <summary>Attempts to modify a user's password based on the submitted form. <br/>
+        /// <summary>Attempts to modify a <see cref="User"/>'s <see cref="User.Password"/> based on the submitted form. <br/>
         /// If the user is not logged in, the user is redirected to the home page. <br/>
         /// If the submitted password is a valid password, the user's password is updated in the DB. <br/>
         /// If any errors occur, the appropriate error messages are generated for displaying in the response.</summary>
@@ -203,7 +203,7 @@ namespace Project_EFT.Controllers
             return RedirectToAction("editInfo", "EditInfo");
         }
 
-        /// <summary>Attempts to modify a user's profile picture based on the submitted form. <br/>
+        /// <summary>Attempts to modify a <see cref="StandardUser"/>'s profile picture based on the submitted form. <br/>
         /// If the user is not logged in, the user is redirected to the home page. <br/>
         /// If the submitted profile picture is a valid profile picture, the user's profile picture is updated. <br/>
         /// If no profile picture is submitted, the user's profile picture is reset to the default profile picture, default.png, found in wwwroot/Images. <br/>
@@ -253,7 +253,7 @@ namespace Project_EFT.Controllers
             return RedirectToAction("editInfo", "EditInfo");
         }
 
-        /// <summary>Attempts to modify a user's about based on the submitted form. <br/>
+        /// <summary>Attempts to modify a <see cref="StandardUser"/>'s about based on the submitted form. <br/>
         /// If the user is not logged in, the user is redirected to the home page. <br/>
         /// If the submitted about is a valid about, the user's about is updated in the DB. <br/>
         /// If any errors occur, the appropriate error messages are generated for displaying in the response.</summary>

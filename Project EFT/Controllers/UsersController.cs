@@ -26,7 +26,7 @@ namespace Project_EFT.Controllers
             _logger = logger;
         }
 
-        /// <summary>Searches for a user with the given information.</summary>
+        /// <summary>Searches for a <see cref="StandardUser"/> with the given information.</summary>
         /// <returns>The Users page, populated with the results of the DB user search query.</returns>
         [HttpPost]
         public IActionResult search() 
@@ -36,7 +36,7 @@ namespace Project_EFT.Controllers
             return RedirectToAction("users");
         }
 
-        /// <summary>Attempts to load a user's profile with the given information.<br/>
+        /// <summary>Attempts to load a <see cref="StandardUser"/>'s profile with the given information.<br/>
         /// If the given username is valid, a user exists with the given username, and the user's profile can be retrieved,
         /// the profile will be displayed. Otherwise, the user is redirected to the User search page.
         /// </summary>
@@ -56,7 +56,7 @@ namespace Project_EFT.Controllers
             return View();
         }
 
-        /// <summary>Attempts to load a user's profile with the given information.<br/>
+        /// <summary>Attempts to load a <see cref="StandardUser"/>'s profile with the given information.<br/>
         /// If the given username is valid, a user exists with the given username, and the user's profile can be retrieved,
         /// the profile will be displayed. Otherwise, the user is redirected to the User search page.
         /// </summary>
