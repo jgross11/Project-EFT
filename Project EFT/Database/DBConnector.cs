@@ -10,18 +10,37 @@ using System.Diagnostics;
 
 namespace Project_EFT.Database
 {
+    /// <summary>Every DB CRUD operation is done through this class. Good luck.</summary>
     public class DBConnector
     {
+        /// <summary>Connection to the DB that probably shouldn't be static or referenced by every query.</summary>
         public static MySqlConnection connection;
+
+        /// <summary>URL/URI string that contains the DB connection information.</summary>
         public static string connectionString;
+
+        /// <summary>All problems in the database that probably shouldn't be static.</summary>
         public static List<Problem> problems;
+
+        /// <summary>The number of <see cref="StandardUser"/>s in the DB.</summary>
         public static int UserCount;
 
+        /// <summary>Indicates that the DB encountered a problem when executing some query, for queries that need more information than just true / false responses.</summary>
         public const int DB_FAILURE = -1;
+
+        /// <summary>Indicates that the credential change was successful, for credential updating queries.</summary>
         public const int CREDENTIAL_CHANGE_SUCCESS = 100;
+
+        /// <summary>Indicates that the credential change failed because they belong to another account, for credential updating queries.</summary>
         public const int CREDENTIAL_TAKEN = 101;
+
+        /// <summary>Number of threads that should be connected to the DB when DB tests are ran so as to not allow concurrency wonkiness.</summary>
         public const int EXPECTED_THREADS_CONNECTED = 2;
 
+        /// <summary>Called when the server is first started. <br/>
+        /// Reads credential information from the credentials file and generates connection string. <br/>
+        /// Reads problem information in DB into cache. <br/>
+        /// Reads the number of users in DB into cache.</summary>
         public static void Init()
         {
             string[] lines = System.IO.File.ReadAllLines("info.txt");
@@ -34,6 +53,10 @@ namespace Project_EFT.Database
             if (!GetNumberUsersInDB()) throw new Exception("Could not get initial number of users in DB");
         }
 
+        /// <summary>Called when DB tests are started.<br/>
+        /// Ensures there are the right number of threads connected to the DB before DB tests can run. <br/>
+        /// If DB tests shouldn't run, an exception is thrown to prevent them from running. <br/>
+        /// Otherwise, formats connection string in preparation for DB tests.</summary>
         public static void InitForTests()
         {
 
@@ -64,6 +87,8 @@ namespace Project_EFT.Database
             if (!GetNumberUsersInDB()) throw new Exception("Could not get initial number of users in DB");
         }
 
+        /// <summary>Open a connection to the DB.</summary>
+        /// <returns>True if a connection was successfully opened. False otherwise.</returns>
         public static bool OpenConnection()
         {
             // dependent on the structure of the file...
@@ -79,11 +104,16 @@ namespace Project_EFT.Database
             }
         }
 
+        /// <summary>Makes a Command with the given MySQL statement.</summary>
+        /// <param name="statement">The MySQL statement to create.</param>
+        /// <returns>A <see cref="MySqlCommand"/> representing the given MySQL statement if a connection could be opened. Null otherwise.</returns>
         public static MySqlCommand MakeCommand(string statement)
         {
             return OpenConnection() ? new MySqlCommand(statement, connection) : null;
         }
 
+        /// <summary>Makes a Transaction to be used for a series of CRUD queries.</summary>
+        /// <returns>A <see cref="MySqlTransaction"/> representing the created transaction, if a connection and transaction could be created. Null otherwise.</returns>
         public static MySqlTransaction MakeTransaction()
         {
             if (OpenConnection())
@@ -99,6 +129,9 @@ namespace Project_EFT.Database
             return null;
         }
 
+        /// <summary>Determines if the given <see cref="StandardUser"/>'s submission table exists.</summary>
+        /// <param name="UserId">ID of the <see cref="StandardUser"/> whose submission table will be queried for.</param>
+        /// <returns>True if the <see cref="StandardUser"/>'s submission table exists. False otherwise.</returns>
         public static bool CheckIfUserSubmissionTableExists(int UserId)
         {
             string tablename = "UserSubmissions" + UserId;
@@ -120,6 +153,10 @@ namespace Project_EFT.Database
             }
         }
 
+        /// <summary>Resets a specific <see cref="Problem"/>'s <see cref="AnswerSubmission"/>s for a specific <see cref="StandardUser"/>.</summary>
+        /// <param name="user"><see cref="StandardUser"/> whose submissions will be reset.</param>
+        /// <param name="problemID">Problem number of the <see cref="Problem"/> whose submissions will be deleted.</param>
+        /// <returns>True if the problem's submissions are reset, user rank and point total are updated, and problem attempts and completions are updated successfully. False otherwise.</returns>
         public static bool ResetProblemSubmissions(StandardUser user, int problemID)
         {
             if (CheckIfUserSubmissionTableExists(user.Id))
@@ -214,6 +251,9 @@ namespace Project_EFT.Database
             return false;
         }
 
+        /// <summary>Creates an <see cref="AnswerSubmission"/> table for a <see cref="StandardUser"/>.</summary>
+        /// <param name="ID">ID of the <see cref="StandardUser"/> whose submission table will be created.</param>
+        /// <returns>True if the submission table was successfully created. False otherwise.</returns>
         public static bool CreateUserSubmissionTable(int ID)
         {
             try
@@ -233,6 +273,9 @@ namespace Project_EFT.Database
             return false;
         }
         
+        /// <summary>Submits the given <see cref="Problem"/> information into the DB.</summary>
+        /// <param name="problem">Problem to insert into DB.</param>
+        /// <returns>True if the problem was successfully added to the DB. False otherwise.</returns>
         public static bool InsertNewProblem(Problem problem)
         {
             try
@@ -263,6 +306,12 @@ namespace Project_EFT.Database
             return false;
         }
 
+        /// <summary>Updates the given <see cref="User"/>'s username.</summary>
+        /// <param name="user"><see cref="User"/> whose username will be updated.</param>
+        /// <param name="newUsername">The new username.</param>
+        /// <returns><see cref="CREDENTIAL_CHANGE_SUCCESS"/> if the <see cref="User"/>'s username was updated in the DB,<br/>
+        /// <see cref="CREDENTIAL_TAKEN"/> if the username is taken by another account of the same type, and <br/>
+        /// <see cref="DB_FAILURE"/> otherwise.</returns>
         public static int TryUpdateUsername(User user, string newUsername)
         {
             MySqlDataReader reader = null;
@@ -315,6 +364,12 @@ namespace Project_EFT.Database
             return DB_FAILURE;
         }
 
+        /// <summary>Updates the given <see cref="User"/>'s email.</summary>
+        /// <param name="user"><see cref="User"/> whose email will be updated.</param>
+        /// <param name="newEmail">The new email.</param>
+        /// <returns><see cref="CREDENTIAL_CHANGE_SUCCESS"/> if the <see cref="User"/>'s email was updated in the DB,<br/>
+        /// <see cref="CREDENTIAL_TAKEN"/> if the email is taken by another account of the same type, and <br/>
+        /// <see cref="DB_FAILURE"/> otherwise.</returns>
         public static int TryUpdateEmail(User user, string newEmail)
         {
             MySqlDataReader reader = null;
@@ -367,6 +422,11 @@ namespace Project_EFT.Database
             return DB_FAILURE;
         }
 
+        /// <summary>Updates the given <see cref="User"/>'s password.</summary>
+        /// <param name="user"><see cref="User"/> whose password will be updated.</param>
+        /// <param name="newPassword"></param>
+        /// <returns><see cref="CREDENTIAL_CHANGE_SUCCESS"/> if the <see cref="User"/>'s password was updated in the DB,<br/>
+        /// <see cref="DB_FAILURE"/> otherwise.</returns>
         public static int UpdatePassword(User user, string newPassword)
         {
             try
@@ -399,6 +459,10 @@ namespace Project_EFT.Database
             return DB_FAILURE;
         }
 
+        /// <summary>Updates the given <see cref="StandardUser"/>'s about.</summary>
+        /// <param name="newAbout">New 'about me' text.</param>
+        /// <param name="Id">ID of the <see cref="StandardUser"/>.</param>
+        /// <returns>True if the user's about was updated. False otherwise.</returns>
         public static bool UpdateAbout(string newAbout, int Id)
         {
             MySqlCommand command = MakeCommand("UPDATE Users SET User_About = @newAbout WHERE User_ID = @id");
@@ -418,6 +482,9 @@ namespace Project_EFT.Database
             return false;
         }
 
+        /// <summary>Updates the given <see cref="Problem"/>.</summary>
+        /// <param name="problem"><see cref="Problem"/> whose information will be updated.</param>
+        /// <returns>True if the problem information was successfully updated. False otherwise.</returns>
         public static int UpdateProblem(Problem problem)
         {
             try
@@ -449,6 +516,9 @@ namespace Project_EFT.Database
             return 0;
         }
 
+        /// <summary>Retreives all <see cref="AnswerSubmission"/>s for a <see cref="StandardUser"/>.</summary>
+        /// <param name="id">ID of the <see cref="StandardUser"/> whose submissions will be retrieved.</param>
+        /// <returns>A populated list of submissions, if they exist. An empty list if the user has no submissions. Null if an error occurs.</returns>
         public static List<AnswerSubmission> GetAnswerSubmissionsByID(int id)
         {
             MySqlDataReader reader = null;
@@ -485,6 +555,9 @@ namespace Project_EFT.Database
             return null;
         }
 
+        /// <summary>Retreives all <see cref="Submission"/>s for an <see cref="Admin"/>.</summary>
+        /// <param name="id">ID of the <see cref="Admin"/> whose submissions will be retrieved.</param>
+        /// <returns>A populated list of submissions, if they exist. An empty list if the user has no submissions. Null if an error occurs.</returns>
         public static List<Submission> GetAdminSubmissionsByID(int id)
         {
             MySqlDataReader reader = null;
@@ -517,6 +590,8 @@ namespace Project_EFT.Database
             return null;
         }
 
+        /// <summary>Fetches all <see cref="Problem"/>s from the DB and stores them in memory for easy access.</summary>
+        /// <returns>True if all problems were fetched from the DB. False otherwise.</returns>
         public static bool GetProblemsList()
         {
             MySqlDataReader reader = null;
@@ -551,6 +626,9 @@ namespace Project_EFT.Database
             return false;
         }
 
+        /// <summary>Inserts a new <see cref="Submission"/> for an <see cref="Admin"/>.</summary>
+        /// <param name="submission"><see cref="Submission"/> to insert.</param>
+        /// <returns>True if the submission was successfully inserted. False otherwise.</returns>
         public static bool InsertNewAdminSubmission(Submission submission)
         {
             try
@@ -574,6 +652,9 @@ namespace Project_EFT.Database
             return false;
         }
 
+        /// <summary>Retrieves the ranking for a <see cref="StandardUser"/>.</summary>
+        /// <param name="userID">ID of the user whose ranking will be retrieved.</param>
+        /// <returns>The user's ranking, if it exists and is successfully retrieved. <see cref="DB_FAILURE"/> otherwise.</returns>
         public static int GetUserRanking(int userID) 
         {
             MySqlCommand command = MakeCommand("SELECT User_Ranking FROM Users WHERE User_ID = @id");
@@ -597,6 +678,11 @@ namespace Project_EFT.Database
             return DB_FAILURE;
         }
 
+        /// <summary>Inserts a new <see cref="AnswerSubmission"/> for a <see cref="StandardUser"/>.</summary>
+        /// <param name="submission"><see cref="AnswerSubmission"/> to insert.</param>
+        /// <param name="currentUserPointsTotal">Current point sum of the <see cref="StandardUser"/> this submission belongs to.</param>
+        /// <param name="problemWorth">Point value of the <see cref="Problem"/> this submission belongs to.</param>
+        /// <returns>True if the submission was inserted, user ranking and points sum are updated, and problem attempts and completions are updated. False otherwise.</returns>
         public static bool InsertNewAnswerSubmission(AnswerSubmission submission, int currentUserPointsTotal, int problemWorth)
         {
             MySqlTransaction transaction = MakeTransaction();
@@ -678,6 +764,9 @@ namespace Project_EFT.Database
             return false;
         }
 
+        /// <summary>Retrieves a specific <see cref="Problem"/>.</summary>
+        /// <param name="ID">Problem number of the <see cref="Problem"/> to retrieve.</param>
+        /// <returns>The desired <see cref="Problem"/>, if it exists and was successfully retrieved. Null otherwise.</returns>
         public static Problem GetProblemByID(int ID)
         {
             MySqlDataReader reader = null;
@@ -719,6 +808,9 @@ namespace Project_EFT.Database
             return null;
         }
 
+        /// <summary>Inserts a new <see cref="StandardUser"/>.</summary>
+        /// <param name="user"><see cref="StandardUser"/> to insert.</param>
+        /// <returns>The new user's ID, if insertion was successful. <see cref="DB_FAILURE"/> otherwise.</returns>
         public static int InsertNewUser(StandardUser user)
         {
             try
@@ -727,10 +819,11 @@ namespace Project_EFT.Database
                 command.Parameters.AddWithValue("@username", user.Username);
                 command.Parameters.AddWithValue("@password", user.Password);
                 command.Parameters.AddWithValue("@email", user.Email);
-                command.Parameters.AddWithValue("@ranking", ++UserCount);
+                command.Parameters.AddWithValue("@ranking", UserCount+1);
                 command.Prepare();
-                int result = command.ExecuteNonQuery() == 1 ? (int)command.LastInsertedId : -1;
+                int result = command.ExecuteNonQuery() == 1 ? (int)command.LastInsertedId : DB_FAILURE;
                 connection.Close();
+                if (result != DB_FAILURE) UserCount++;
                 return result;
             }
             catch (Exception e) 
@@ -738,9 +831,12 @@ namespace Project_EFT.Database
                 Debug.WriteLine(e);
                 if (connection != null && connection.State == ConnectionState.Open) connection.Close();
             }
-            return -1;
+            return DB_FAILURE;
         }
 
+        /// <summary>Determines if the given email is associated with a <see cref="User"/>.</summary>
+        /// <param name="email">Email to check.</param>
+        /// <returns>True if the email is already associated with an account. False otherwise.</returns>
         public static bool DoesEmailExist(string email)
         {
             MySqlDataReader reader = null;
@@ -778,6 +874,9 @@ namespace Project_EFT.Database
             return false;
         }
 
+        /// <summary>Determines if the given username is associated with a <see cref="User"/>.</summary>
+        /// <param name="username">Username to check.</param>
+        /// <returns>True if the username is already associated with an account. False otherwise.</returns>
         public static bool DoesUsernameExist(string username)
         {
             MySqlDataReader reader = null;
@@ -815,6 +914,10 @@ namespace Project_EFT.Database
             return false;
         }
 
+        /// <summary>Retrieves the information for a <see cref="StandardUser"/> with the given login credentials.</summary>
+        /// <param name="username">Username of the <see cref="StandardUser"/>.</param>
+        /// <param name="password">Password of the <see cref="StandardUser"/>.</param>
+        /// <returns>The <see cref="StandardUser"/>, fully populated, if one exists with the given credentials. Null otherwise.</returns>
         public static StandardUser StandardUserLogin(string username, string password)
         {
             MySqlDataReader reader = null;
@@ -890,6 +993,10 @@ namespace Project_EFT.Database
             return null;
         }
 
+        /// <summary>Retrieves the information for an <see cref="Admin"/> with the given login credentials.</summary>
+        /// <param name="username">Username of the <see cref="Admin"/>.</param>
+        /// <param name="password">Password of the <see cref="Admin"/>.</param>
+        /// <returns>The <see cref="Admin"/>, fully populated, if one exists with the given credentials. Null otherwise.</returns>
         public static Admin AdminLogin(string username, string password)
         {
             MySqlDataReader reader = null;
@@ -932,6 +1039,14 @@ namespace Project_EFT.Database
             return null;
         }
 
+        /// <summary>Deletes the <see cref="StandardUser"/> with the given username.</summary>
+        /// <param name="username">Username of the <see cref="StandardUser"/>.</param>
+        /// <returns>True if:<br/>
+        /// - Attempts and completions for all problems the user attempted / completed were updated.<br/>
+        /// - User ranking updating occurred. <br/>
+        /// - The <see cref="StandardUser"/> and their submission table was deleted.<br/>
+        /// False otherwise.
+        /// </returns>
         public static bool DeleteUser(string username)
         {
             StandardUser user = GetStandardUserByUsername(username);
@@ -1019,7 +1134,7 @@ namespace Project_EFT.Database
 
                 UserCount--;
 
-                if (File.Exists(InformationValidator.ImageProjectPath + "/" + user.Id + ".png")) File.Delete(InformationValidator.ImageProjectPath + "/" + user.Id + ".png");
+                if (File.Exists(Program.ImageProjectPath + "/" + user.Id + ".png")) File.Delete(Program.ImageProjectPath + "/" + user.Id + ".png");
 
                 // user deleted --> one row was affected (the deleted one)
                 return true;
@@ -1037,6 +1152,9 @@ namespace Project_EFT.Database
             return false;
         }
 
+        /// <summary>Retrieves a <see cref="StandardUser"/> without a submissions list for account recovery purposes.</summary>
+        /// <param name="username">Username of the <see cref="StandardUser"/> to find.</param>
+        /// <returns>A reduced <see cref="StandardUser"/> if one exists with the given credential. Null otherwise.</returns>
         public static StandardUser GetStandardUserByUsername(string username) 
         {
             MySqlDataReader reader = null;
@@ -1077,6 +1195,9 @@ namespace Project_EFT.Database
             return null;
         }
 
+        /// <summary>Retrieves a <see cref="StandardUser"/> without a submissions list for account recovery purposes.</summary>
+        /// <param name="email">Email of the <see cref="StandardUser"/> to find.</param>
+        /// <returns>A reduced <see cref="StandardUser"/> if one exists with the given credential. Null otherwise.</returns>
         public static StandardUser GetStandardUserByEmail(string email)
         {
             MySqlDataReader reader = null;
@@ -1116,7 +1237,10 @@ namespace Project_EFT.Database
             return null;
         }
 
-        //currently only for tests
+        /// <summary>Currently used exclusively for DB tests. <br/>
+        /// Retrieves an <see cref="Admin"/> without a submissions list.</summary>
+        /// <param name="username">Username of the <see cref="Admin"/> to find.</param>
+        /// <returns>An reduced <see cref="Admin"/> if one exists with the given credential. Null otherwise.</returns>
         public static Admin GetAdminByUsername(string username)
         {
             MySqlDataReader reader = null;
@@ -1154,7 +1278,10 @@ namespace Project_EFT.Database
             return null;
         }
 
-        //currently only for tests
+        /// <summary>Currently used exclusively for DB tests. <br/>
+        /// Retrieves an <see cref="Admin"/> without a submissions list.</summary>
+        /// <param name="email">Email of the <see cref="Admin"/> to find.</param>
+        /// <returns>An reduced <see cref="Admin"/> if one exists with the given credential. Null otherwise.</returns>
         public static Admin GetAdminByEmail(string email)
         {
             MySqlDataReader reader = null;
@@ -1191,6 +1318,8 @@ namespace Project_EFT.Database
             return null;
         }
 
+        /// <summary>Retrieves the number of <see cref="StandardUser"/>s in the DB.</summary>
+        /// <returns>True if the number of users was successfully retrieved and stored in <see cref="UserCount"/>. False otherwise.</returns>
         public static bool GetNumberUsersInDB() 
         {
             MySqlCommand command = MakeCommand("SELECT COUNT(User_ID) FROM Users");
@@ -1216,6 +1345,8 @@ namespace Project_EFT.Database
             return false;
         }
 
+        /// <summary>Retrieves a list of up to 5 <see cref="StandardUser"/>s who have the highest rank in the system.</summary>
+        /// <returns>A list of up to 5 <see cref="StandardUser"/>s if users exist in the DB. Null otherwise.</returns>
         public static List<StandardUser> GetTopFiveUsers() 
         {
             MySqlCommand command = MakeCommand("SELECT * FROM Users WHERE User_Ranking < 6 ORDER BY User_Ranking ASC");
@@ -1250,6 +1381,9 @@ namespace Project_EFT.Database
             return null;
         }
 
+        /// <summary>Retrieves the necessary information to display a <see cref="StandardUser"/>'s profile. </summary>
+        /// <param name="username">Username of the <see cref="StandardUser"/> whose profile information is being retrieved.</param>
+        /// <returns>A <see cref="StandardUser"/> populated with only the information necessary to generate a profile, if one exists with the given credentials. Null otherwise.</returns>
         public static StandardUser GetUserProfileInformationByUsername(string username)
         {
             MySqlCommand command = MakeCommand("SELECT * FROM Users WHERE User_Username = @username");
@@ -1304,6 +1438,12 @@ namespace Project_EFT.Database
             return null;
         }
 
+        /// <summary>Retrieves a list of <see cref="StandardUser"/>s whose username is similar to the given query.</summary>
+        /// <param name="query">Username or username snippet used to construct list.</param>
+        /// <returns>A list of <see cref="StandardUser"/>s that is:<br/> 
+        /// - Populated with user information if users with usernames 'like' the query exist. <br/>
+        /// - Empty if no users with usernames 'like' the query exist. <br/>
+        /// Null otherwise.</returns>
         public static List<StandardUser> SearchForUser(string query) 
         {
             string relativeQuery = '%' + query + '%';
@@ -1342,7 +1482,9 @@ namespace Project_EFT.Database
             return null;
         }
 
-        //currently only used for tests
+        /// <summary>Currently used exclusively for testing. <br/>
+        /// Deletes an <see cref="Admin"/>'s <see cref="Submission"/> with the given content.</summary>
+        /// <param name="content">Content of the submission to delete.</param>
         public static void DeleteAdminSubmissionByContent(string content)
         {
             MySqlTransaction transaction = MakeTransaction();
@@ -1369,7 +1511,10 @@ namespace Project_EFT.Database
             }
         }
 
-        //currently only used for tests
+        /// <summary>Currently used exclusively for testing. <br/>
+        /// Deletes a <see cref="StandardUser"/>'s <see cref="AnswerSubmission"/> with the given answer.</summary>
+        /// <param name="answer">Answer of the <see cref="AnswerSubmission"/> to delete.</param>
+        /// <param name="userID">ID of the <see cref="StandardUser"/> whose submission will be deleted.</param>
         public static void DeleteAnswerSubmissionByAnswer(string answer, int userID)
         {
             //if this occurs *after* the transaction is made, the connection is closed....
@@ -1400,7 +1545,9 @@ namespace Project_EFT.Database
             }
         }
 
-        //currently only used for tests, but could be added into "deleteUser()" query
+        /// <summary>Current used exclusively for testing. <br/>
+        /// Deletes a <see cref="StandardUser"/>'s submission table.</summary>
+        /// <param name="tableID">The <see cref="StandardUser"/>'s ID.</param>
        public static void DropUserSubmissionTable(int tableID)
         {
             MySqlTransaction transaction = MakeTransaction();
@@ -1426,7 +1573,9 @@ namespace Project_EFT.Database
             }
         }
 
-        //currently only used for tests, but could be used by admin with some adjustments to update all problems in front's id...updateProblem()
+        /// <summary>Current used exclusively for testing. <br/>
+        /// Deletes a <see cref="Problem"/>.</summary>
+        /// <param name="problemID">The <see cref="Problem"/>'s problem number.</param>
         public static void DeleteProblemByID(int problemID)
         {
             MySqlTransaction transaction = MakeTransaction();
