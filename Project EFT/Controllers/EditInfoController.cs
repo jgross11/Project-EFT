@@ -217,11 +217,11 @@ namespace Project_EFT.Controllers
             IFormCollection form = Request.Form;
             if (form.Files.Count == 0)
             {
-                if (FileChecker.Exists(InformationValidator.ImageProjectPath + "/" + user.Id + ".png"))
+                if (FileChecker.Exists(Program.ImageProjectPath + "/" + user.Id + ".png"))
                 {
                     try
                     {
-                        FileChecker.Delete(InformationValidator.ImageProjectPath + "/" + user.Id + ".png");
+                        FileChecker.Delete(Program.ImageProjectPath + "/" + user.Id + ".png");
                         HttpContext.Session.SetString("pictureSuccess", "Profile picture successfully reset!");
                     }
                     catch { HttpContext.Session.SetString("pictureError", "Unable to reset profile picture. Please try again."); }
@@ -242,7 +242,7 @@ namespace Project_EFT.Controllers
                         MemoryStream ms = new MemoryStream(bytes);
                         Bitmap bitmap = (Bitmap)Bitmap.FromStream(ms);
                         ms.Close();
-                        bitmap.Save(InformationValidator.ImageProjectPath + "/" + user.Id + ".png", ImageFormat.Png);
+                        bitmap.Save(Program.ImageProjectPath + "/" + user.Id + ".png", ImageFormat.Png);
                         HttpContext.Session.SetString("pictureSuccess", "Profile picture successfully updated!");
                     }
                     else HttpContext.Session.SetString("pictureError", "To reset your profile picture, submit the form without selecting an image. Otherwise, please ensure your image is a < 1MB .png");
