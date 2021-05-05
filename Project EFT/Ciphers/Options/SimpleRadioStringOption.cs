@@ -24,9 +24,7 @@ namespace Project_EFT.Ciphers.Options
             return FieldName;
         }
 
-        public override void SetValue(string newVal)
-        {
-            FieldName = newVal;
-        }
+        /// do not get clever and think this should do something - it shouldn't.
+        public override void SetValue(string newVal){}
     }
 }

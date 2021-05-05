@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Project_EFT.Ciphers.Options;
 
@@ -103,7 +104,27 @@ namespace Project_EFT.Ciphers
             }
             else 
             {
-                EncryptionFormOptions[InputIndex].SetValue("TODO decrypt without knowing shift amount!!!");
+                plaintexts = new string[alphabet.Length];
+                StringBuilder builder = new StringBuilder();
+                builder.AppendLine("Brute force decryption:");
+                for (int i = 0; i < alphabet.Length; i++) 
+                {
+                    foreach (char c in ciphertext)
+                    {
+                        int index = alphabet.IndexOf(c);
+                        if (index == -1)
+                        {
+                            plaintexts[i] += c;
+                        }
+                        else
+                        {
+                            int newPosition = Mod(index - i, alphabet.Length);
+                            plaintexts[i] += alphabet[newPosition];
+                        }
+                    }
+                    builder.AppendLine("Shift amount " + i + ": " + plaintexts[i] + "\n");
+                }
+                EncryptionFormOptions[InputIndex].SetValue(builder.ToString());
             }
         }
 
