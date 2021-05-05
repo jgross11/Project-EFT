@@ -58,7 +58,6 @@ namespace Project_EFT.Ciphers.Options
         /// <param name="form">The HTML form object - which may or may not contain information for this option - to attempt to pull a value from.</param>
         public override void ObtainValueFromForm(IFormCollection form)
         {
-            // TODO obtain option value for selected option only(?)
             foreach (Option opt in Choices) 
             {
                 opt.ObtainValueFromForm(form);

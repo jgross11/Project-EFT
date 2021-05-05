@@ -63,7 +63,7 @@ namespace Project_EFT.Database
             string[] lines = System.IO.File.ReadAllLines("../../../../Project EFT/info.txt");
             connectionString = @"server=" + lines[0] + ";userid=" + lines[1] + ";password=" + lines[2] + ";database=" + lines[3];
 
-
+            // SHOW PROCESSLIST for more info
             MySqlCommand command = MakeCommand("SHOW STATUS LIKE 'Threads_Connected'");
             
             command.Prepare();
