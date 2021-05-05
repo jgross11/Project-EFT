@@ -53,7 +53,8 @@ namespace Project_EFT.Ciphers
             if (wordStart < plaintext.Length) 
             {
                 word = plaintext.Substring(wordStart, plaintext.Length - wordStart).Trim();
-                word = word.Substring(1) + word[0] + "ay";
+                if(word.Length>1)
+                    word = word.Substring(1) + word[0] + "ay";
                 ciphertext += word;
             }
             DecryptionFormOptions[InputIndex].SetValue(ciphertext);
