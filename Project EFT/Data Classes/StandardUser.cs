@@ -23,6 +23,9 @@ namespace Project_EFT.Data_Classes
         /// <summary>A brief summary of a user that is displayed on their profile.</summary>
         public string About { get; set; }
 
+        /// <summary>Name of this user's profile picture saved in the project.</summary>
+        public string PictureName { get; set; }
+
         /// <summary>Creates an almost complete instance with the given information, which is only missing an about.</summary>
         /// <param name="username">This user's username.</param>
         /// <param name="password">This user's password.</param>
@@ -92,7 +95,7 @@ namespace Project_EFT.Data_Classes
         /// <returns>The image path for an HTML img element to find this user's profile picture if it exists, or the default profile picture otherwise.</returns>
         public string GetImagePathString() 
         {
-            return Program.ImageWebPath + "/" + (File.Exists(Program.ImageProjectPath + "/" + Id + ".png") ? Id.ToString() + ".png" : "default.png");
+            return Program.ImageWebPath + "/" + (File.Exists(Program.ImageProjectPath + "/" + PictureName + ".png") ? PictureName + ".png" : "default.png");
         }
 
         /// <summary>Checks for complete equality with another user, including all fields and submissions.</summary>
