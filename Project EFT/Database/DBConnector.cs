@@ -937,6 +937,7 @@ namespace Project_EFT.Database
                     int points = reader.GetInt32(5);
                     int id = reader.GetInt32(0);
                     string about = reader.GetString(6);
+                    string fileName = reader.GetString(7);
                     connection.Close();
                     reader.Close();
                     Dictionary<int, List<AnswerSubmission>> submissionMap = new Dictionary<int, List<AnswerSubmission>>();
@@ -974,6 +975,7 @@ namespace Project_EFT.Database
                         usern, passw, email, rank, points, id, submissionMap
                     );
                     result.About = about;
+                    result.PictureName = fileName;
 
                     return result;
                 }
@@ -1134,7 +1136,7 @@ namespace Project_EFT.Database
 
                 UserCount--;
 
-                if (File.Exists(Program.ImageProjectPath + "/" + user.Id + ".png")) File.Delete(Program.ImageProjectPath + "/" + user.Id + ".png");
+                if (File.Exists(Program.ImageProjectPath + "/" + user.PictureName + ".png")) File.Delete(Program.ImageProjectPath + "/" + user.PictureName + ".png");
 
                 // user deleted --> one row was affected (the deleted one)
                 return true;
@@ -1173,11 +1175,14 @@ namespace Project_EFT.Database
                     int id = reader.GetInt32(0);
                     int points = reader.GetInt32(5);
                     string about = reader.GetString(6);
+                    string fileName = reader.GetString(7);
                     connection.Close();
                     reader.Close();
-                    return new StandardUser(
+                    StandardUser result = new StandardUser(
                         usern, passw, email, rank, points, id, about
                     );
+                    result.PictureName = fileName;
+                    return result;
                 }
                 else
                 {
@@ -1215,11 +1220,14 @@ namespace Project_EFT.Database
                     int id = reader.GetInt32(0);
                     int points = reader.GetInt32(5);
                     string about = reader.GetString(6);
+                    string fileName = reader.GetString(7);
                     connection.Close();
                     reader.Close();
-                    return new StandardUser(
+                    StandardUser result = new StandardUser(
                         usern, passw, email, rank, points, id, about
                     );
+                    result.PictureName = fileName;
+                    return result;
                 }
                 else
                 {
@@ -1364,6 +1372,7 @@ namespace Project_EFT.Database
                         user.Username = reader.GetString(1);
                         user.Ranking = reader.GetInt32(4);
                         user.PointsTotal = reader.GetInt32(5);
+                        user.PictureName = reader.GetString(7);
                         result.Add(user);
                     } while (reader.Read());
                     connection.Close();
@@ -1401,6 +1410,7 @@ namespace Project_EFT.Database
                     user.Ranking = reader.GetInt32(4);
                     user.PointsTotal = reader.GetInt32(5);
                     user.About = reader.GetString(6);
+                    user.PictureName = reader.GetString(7);
                     connection.Close();
                     reader.Close();
                     if (CheckIfUserSubmissionTableExists(user.Id))
@@ -1464,6 +1474,7 @@ namespace Project_EFT.Database
                         user.Username = reader.GetString(1);
                         user.Ranking = reader.GetInt32(4);
                         user.PointsTotal = reader.GetInt32(5);
+                        user.PictureName = reader.GetString(7);
                         results.Add(user);
                     } while (reader.Read());
                     connection.Close();
@@ -1602,5 +1613,56 @@ namespace Project_EFT.Database
             }
         }
 
+        /// <summary>Retrieves a <see cref="StandardUser"/>'s profile picture file name.</summary>
+        /// <param name="Id">The ID of the <see cref="StandardUser"/> whose file name will be retrieved.</param>
+        /// <returns>The <see cref="StandardUser"/>'s profile picture file name if it exists and is successfully retrieved. Null otherwise.</returns>
+        public static string GetPictureNameByID(int Id) 
+        {
+            MySqlCommand command = MakeCommand("SELECT User_PictureName FROM Users WHERE User_ID = @id");
+            MySqlDataReader reader = null;
+            try
+            {
+                command.Parameters.AddWithValue("@id", Id);
+                command.Prepare();
+                reader = command.ExecuteReader();
+                string result = null;
+                if (reader.Read()) result = reader.GetString(0);
+                connection.Close();
+                reader.Close();
+                return result;
+            }
+            catch
+            {
+                if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+                if (reader != null && !reader.IsClosed) reader.Close();
+            }
+            return null;
+        }
+
+        /// <summary>Updates a <see cref="StandardUser"/>'s profile picture file name.</summary>
+        /// <param name="Id">The ID of the <see cref="StandardUser"/> whose file name will be updated.</param>
+        /// <param name="fileName">The file name of the new profile picture.</param>
+        /// <returns>True if the <see cref="StandardUser"/> exists and the file name was successfully updated. False otherwise.</returns>
+        public static bool UpdatePictureNameByID(int Id, string fileName)
+        {
+            try
+            {
+                MySqlCommand command = MakeCommand("UPDATE Users SET User_PictureName = @fileName WHERE User_ID = @id");
+                command.Parameters.AddWithValue("@fileName", fileName);
+                command.Parameters.AddWithValue("@id", Id);
+                command.Prepare();
+                int result = command.ExecuteNonQuery();
+                connection.Close();
+
+                // file name added --> one row was affected (the added one)
+                return result == 1;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+                if (connection != null && connection.State == ConnectionState.Open) connection.Close();
+            }
+            return false;
+        }
     }
 }
