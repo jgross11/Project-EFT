@@ -7,9 +7,11 @@
 @using Project_EFT.Ciphers.Options
 @{ISession session = HttpContextAccessor.HttpContext.Session; }
 
+
 @if (session.ContainsKey("activeSystem"))
 {
     Cipher activeSystem = session.GetComplexObject<Cipher>("activeSystem");
+    ViewData["Title"] = activeSystem.Name;
     <h1>@activeSystem.Name</h1>
 
     <!-- encryption form-->
@@ -46,5 +48,6 @@
 }
 else
 {
+    ViewData["Title"] = "Invalid Cipher System";
     <h1> No cipher system with that ID exists.</h1>
 }

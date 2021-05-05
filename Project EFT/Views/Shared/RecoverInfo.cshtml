@@ -15,7 +15,9 @@
 }
 <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.12.0/js/md5.min.js"></script>
 
-Forgot your password? Enter your username below to send a password recovery email.
+@{ViewData["Title"] = "Recover Account Information"; }
+
+    Forgot your password? Enter your username below to send a password recovery email.
 <br />
 <form id="forgotPassword" action="~/Recovery/forgotPassword" method="post">
     <input type="text" id="username" name="username" value="@username" /><br>
