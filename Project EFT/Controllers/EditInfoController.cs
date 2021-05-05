@@ -217,14 +217,19 @@ namespace Project_EFT.Controllers
             IFormCollection form = Request.Form;
             if (form.Files.Count == 0)
             {
-                if (FileChecker.Exists(Program.ImageProjectPath + "/" + user.Id + ".png"))
+                if (FileChecker.Exists(Program.ImageProjectPath + "/" + user.PictureName + ".png"))
                 {
-                    try
+                    if (DBConnector.UpdatePictureNameByID(user.Id, ""))
                     {
-                        FileChecker.Delete(Program.ImageProjectPath + "/" + user.Id + ".png");
-                        HttpContext.Session.SetString("pictureSuccess", "Profile picture successfully reset!");
+                        try
+                        {
+                            FileChecker.Delete(Program.ImageProjectPath + "/" + user.PictureName + ".png");
+                            HttpContext.Session.SetString("pictureSuccess", "Profile picture successfully reset!");
+                            user.PictureName = "";
+                        }
+                        catch { HttpContext.Session.SetString("pictureError", "Unable to reset profile picture. Please try again."); }
                     }
-                    catch { HttpContext.Session.SetString("pictureError", "Unable to reset profile picture. Please try again."); }
+                    else HttpContext.Session.SetString("pictureError", "Unable to remove profile picture from DB. Please try again.");
                 }
                 else HttpContext.Session.SetString("pictureSuccess", "Nothing to reset.");
             }
@@ -242,14 +247,27 @@ namespace Project_EFT.Controllers
                         MemoryStream ms = new MemoryStream(bytes);
                         Bitmap bitmap = (Bitmap)Bitmap.FromStream(ms);
                         ms.Close();
-                        bitmap.Save(Program.ImageProjectPath + "/" + user.Id + ".png", ImageFormat.Png);
-                        HttpContext.Session.SetString("pictureSuccess", "Profile picture successfully updated!");
+                        string fileName = InformationValidator.MD5Hash(InformationValidator.GenerateTemporaryPassword());
+                        if (DBConnector.UpdatePictureNameByID(user.Id, fileName))
+                        {
+                            try
+                            {
+                                FileChecker.Delete(Program.ImageProjectPath + "/" + user.PictureName + ".png");
+                                bitmap.Save(Program.ImageProjectPath + "/" + fileName + ".png", ImageFormat.Png);
+                                user.PictureName = fileName;
+                                HttpContext.Session.SetString("pictureSuccess", "Profile picture successfully updated!");
+                            }
+                            catch { HttpContext.Session.SetString("pictureError", "Could not save image to disk. Please try again."); }
+                        }
+                        else HttpContext.Session.SetString("pictureError", "Could not save file name to DB. Please try again.");
                     }
                     else HttpContext.Session.SetString("pictureError", "To reset your profile picture, submit the form without selecting an image. Otherwise, please ensure your image is a < 1MB .png");
                 }
                 catch { HttpContext.Session.SetString("pictureError", "Unable to update profile picture. Please Try again."); }
             }
             else HttpContext.Session.SetString("pictureError", "To reset your profile picture, submit the form without selecting an image. Otherwise, please ensure your image is a < 1MB .png");
+
+            HttpContext.Session.SetComplexObject<StandardUser>("userInfo", user);
             return RedirectToAction("editInfo", "EditInfo");
         }
 
