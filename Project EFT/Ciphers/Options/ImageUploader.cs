@@ -35,7 +35,6 @@ namespace Project_EFT.Ciphers.Options
                 IFormFile file = form.Files[0];
 
                 // if an I/O error occurs, inform user there was an error
-                // TODO does this still work?????
                 try
                 {
                     if (Path.GetExtension(file.FileName) == ".png")
