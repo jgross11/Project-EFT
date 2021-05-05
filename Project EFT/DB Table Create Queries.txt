@@ -1,0 +1,44 @@
+Simply copy and paste everything below the separation line into MySQL workbench and run as one query to create every table for the project.
+
+Bad practice, etc., but time crunch.
+--------------------------
+# Admins
+CREATE TABLE `Admins` (
+  `Admin_ID` int NOT NULL AUTO_INCREMENT,
+  `Admin_Username` varchar(45) NOT NULL,
+  `Admin_Password` varchar(32) NOT NULL,
+  `Admin_Email` varchar(45) NOT NULL,
+  PRIMARY KEY (`Admin_ID`)
+);
+# AdminSubmissions
+CREATE TABLE `AdminSubmissions` (
+  `AdminSubmissions_ID` int NOT NULL AUTO_INCREMENT,
+  `Admin_ID` int NOT NULL,
+  `AdminSubmissions_Content` varchar(255) NOT NULL,
+  `AdminSubmissions_SubmissionDate` datetime DEFAULT NULL,
+  PRIMARY KEY (`AdminSubmissions_ID`)
+);
+# Problems
+CREATE TABLE `Problems` (
+  `Problem_ID` int NOT NULL AUTO_INCREMENT,
+  `Problem_Title` varchar(45) NOT NULL,
+  `Problem_Question` varchar(255) NOT NULL,
+  `Problem_Answer` varchar(255) NOT NULL,
+  `Problem_Attempts` int unsigned NOT NULL DEFAULT '0',
+  `Problem_Completions` int unsigned NOT NULL DEFAULT '0',
+  `Problem_PointValue` int NOT NULL DEFAULT '1',
+  `Problem_Number` int unsigned NOT NULL,
+  PRIMARY KEY (`Problem_ID`)
+); 
+# Users
+CREATE TABLE `Users` (
+  `User_ID` int NOT NULL AUTO_INCREMENT,
+  `User_Username` varchar(45) NOT NULL,
+  `User_Password` varchar(32) NOT NULL,
+  `User_Email` varchar(45) NOT NULL,
+  `User_Ranking` int NOT NULL,
+  `User_PointsTotal` int NOT NULL DEFAULT '0',
+  `User_About` varchar(255) NOT NULL,
+  `User_PictureName` varchar(32) NOT NULL,
+  PRIMARY KEY (`User_ID`)
+)
