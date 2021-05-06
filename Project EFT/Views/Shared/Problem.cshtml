@@ -8,10 +8,9 @@
 
 @if (session.ContainsKey("problem"))
 {
-
     Problem problem = session.GetComplexObject<Problem>("problem");
 
-
+    ViewData["Title"] = problem.Title;
     <h1>@problem.Title</h1>
     <h3>This is problem number @problem.ProblemNumber. It is worth @problem.PointsValue point(s).</h3>
     <div>@problem.Question</div>
@@ -102,6 +101,7 @@
 }
 else
 {
+    ViewData["Title"] = "Nonexistent Problem";
     <h1>This problem has not yet been created!</h1>
 }
 @if (session.ContainsKey("errorMessage"))

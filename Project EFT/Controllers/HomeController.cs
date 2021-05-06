@@ -12,6 +12,14 @@ using Project_EFT.Models;
 
 namespace Project_EFT.Controllers
 {
+    /// <summary>Handles GETs and POSTs for: <br/>
+    /// Logging in (POST) and out (GET).
+    /// Deleting an account as an admin (POST).
+    /// Retrieving and formatting the home page (GET).
+    /// Retrieving the Problem List page (GET).
+    /// Retrieving the Cipher List page (GET).
+    /// Handling invalid subURL requests (GET).
+    /// </summary>
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -21,7 +29,8 @@ namespace Project_EFT.Controllers
             _logger = logger;
         }
 
-        // attempts to locate cshtml file with name Index in Home folder and Shared folder
+        /// <summary>If the user is logged in as a <see cref="StandardUser"/>, updates the user's ranking. Otherwise, it only...</summary>
+        /// <returns>The home page.</returns>
         public IActionResult Index()
         {
             if (HttpContext.Session.ContainsKey("userInfo")) 
@@ -33,6 +42,8 @@ namespace Project_EFT.Controllers
             return View();
         }
 
+        /// <summary>Logs the user out by removing all data currently in the session, and...</summary>
+        /// <returns>The home page.</returns>
         [HttpGet]
         public IActionResult logout() 
         {
@@ -40,6 +51,11 @@ namespace Project_EFT.Controllers
             return RedirectToAction("Index");
         }
 
+        /// <summary>Attempts to log the <see cref="User"/> in with the given information. <br/>
+        /// If the username or password are invalid, or no user with those credentials exists, an error message is generated to be displayed in the response.<br/>
+        /// Otherwise, the user information retrieved from the DB is stored in the session. <br/>
+        /// In either case, this...</summary>
+        /// <returns>The home page.</returns>
         [HttpPost]
         public IActionResult login()
         {
@@ -84,6 +100,12 @@ namespace Project_EFT.Controllers
             return RedirectToAction("Index");
         }
 
+        /// <summary>Attempts to delete the <see cref="StandardUser"/> with the given information. <br/>
+        /// If the user is not logged in as an admin, the user is redirected to the home page. <br/>
+        /// If the submitted username is invalid, or does not belong to a standard user, an error message is generated to be displayed in the response. <br/>
+        /// Otherwise, the given username's user information is removed from the DB. <br/>
+        /// In any case, this...</summary>
+        /// <returns>The home page.</returns>
         [HttpPost]
         public IActionResult DeleteUserAccount() 
         {
@@ -121,11 +143,15 @@ namespace Project_EFT.Controllers
             return RedirectToAction("Index");
         }
 
+        /// <summary>Accesses the Problem List page.</summary>
+        /// <returns>The Problem List page.</returns>
         public IActionResult ProblemList() 
         {
             return View();
         }
 
+        /// <summary>Accesses the Cipher List page.</summary>
+        /// <returns>The Cipher List page.</returns>
         public IActionResult CipherList()
         {
 
@@ -139,6 +165,9 @@ namespace Project_EFT.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
+        /// <summary>Handles all GETs for URL's without mappings (invalid URL's).</summary>
+        /// <param name="code">May be the error code for the given error...</param>
+        /// <returns>The home page.</returns>
         [Route("/Home/HandleError/{code:int}")]
         public IActionResult Error(int code)
         {

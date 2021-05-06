@@ -8,7 +8,7 @@
     Problem[] problems = DBConnector.problems.ToArray();
     StandardUser user = session.GetComplexObject<StandardUser>("userInfo");
 }
-
+@{ViewData["Title"] = "Problem List"; }
 <h1> Problems </h1>
 <table>
     <tr>
@@ -28,33 +28,33 @@
         // generate row for each problem in problems array
         foreach (Problem problem in problems)
         {
-        <tr>
-            @{
-                if (user != null)
-                {
-                    if (user.Submissions.ContainsKey(problem.ProblemNumber))
+            <tr>
+                @{
+                    if (user != null)
                     {
-                        if (user.Submissions[problem.ProblemNumber][user.Submissions[problem.ProblemNumber].Count - 1].IsCorrect)
+                        if (user.Submissions.ContainsKey(problem.ProblemNumber))
                         {
-                            <th class="success">Y</th>
+                            if (user.Submissions[problem.ProblemNumber][user.Submissions[problem.ProblemNumber].Count - 1].IsCorrect)
+                            {
+                                <th class="success">Y</th>
+                            }
+                            else
+                            {
+                                <th class="error">N</th>
+                            }
                         }
-                        else 
-                        { 
-                            <th class="error">N</th>
+                        else
+                        {
+                            <th>N/A</th>
                         }
-                    }
-                    else
-                    {
-                        <th>N/A</th>
                     }
                 }
-            }
-            <th>@problem.ProblemNumber</th>
-            <th><a href="/problem?ID=@problem.ProblemNumber">@problem.Title</a></th>
-            <th>@problem.Attempts</th>
-            <th>@problem.Completions</th>
-            <th>@problem.PointsValue</th>
-        </tr>
+                <th>@problem.ProblemNumber</th>
+                <th><a href="/problem?ID=@problem.ProblemNumber">@problem.Title</a></th>
+                <th>@problem.Attempts</th>
+                <th>@problem.Completions</th>
+                <th>@problem.PointsValue</th>
+            </tr>
         }
     }
 </table>

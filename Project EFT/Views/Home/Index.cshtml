@@ -4,9 +4,9 @@
 @using Project_EFT.Database;
 @{ISession session = HttpContextAccessor.HttpContext.Session; }
 @{
-    ViewData["Title"] = "Home Page";
     if (session.ContainsKey("userInfo"))
     {
+        ViewData["Title"] = "Standard User Home Page";
         StandardUser user = session.GetComplexObject<StandardUser>("userInfo");
         <h2>Logged in as standard user: </h2>
         <br>
@@ -91,6 +91,7 @@
     }
     else if (session.ContainsKey("adminInfo"))
     {
+        ViewData["Title"] = "Admin Home Page";
         string errorMessage = session.TryGetAndRemoveKey<string>("errorMessage");
         string successMessage = session.TryGetAndRemoveKey<string>("successMessage");
         string username = session.TryGetAndRemoveKey<string>("username");
@@ -150,6 +151,7 @@
     }
     else
     {
+        ViewData["Title"] = "Home Page";
         string loginErrorMessage = session.TryGetAndRemoveKey<string>("errorMessage");
         string usernameFormatError = session.TryGetAndRemoveKey<string>("usernameFormatError");
         string passwordFormatError = session.TryGetAndRemoveKey<string>("passwordFormatError");

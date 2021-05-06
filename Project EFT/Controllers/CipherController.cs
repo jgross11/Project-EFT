@@ -12,6 +12,9 @@ using Project_EFT.Ciphers.Options;
 
 namespace Project_EFT.Controllers
 {
+    /// <summary>Handles GETs and POSTs for: <br/>
+    /// - Cipher system encrypting and decrypting (POST).<br/>
+    /// - Targetting a specific cipher system for encrypting / decrypting purposes (GET).</summary>
     public class CipherController : Controller
     {
         private readonly ILogger<CipherController> _logger;
@@ -21,7 +24,13 @@ namespace Project_EFT.Controllers
             _logger = logger;
         }
 
-        // encryption POST
+
+        /// <summary>Attempts to execute the selected <see cref="Cipher"/> system's encrypt method, based on the submitted encryption form data.<br/>
+        /// If no system is selected, the user is redirected to the CipherList page. <br/>
+        /// If encryption errors occur, generates error messages to be displayed in front end response.<br/>
+        /// If a system is selected, regardless of whether encryption is successfully or not, the user is then redirected to the Cipher page to display results / errors.
+        /// </summary>
+        /// <returns>The generic Cipher page, formatted with the encryption results if successful, or the appropriate error message(s) otherwise.</returns>
         [HttpPost]
         public IActionResult encrypt()
         {
@@ -49,6 +58,12 @@ namespace Project_EFT.Controllers
             }
         }
 
+        /// <summary>Attempts to execute the selected <see cref="Cipher"/> system's decrypt method, based on the submitted decryption form data.<br/>
+        /// If no system is selected, the user is redirected to the CipherList page. <br/>
+        /// If decryption errors occur, generates error messages to be displayed in front end response.<br/>
+        /// If a system is selected, regardless of whether decryption is successfully or not, the user is then redirected to the Cipher page to display results / errors.
+        /// </summary>
+        /// <returns>The generic Cipher page, formatted with the decryption results if successful, or the appropriate error message(s) otherwise.</returns>
         [HttpPost]
         public IActionResult decrypt() 
         {
@@ -76,6 +91,10 @@ namespace Project_EFT.Controllers
             }
         }
 
+        /// <summary>Attempts to create an instance of the selected <see cref="Cipher"/> by it's index in <see cref="Program.CipherList"/> for encrypting or decrypting purposes.<br/>
+        /// If no cipher exists at the given index, the response will indicate as such. Otherwise, the selected cipher's encrypt / decrypt form are displayed in the response.</summary>
+        /// <param name="id">The index in <see cref="Program.CipherList"/> of the desired <see cref="Cipher"/> system.</param>
+        /// <returns>The cipher page, that displays a cipher's form information, or an error message indicating no such cipher system exists.</returns>
         public IActionResult cipher(int id)
         {
             if (id > -1 && id < Program.CipherList.Count)

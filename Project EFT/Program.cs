@@ -16,6 +16,11 @@ namespace Project_EFT
         public static List<Type> CipherList;
         public static JsonSerializerSettings DerivedJSONSettings;
         public static List<string> CipherNames;
+        /// <summary>Path to the user profile pictures folder (from an HTML perspective) where the root folder is wwwroot.</summary>
+        public const string ImageWebPath = "/Images";
+
+        /// <summary>Path to the user profile pictures folder (from a Solution perspective) where the root folder is Project EFT.</summary>
+        public const string ImageProjectPath = "wwwroot/Images";
 
         public static void Main(string[] args)
         {

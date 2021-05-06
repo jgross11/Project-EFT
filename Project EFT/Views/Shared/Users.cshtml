@@ -8,10 +8,13 @@
 @using Project_EFT.Database
 @{ISession session = HttpContextAccessor.HttpContext.Session; }
 
+
+
 @{
     if (session.ContainsKey("userToView"))
     {
         StandardUser user = session.GetComplexObject<StandardUser>("userToView");
+        ViewData["Title"] = user.Username + "'s Profile";
         <img width="150" height="150" src="@user.GetImagePathString()">
         <h1>@user.Username</h1>
         <h4>Rank: @user.Ranking / @DBConnector.UserCount | Points: @user.PointsTotal</h4>
@@ -22,8 +25,8 @@
             {
                 <div>@user.About</div>
             }
-            else 
-            { 
+            else
+            {
                 <div>This user has no about.</div>
             }
         </div>
@@ -84,6 +87,7 @@
     }
     else
     {
+        ViewData["Title"] = "Users List";
         List<StandardUser> top5 = session.GetComplexObject<List<StandardUser>>("top5");
         <h3>Top 5 Users:</h3>
         <ol>

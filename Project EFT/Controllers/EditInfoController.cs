@@ -15,8 +15,14 @@ using System.Drawing.Imaging;
 
 namespace Project_EFT.Controllers
 {
+    /// <summary>Handles GETs and POSTs for: <br/>
+    /// - Editting username, email, password, profile picture, and about information(POSTs).<br/>
+    /// - Accessing the edit information page (GET).
+    /// </summary>
     public class EditInfoController : Controller
     {
+        /// <summary>Determines if the user should be able to access the edit information page.</summary>
+        /// <returns>The edit information page, if the user is logged in as a <see cref="StandardUser"/> or <see cref="Admin"/>. Otherwise, the home page.</returns>
         public IActionResult editInfo()
         {
             if (HttpContext.Session.ContainsKey("userInfo") || HttpContext.Session.ContainsKey("adminInfo"))
@@ -29,6 +35,11 @@ namespace Project_EFT.Controllers
             }
         }
 
+        /// <summary>Attempts to modify a <see cref="User"/>'s <see cref="User.Username"/> based on the submitted form. <br/>
+        /// If the user is not logged in, the user is redirected to the home page. <br/>
+        /// If the submitted username is a valid username, and does not belong to another user of the same type, the user's username is updated in the DB. <br/>
+        /// If any errors occur, the appropriate error messages are generated for displaying in the response.</summary>
+        /// <returns>The edit information page, with either the success message or an error, if the user is logged in. Otherwise, the home page.</returns>
         [HttpPost]
         public IActionResult editUsername()
         {
@@ -82,6 +93,11 @@ namespace Project_EFT.Controllers
             return RedirectToAction("editInfo", "EditInfo");
         }
 
+        /// <summary>Attempts to modify a <see cref="User"/>'s <see cref="User.Email"/> based on the submitted form. <br/>
+        /// If the user is not logged in, the user is redirected to the home page. <br/>
+        /// If the submitted email is a valid email, and does not belong to another user of the same type, the user's email is updated in the DB. <br/>
+        /// If any errors occur, the appropriate error messages are generated for displaying in the response.</summary>
+        /// <returns>The edit information page, with either the success message or an error, if the user is logged in. Otherwise, the home page.</returns>
         [HttpPost]
         public IActionResult editEmail()
         {
@@ -136,6 +152,11 @@ namespace Project_EFT.Controllers
             return RedirectToAction("editInfo", "EditInfo");
         }
 
+        /// <summary>Attempts to modify a <see cref="User"/>'s <see cref="User.Password"/> based on the submitted form. <br/>
+        /// If the user is not logged in, the user is redirected to the home page. <br/>
+        /// If the submitted password is a valid password, the user's password is updated in the DB. <br/>
+        /// If any errors occur, the appropriate error messages are generated for displaying in the response.</summary>
+        /// <returns>The edit information page, with either the success message or an error, if the user is logged in. Otherwise, the home page.</returns>
         [HttpPost]
         public IActionResult editPassword()
         {
@@ -182,6 +203,12 @@ namespace Project_EFT.Controllers
             return RedirectToAction("editInfo", "EditInfo");
         }
 
+        /// <summary>Attempts to modify a <see cref="StandardUser"/>'s profile picture based on the submitted form. <br/>
+        /// If the user is not logged in, the user is redirected to the home page. <br/>
+        /// If the submitted profile picture is a valid profile picture, the user's profile picture is updated. <br/>
+        /// If no profile picture is submitted, the user's profile picture is reset to the default profile picture, default.png, found in wwwroot/Images. <br/>
+        /// If any errors occur, the appropriate error messages are generated for displaying in the response.</summary>
+        /// <returns>The edit information page, with either the success message or an error, if the user is logged in. Otherwise, the home page.</returns>
         [HttpPost]
         public IActionResult editProfilePic() 
         {
@@ -190,14 +217,19 @@ namespace Project_EFT.Controllers
             IFormCollection form = Request.Form;
             if (form.Files.Count == 0)
             {
-                if (FileChecker.Exists(InformationValidator.ImageProjectPath + "/" + user.Id + ".png"))
+                if (FileChecker.Exists(Program.ImageProjectPath + "/" + user.PictureName + ".png"))
                 {
-                    try
+                    if (DBConnector.UpdatePictureNameByID(user.Id, ""))
                     {
-                        FileChecker.Delete(InformationValidator.ImageProjectPath + "/" + user.Id + ".png");
-                        HttpContext.Session.SetString("pictureSuccess", "Profile picture successfully reset!");
+                        try
+                        {
+                            FileChecker.Delete(Program.ImageProjectPath + "/" + user.PictureName + ".png");
+                            HttpContext.Session.SetString("pictureSuccess", "Profile picture successfully reset!");
+                            user.PictureName = "";
+                        }
+                        catch { HttpContext.Session.SetString("pictureError", "Unable to reset profile picture. Please try again."); }
                     }
-                    catch { HttpContext.Session.SetString("pictureError", "Unable to reset profile picture. Please try again."); }
+                    else HttpContext.Session.SetString("pictureError", "Unable to remove profile picture from DB. Please try again.");
                 }
                 else HttpContext.Session.SetString("pictureSuccess", "Nothing to reset.");
             }
@@ -215,17 +247,35 @@ namespace Project_EFT.Controllers
                         MemoryStream ms = new MemoryStream(bytes);
                         Bitmap bitmap = (Bitmap)Bitmap.FromStream(ms);
                         ms.Close();
-                        bitmap.Save(InformationValidator.ImageProjectPath + "/" + user.Id + ".png", ImageFormat.Png);
-                        HttpContext.Session.SetString("pictureSuccess", "Profile picture successfully updated!");
+                        string fileName = InformationValidator.MD5Hash(InformationValidator.GenerateTemporaryPassword());
+                        if (DBConnector.UpdatePictureNameByID(user.Id, fileName))
+                        {
+                            try
+                            {
+                                FileChecker.Delete(Program.ImageProjectPath + "/" + user.PictureName + ".png");
+                                bitmap.Save(Program.ImageProjectPath + "/" + fileName + ".png", ImageFormat.Png);
+                                user.PictureName = fileName;
+                                HttpContext.Session.SetString("pictureSuccess", "Profile picture successfully updated!");
+                            }
+                            catch { HttpContext.Session.SetString("pictureError", "Could not save image to disk. Please try again."); }
+                        }
+                        else HttpContext.Session.SetString("pictureError", "Could not save file name to DB. Please try again.");
                     }
                     else HttpContext.Session.SetString("pictureError", "To reset your profile picture, submit the form without selecting an image. Otherwise, please ensure your image is a < 1MB .png");
                 }
                 catch { HttpContext.Session.SetString("pictureError", "Unable to update profile picture. Please Try again."); }
             }
             else HttpContext.Session.SetString("pictureError", "To reset your profile picture, submit the form without selecting an image. Otherwise, please ensure your image is a < 1MB .png");
+
+            HttpContext.Session.SetComplexObject<StandardUser>("userInfo", user);
             return RedirectToAction("editInfo", "EditInfo");
         }
 
+        /// <summary>Attempts to modify a <see cref="StandardUser"/>'s about based on the submitted form. <br/>
+        /// If the user is not logged in, the user is redirected to the home page. <br/>
+        /// If the submitted about is a valid about, the user's about is updated in the DB. <br/>
+        /// If any errors occur, the appropriate error messages are generated for displaying in the response.</summary>
+        /// <returns>The edit information page, with either the success message or an error, if the user is logged in. Otherwise, the home page.</returns>
         [HttpPost]
         public IActionResult editAbout()
         {
