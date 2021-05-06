@@ -3,3 +3,6 @@ We have a collection of Postman tests for the frontend data verification. (GETS/
 https://www.getpostman.com/collections/3fa4816eda28b0abb628
 
 If you use this you will have to update the StandardUser and Admin credentials accordingly.
+
+Information (probably outdated) about importing collections can be found here.
+https://learning.postman.com/docs/getting-started/importing-and-exporting-data/
